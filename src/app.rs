@@ -1,4 +1,4 @@
-use {crate::{Error,Stream,Source}};
+use crate::{Error, Source, Stream};
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -7,7 +7,7 @@ pub(crate) struct App;
 impl App {
     pub(crate) fn run() -> Result<(), Error> {
         use clap;
-        let app = clap::App::new("re")
+        let app = clap::App::new("sd")
             .version(VERSION)
             .setting(clap::AppSettings::ColoredHelp)
             .setting(clap::AppSettings::NextLineHelp)

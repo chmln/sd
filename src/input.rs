@@ -1,4 +1,7 @@
-use {crate::Error, std::{fs::File, io::prelude::*}};
+use {
+    crate::{utils, Error},
+    std::{fs::File, io::prelude::*},
+};
 
 pub(crate) enum Source {
     Stdin,
@@ -31,7 +34,6 @@ impl Source {
             }
         }
     }
-
 }
 
 pub(crate) struct Stream {
@@ -50,11 +52,12 @@ impl Stream {
         replace_with: &str,
     ) -> Result<(), crate::Error> {
         if is_regex {
-            self.data = regex::Regex::new(look_for)?
+            let replaced = regex::Regex::new(look_for)?
                 .replace_all(&self.data, replace_with)
-                .to_string()
+                .to_string();
+            self.data = utils::unescape(&replaced).unwrap_or_else(|| replaced);
         } else {
-            self.data = self.data.replace(look_for, replace_with)
+            self.data = self.data.replace(look_for, replace_with);
         }
         Ok(())
     }
@@ -64,9 +67,7 @@ impl Stream {
     // Otherwise, pipe to stdout.
     pub(crate) fn output(self, source: &Source) -> Result<(), crate::Error> {
         match source {
-            Source::File(path) => {
-                Ok(std::fs::write(path, self.data)?)
-            },
+            Source::File(path) => Ok(std::fs::write(path, self.data)?),
             Source::Stdin => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
