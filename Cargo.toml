@@ -1,0 +1,20 @@
+[package]
+name = "re"
+version = "0.1.0"
+edition = "2018"
+authors = ["Gregory <gregory.mkv@gmail.com>"]
+description = "A find & replace CLI focused on user-friendliness"
+keywords = ["sed", "find", "replace", "regex"]
+license = "MIT"
+homepage = "https://github.com/chmln/re"
+repository = "https://github.com/chmln/re.git"
+categories = ["command-line-utilities", "text-processing", "development-tools"]
+
+[dependencies]
+clap = "2.32.0"
+regex = "1.1.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+debug = false
