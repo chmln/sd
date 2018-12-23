@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: rustlang/rust:nightly-slim
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: project-cache
+
+      - run:
+          name: Test
+          command: cargo check 
+
+      - save_cache:
+          key: project-cache
+          paths:
+            - "~/.cargo"
+            - "./target"
+
