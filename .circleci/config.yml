@@ -8,15 +8,16 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: project-cache
+          key: v4-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
 
       - run:
           name: Test
           command: cargo check 
 
       - save_cache:
-          key: project-cache
           paths:
             - "~/.cargo"
             - "./target"
+            - /usr/local/cargo/registry
+          key: v4-cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
 
