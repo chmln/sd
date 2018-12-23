@@ -17,14 +17,14 @@ impl App {
                     .long("regex")
                     .required(false)
                     .takes_value(false)
-                    .help("Enable regex"),
+                    .help("Enable regular expressions"),
             )
             .arg(
                 clap::Arg::with_name("input")
                     .short("i")
                     .required(false)
                     .takes_value(true)
-                    .help("The path to file")
+                    .help("The path to file. The file contents will be transformed in-place.")
             )
             .arg(
                 clap::Arg::with_name("find")
