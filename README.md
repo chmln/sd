@@ -28,7 +28,7 @@ Some cherry-picked examples, where `sd` shines:
   - sd: `echo "{((sample with /path/))}" | sd -r '\{\(\(.*(/.*/)\)\)\}' '$1'`
   - sed
     - incorrect, but closest I could get after 15 minutes of struggle
-    - `echo "{((sample string also contains /path/))}" | sed 's/{((\.\*\(\/.*\/\)))}/\1/g'`
+    - `echo "{((sample with /path/))}" | sed 's/{((\.\*\(\/.*\/\)))}/\1/g'`
 
 Note: although `sed` has a nicer regex syntax with `-r`, it is not portable and doesn't work on, say, MacOS or Solaris. 
 
