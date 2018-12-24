@@ -18,6 +18,8 @@ Find & replace expressions are split up and in most cases unescaped, which contr
 
 ## Comparison to sed
 
+While sed is frighteningly powerful, `sd` focuses on doing just one thing and doing it well.
+
 Some cherry-picked examples, where `sd` shines:
 - Replace newlines with commas:
   - sed: `sed ':a;N;$!ba;s/\r/,/g'` vs
