@@ -1,13 +1,14 @@
 [package]
 name = "sd"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "A find & replace CLI focused on user-friendliness"
+readme = "README.md"
 keywords = ["sed", "find", "replace", "regex"]
 license = "MIT"
-homepage = "https://github.com/chmln/re"
-repository = "https://github.com/chmln/re.git"
+homepage = "https://github.com/chmln/sd"
+repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
 
 [dependencies]
