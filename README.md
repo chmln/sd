@@ -34,7 +34,7 @@ Note: although `sed` has a nicer regex syntax with `-r`, it is not portable and 
 
 ## Guide
 
-1. By default, expressions are treated as literals.
+1. **Literal mode**. By default, expressions are treated as literals.
 
 ```sh
 > echo "lots((([]))) of special chars" | sd "((([])))" ""
@@ -43,14 +43,14 @@ lots of special chars
 
 Use `-r` or `--regex` to enable regex.
 
-2. Basic regex use - let's trim some trailing whitespace
+2. **Basic regex use** - let's trim some trailing whitespace
 
 ```sh
 > echo "lorem ipsum 23   " | sd -r '\s+$' ''
 lorem ipsum 23
 ```
 
-3. Capturing useful information. 
+3. **Capture groups**
 
 Indexed capture groups:
 
@@ -66,7 +66,7 @@ Named capture groups:
 123 dollars and 45 cents
 ```
 
-If you stumble upon any ambiguities, just use `${1}` instead of `$1`:
+If you stumble upon any ambiguities, just use `${var}` instead of `$var`:
 
 ```sh
 > echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
@@ -75,10 +75,7 @@ If you stumble upon any ambiguities, just use `${1}` instead of `$1`:
 123_dollars and 45_cents
 ```
 
-You may choose to always use `${1}` or only add as necessary.
-
-
-4. Find & replace in files
+4. **Find & replace in files**
 
 ```sh
 > sd "window.fetch" "fetch" -i http.js
@@ -89,10 +86,10 @@ That's it.
 Do a dry run:
 
 ```sh
-> sd "window.fetch" "fetch" < http.js | less
+> sd "window.fetch" "fetch" < http.js 
 ```
 
-5. Find & replace across your project
+5. **Find & replace across project**
 
 Good ol' unix philosophy to the rescue.
 
