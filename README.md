@@ -32,3 +32,76 @@ Some cherry-picked examples, where `sd` shines:
 
 Note: although `sed` has a nicer regex syntax with `-r`, it is not portable and doesn't work on, say, MacOS or Solaris. 
 
+## Guide
+
+1. **Literal mode**. By default, expressions are treated as literals.
+
+```sh
+> echo "lots((([]))) of special chars" | sd "((([])))" ""
+lots of special chars
+```
+
+Use `-r` or `--regex` to enable regex.
+
+2. **Basic regex use** - let's trim some trailing whitespace
+
+```sh
+> echo "lorem ipsum 23   " | sd -r '\s+$' ''
+lorem ipsum 23
+```
+
+3. **Capture groups**
+
+Indexed capture groups:
+
+```sh
+> echo "cargo +nightly watch" | sd -r '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'
+cmd: cargo, channel: nightly, subcmd: watch
+```
+
+Named capture groups:
+
+```sh
+> echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'
+123 dollars and 45 cents
+```
+
+If you stumble upon any ambiguities, just use `${var}` instead of `$var`:
+
+```sh
+> echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
+ and 
+> echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
+123_dollars and 45_cents
+```
+
+4. **Find & replace in files**
+
+```sh
+> sd "window.fetch" "fetch" -i http.js
+```
+
+That's it.
+
+Do a dry run:
+
+```sh
+> sd "window.fetch" "fetch" < http.js 
+```
+
+5. **Find & replace across project**
+
+Good ol' unix philosophy to the rescue.
+
+```sh
+fd -t f --exec sd 'from "react"' 'from "preact"' -i {}
+```
+
+Same, but with backups (consider version control).
+
+```bash
+for file in $(fd -t f); do
+  cp "$file" "$file.bk"
+  sd 'from "react"' 'from "preact"' -i "$file"; 
+done
+```
