@@ -9,5 +9,5 @@ pub(crate) use {
 };
 
 fn main() -> Result<(), ()> {
-    app::App::run().map_err(|e| eprintln!("{}", e))
+    app::run().map_err(|e| eprintln!("{}", e))
 }

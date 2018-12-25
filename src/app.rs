@@ -1,56 +1,35 @@
 use crate::{Error, Source, Stream};
+use structopt::StructOpt;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+#[derive(Debug, StructOpt)]
+#[structopt(
+    author = "",
+    raw(setting = "structopt::clap::AppSettings::ColoredHelp"),
+    raw(setting = "structopt::clap::AppSettings::NextLineHelp")
+)]
+pub(crate) struct Options {
+    /// The path to file. The file contents will be transformed in-place.
+    #[structopt(short = "i", long = "input")]
+    file_path: Option<String>,
 
-pub(crate) struct App;
+    /// Enable regular expressions
+    #[structopt(short = "r", long = "regex")]
+    enable_regex: bool,
 
-impl App {
-    pub(crate) fn run() -> Result<(), Error> {
-        use clap;
-        let app = clap::App::new("sd")
-            .version(VERSION)
-            .setting(clap::AppSettings::ColoredHelp)
-            .setting(clap::AppSettings::NextLineHelp)
-            .arg(
-                clap::Arg::with_name("enable_regex")
-                    .short("r")
-                    .long("regex")
-                    .required(false)
-                    .takes_value(false)
-                    .help("Enable regular expressions"),
-            )
-            .arg(
-                clap::Arg::with_name("input")
-                    .short("i")
-                    .required(false)
-                    .takes_value(true)
-                    .help("The path to file. The file contents will be transformed in-place.")
-            )
-            .arg(
-                clap::Arg::with_name("find")
-                    .help("The string or regexp (if --regex) to search for.")
-                    .required(true)
-                    .index(1),
-            )
-            .arg(
-                clap::Arg::with_name("replace_with")
-                    .help("What to replace each match with. If regex is enabled, you may use captured values like $1, $2, etc.")
-                    .required(true)
-                    .index(2),
-            );
+    /// The string or regexp (if --regex) to search for.
+    find: String,
 
-        let matches = app.get_matches();
+    /// What to replace each match with. If regex is enabled,
+    /// you may use captured values like $1, $2, etc.
+    replace_with: String,
+}
 
-        let file_path = matches.value_of("input").map(|p| p.to_string());
-        let find = matches.value_of("find").unwrap();
-        let replace_with = matches.value_of("replace_with").unwrap();
-        let is_regex = matches.occurrences_of("enable_regex") == 1;
+pub(crate) fn run() -> Result<(), Error> {
+    let args = Options::from_args();
+    let source = Source::from(args.file_path);
+    let mut stream: Stream = (&source).into_stream()?;
+    stream.replace(args.enable_regex, &args.find, &args.replace_with)?;
 
-        let source = Source::from(file_path);
-        let mut stream: Stream = (&source).into_stream()?;
-        stream.replace(is_regex, find, replace_with)?;
-
-        // replace file in-place, or pipe to stdout
-        stream.output(&source)
-    }
+    // replace file in-place, or pipe to stdout
+    stream.output(&source)
 }
