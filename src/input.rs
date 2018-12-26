@@ -21,7 +21,6 @@ impl Source {
                 let mut buffer = String::new();
                 let stdin = std::io::stdin();
                 let mut handle = stdin.lock();
-
                 handle.read_to_string(&mut buffer)?;
                 Ok(Stream::new(buffer))
             }
