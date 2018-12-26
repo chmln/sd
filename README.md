@@ -12,11 +12,11 @@ Why use it over any existing tools?
 
 **String-literal mode**
 
-Non-regex find & replace. No more backslashes or remembering which characters are special and need to be escaped. Replace away.
+Non-regex find & replace. No more backslashes or remembering which characters are special and need to be escaped.
 
 **Easy to read, easy to write**
 
-Find & replace expressions are split up and in most cases unescaped, which contributes to readability and makes it easier to spot errors in your regexes.
+Find & replace expressions are split up, which makes them easy to read and write.
 
 ## Comparison to sed
 
@@ -24,17 +24,17 @@ While sed does a whole lot more, `sd` focuses on doing just one thing and doing 
 
 Some cherry-picked examples, where `sd` shines:
 - Replace newlines with commas:
-  - sed: `sed ':a;N;$!ba;s/\r/,/g'` vs
   - sd: `sd -r '\r' ','`
+  - sed: `sed ':a;N;$!ba;s/\r/,/g'`
 - Extracting stuff out of strings with special characters
   - sd: `echo "{((sample with /path/))}" | sd -r '\{\(\(.*(/.*/)\)\)\}' '$1'`
   - sed
     - incorrect, but closest I could get after 15 minutes of struggle
     - `echo "{((sample with /path/))}" | sed 's/{((\.\*\(\/.*\/\)))}/\1/g'`
 
-Note: although `sed` has a nicer regex syntax with `-r`, it is not portable and doesn't work on MacOS, BSD, or Solaris. 
+Note: although `sed` does have a nicer regex syntax with `-r`, it is a non-portable GNU-ism and thus doesn't work on MacOS, BSD, or Solaris. 
 
-## Guide
+## Quick Guide
 
 1. **Literal mode**. By default, expressions are treated as literals.
 
