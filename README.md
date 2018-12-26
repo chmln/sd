@@ -24,10 +24,10 @@ While sed does a whole lot more, `sd` focuses on doing just one thing and doing 
 
 Some cherry-picked examples, where `sd` shines:
 - Replace newlines with commas:
-  - sd: `sd -r '\r' ','`
+  - sd: `sd '\r' ','`
   - sed: `sed ':a;N;$!ba;s/\r/,/g'`
 - Extracting stuff out of strings with special characters
-  - sd: `echo "{((sample with /path/))}" | sd -r '\{\(\(.*(/.*/)\)\)\}' '$1'`
+  - sd: `echo "{((sample with /path/))}" | sd '\{\(\(.*(/.*/)\)\)\}' '$1'`
   - sed
     - incorrect, but closest I could get after 15 minutes of struggle
     - `echo "{((sample with /path/))}" | sed 's/{((\.\*\(\/.*\/\)))}/\1/g'`
@@ -36,19 +36,19 @@ Note: although `sed` does have a nicer regex syntax with `-r`, it is a non-porta
 
 ## Quick Guide
 
-1. **Literal mode**. By default, expressions are treated as literals.
+1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
+
 
 ```sh
-> echo "lots((([]))) of special chars" | sd "((([])))" ""
+> echo 'lots((([]))) of special chars' | sd -s '((([])))' ''
 lots of special chars
 ```
 
-Use `-r` or `--regex` to enable regex.
 
 2. **Basic regex use** - let's trim some trailing whitespace
 
 ```sh
-> echo "lorem ipsum 23   " | sd -r '\s+$' ''
+> echo 'lorem ipsum 23   ' | sd '\s+$' ''
 lorem ipsum 23
 ```
 
@@ -57,30 +57,30 @@ lorem ipsum 23
 Indexed capture groups:
 
 ```sh
-> echo "cargo +nightly watch" | sd -r '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'
+> echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'
 cmd: cargo, channel: nightly, subcmd: watch
 ```
 
 Named capture groups:
 
 ```sh
-> echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'
+> echo "123.45" | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'
 123 dollars and 45 cents
 ```
 
 In the unlikely case you stumble upon ambiguities, resolve them by using `${var}` instead of `$var`. Here's an example:
 
 ```sh
-> echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
+> echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
  and 
-> echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
+> echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
 123_dollars and 45_cents
 ```
 
 4. **Find & replace in a file**
 
 ```sh
-> sd "window.fetch" "fetch" -i http.js
+> sd 'window.fetch' 'fetch' -i http.js
 ```
 
 That's it. The file is modified in-place.
@@ -88,7 +88,7 @@ That's it. The file is modified in-place.
 To do a dry run, just use stdin/stdout:
 
 ```sh
-> sd "window.fetch" "fetch" < http.js 
+> sd 'window.fetch' 'fetch' < http.js 
 ```
 
 5. **Find & replace across project**
