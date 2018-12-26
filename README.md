@@ -16,7 +16,7 @@ Non-regex find & replace. No more backslashes or remembering which characters ar
 
 **Easy to read, easy to write**
 
-Find & replace expressions are split up, which makes them easy to read and write.
+Find & replace expressions are split up, which makes them easy to read and write. No more messing with unclosed and escaped slashes.
 
 ## Comparison to sed
 
