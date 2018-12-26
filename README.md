@@ -1,16 +1,18 @@
 # sd - s[earch] & d[isplace]
 
-`sd` is a simple, user-friendly find & replace command line tool.
+`sd` is an intuitive find & replace CLI.
 
-## Features
+## The Pitch
+
+Why use it over any existing tools?
 
 **Painless regular expressions**
 
-Use regex syntax that you already know from JavaScript, Python, and Rust. No need to learn  special syntax or eccentrisms of `sed` or `awk`. Easily access your captured groups with `$1`, `$2`.
+`sd` uses regex syntax that you already know from JavaScript and Python. Forget about dealing with quirks of `sed` or `awk` - get productive immediately.
 
 **String-literal mode**
 
-In string-literal mode, you don't need to escape any special characters - its simply unnecessary.
+Non-regex find & replace. No more backslashes or remembering which characters are special and need to be escaped. Replace away.
 
 **Easy to read, easy to write**
 
@@ -18,7 +20,7 @@ Find & replace expressions are split up and in most cases unescaped, which contr
 
 ## Comparison to sed
 
-While sed is frighteningly powerful, `sd` focuses on doing just one thing and doing it well.
+While sed does a whole lot more, `sd` focuses on doing just one thing and doing it well.
 
 Some cherry-picked examples, where `sd` shines:
 - Replace newlines with commas:
@@ -30,7 +32,7 @@ Some cherry-picked examples, where `sd` shines:
     - incorrect, but closest I could get after 15 minutes of struggle
     - `echo "{((sample with /path/))}" | sed 's/{((\.\*\(\/.*\/\)))}/\1/g'`
 
-Note: although `sed` has a nicer regex syntax with `-r`, it is not portable and doesn't work on, say, MacOS or Solaris. 
+Note: although `sed` has a nicer regex syntax with `-r`, it is not portable and doesn't work on MacOS, BSD, or Solaris. 
 
 ## Guide
 
@@ -66,7 +68,7 @@ Named capture groups:
 123 dollars and 45 cents
 ```
 
-If you stumble upon any ambiguities, just use `${var}` instead of `$var`:
+In the unlikely case you stumble upon ambiguities, resolve them by using `${var}` instead of `$var`. Here's an example:
 
 ```sh
 > echo "123.45" | sd -r '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
@@ -75,15 +77,15 @@ If you stumble upon any ambiguities, just use `${var}` instead of `$var`:
 123_dollars and 45_cents
 ```
 
-4. **Find & replace in files**
+4. **Find & replace in a file**
 
 ```sh
 > sd "window.fetch" "fetch" -i http.js
 ```
 
-That's it.
+That's it. The file is modified in-place.
 
-Do a dry run:
+To do a dry run, just use stdin/stdout:
 
 ```sh
 > sd "window.fetch" "fetch" < http.js 
