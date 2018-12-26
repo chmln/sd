@@ -5,8 +5,11 @@ use structopt::StructOpt;
 #[structopt(
     // hide author from help
     author = "",
+    about = "",
     raw(setting = "structopt::clap::AppSettings::ColoredHelp"),
-    raw(setting = "structopt::clap::AppSettings::NextLineHelp")
+    raw(setting = "structopt::clap::AppSettings::NextLineHelp"),
+    raw(setting = "structopt::clap::AppSettings::DisableVersion"),
+    raw(setting = "structopt::clap::AppSettings::UnifiedHelpMessage"),
 )]
 pub(crate) struct Options {
     /// The path to file. The file contents will be transformed in-place.
@@ -17,7 +20,7 @@ pub(crate) struct Options {
     #[structopt(short = "s", long = "string-mode")]
     literal_mode: bool,
 
-    /// The regexp or string (if --literal) to search for.
+    /// The regexp or string (if -s) to search for.
     find: String,
 
     /// What to replace each match with. Unless in string mode, you may 
