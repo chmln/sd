@@ -34,6 +34,12 @@ Some cherry-picked examples, where `sd` shines:
 
 Note: although `sed` does have a nicer regex syntax with `-r`, it is a non-portable GNU-ism and thus doesn't work on MacOS, BSD, or Solaris. 
 
+## Installation
+
+```sh
+cargo install sd
+```
+
 ## Quick Guide
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
