@@ -8,6 +8,6 @@ pub(crate) use {
     crate::input::{Source, Stream},
 };
 
-fn main() -> Result<(), ()> {
-    app::run().map_err(|e| eprintln!("{}", e))
+fn main() -> Result<(), Error> {
+    app::run()
 }
