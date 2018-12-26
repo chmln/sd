@@ -127,7 +127,7 @@ dependencies = [
 
 [[package]]
 name = "sd"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "regex 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.2.14 (registry+https://github.com/rust-lang/crates.io-index)",
