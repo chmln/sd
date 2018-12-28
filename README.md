@@ -46,9 +46,15 @@ Some cherry-picked examples, where `sd` shines:
 
 ## Installation
 
+### Cargo
+
 ```sh
 cargo install sd
 ```
+
+### OS Packages
+
+* **Arch linux:** There's an [AUR package for sd](https://aur.archlinux.org/packages/sd/).
 
 ## Quick Guide
 
