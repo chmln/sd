@@ -65,8 +65,9 @@ impl Stream {
     // When dealing with a file, transform it in-place.
     // Otherwise, pipe to stdout.
     pub(crate) fn output(self, source: &Source) -> Result<(), crate::Error> {
+        use atomic_write::atomic_write;
         match source {
-            Source::File(path) => Ok(std::fs::write(path, self.data)?),
+            Source::File(path) => Ok(atomic_write(path, self.data)?),
             Source::Stdin => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
