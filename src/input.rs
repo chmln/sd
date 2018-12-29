@@ -1,7 +1,48 @@
 use {
     crate::{utils, Error},
+    regex::Regex,
     std::{fs::File, io::prelude::*},
 };
+
+pub(crate) enum Replacer<'a> {
+    Regex(Regex, &'a str),
+    Literal(&'a str, &'a str),
+}
+
+impl<'a> Replacer<'a> {
+    pub(crate) fn new(look_for: &'a str, replace_with: &'a str, is_literal: bool) -> Result<Self, Error> {
+        if is_literal {
+            return Ok(Replacer::Literal(look_for, replace_with));
+        }
+        return Ok(Replacer::Regex(regex::Regex::new(look_for)?, replace_with));
+    }
+
+    pub(crate) fn replace(&self, source: &Source, in_place: bool) -> Result<(), Error> {
+        let content = source.to_string()?;
+        let replaced = match self {
+            Replacer::Regex(regex, replace_with) => {
+                let replaced = regex.replace_all(&content, *replace_with).to_string();
+                utils::unescape(&replaced).unwrap_or_else(|| replaced)
+            }
+            Replacer::Literal(search, replace_with) => content.replace(search, replace_with),
+        };
+
+        Replacer::output(source, replaced, in_place)
+    }
+
+    fn output(source: &Source, data: String, in_place: bool) -> Result<(), Error> {
+        use atomic_write::atomic_write;
+        match (source, in_place) {
+            (Source::Stdin, _) | (Source::File(_), false) => {
+                let stdout = std::io::stdout();
+                let mut handle = stdout.lock();
+                handle.write(data.as_bytes())?;
+                Ok(())
+            }
+            (Source::File(path), true) => Ok(atomic_write(path, data)?),
+        }
+    }
+}
 
 pub(crate) enum Source {
     Stdin,
@@ -15,65 +56,22 @@ impl Source {
             .unwrap_or_else(|| Source::Stdin)
     }
 
-    pub(crate) fn into_stream(&self) -> Result<Stream, Error> {
+    pub(crate) fn to_string(&self) -> Result<String, Error> {
         match self {
             Source::Stdin => {
                 let mut buffer = String::new();
                 let stdin = std::io::stdin();
                 let mut handle = stdin.lock();
                 handle.read_to_string(&mut buffer)?;
-                Ok(Stream::new(buffer))
+                Ok(buffer)
             }
             Source::File(path) => {
                 let file = File::open(path)?;
                 let mut buf_reader = std::io::BufReader::new(file);
                 let mut buffer = String::new();
                 buf_reader.read_to_string(&mut buffer)?;
-                Ok(Stream::new(buffer))
+                Ok(buffer)
             }
-        }
-    }
-}
-
-pub(crate) struct Stream {
-    data: String,
-}
-
-impl Stream {
-    pub(crate) fn new(data: String) -> Self {
-        Self { data }
-    }
-
-    pub(crate) fn replace(
-        &mut self,
-        is_regex: bool,
-        look_for: &str,
-        replace_with: &str,
-    ) -> Result<(), crate::Error> {
-        if is_regex {
-            let replaced = regex::Regex::new(look_for)?
-                .replace_all(&self.data, replace_with)
-                .to_string();
-            self.data = utils::unescape(&replaced).unwrap_or_else(|| replaced);
-        } else {
-            self.data = self.data.replace(look_for, replace_with);
-        }
-        Ok(())
-    }
-
-    // Output based on input.
-    // When dealing with a file, transform it in-place.
-    // Otherwise, pipe to stdout.
-    pub(crate) fn output(self, source: &Source, in_place: bool) -> Result<(), crate::Error> {
-        use atomic_write::atomic_write;
-        match (source, in_place) {
-            (Source::Stdin, _) | (Source::File(_), false) => {
-                let stdout = std::io::stdout();
-                let mut handle = stdout.lock();
-                handle.write(self.data.as_bytes())?;
-                Ok(())
-            }
-            (Source::File(path), true) => Ok(atomic_write(path, self.data)?),
         }
     }
 }

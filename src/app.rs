@@ -1,4 +1,4 @@
-use crate::{Error, Source, Stream};
+use crate::{Error, Replacer, Source};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -35,9 +35,7 @@ pub(crate) struct Options {
 pub(crate) fn run() -> Result<(), Error> {
     let args = Options::from_args();
     let source = Source::from(args.file_path);
-    let mut stream: Stream = (&source).into_stream()?;
-    stream.replace(!args.literal_mode, &args.find, &args.replace_with)?;
-
-    // replace file in-place, or pipe to stdout
-    stream.output(&source, args.in_place)
+    let replacer = Replacer::new(&args.find, &args.replace_with, args.literal_mode)?;
+    replacer.replace(&source, args.in_place)?;
+    Ok(())
 }

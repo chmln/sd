@@ -5,7 +5,7 @@ pub(crate) mod utils;
 
 pub(crate) use {
     crate::error::Error,
-    crate::input::{Source, Stream},
+    crate::input::{Replacer, Source},
 };
 
 fn main() -> Result<(), Error> {
