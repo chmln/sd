@@ -12,11 +12,12 @@ use structopt::StructOpt;
     raw(setting = "structopt::clap::AppSettings::UnifiedHelpMessage"),
 )]
 pub(crate) struct Options {
-    /// The path to file. The file contents will be transformed in-place.
-    #[structopt(short = "i", long = "input")]
-    file_path: Option<String>,
+    /// Transform the file contents in-place. Otherwise, transformation will be
+    /// emitted to stdout.
+    #[structopt(short = "i", long = "in-place")]
+    in_place: bool,
 
-    /// Treat expressions as non-regex strings
+    /// Treat expressions as non-regex strings.
     #[structopt(short = "s", long = "string-mode")]
     literal_mode: bool,
 
@@ -26,6 +27,9 @@ pub(crate) struct Options {
     /// What to replace each match with. Unless in string mode, you may 
     /// use captured values like $1, $2, etc.
     replace_with: String,
+
+    /// The path to file (optional). 
+    file_path: Option<String>,
 }
 
 pub(crate) fn run() -> Result<(), Error> {
@@ -35,5 +39,5 @@ pub(crate) fn run() -> Result<(), Error> {
     stream.replace(!args.literal_mode, &args.find, &args.replace_with)?;
 
     // replace file in-place, or pipe to stdout
-    stream.output(&source)
+    stream.output(&source, args.in_place)
 }

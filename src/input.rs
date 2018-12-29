@@ -64,16 +64,16 @@ impl Stream {
     // Output based on input.
     // When dealing with a file, transform it in-place.
     // Otherwise, pipe to stdout.
-    pub(crate) fn output(self, source: &Source) -> Result<(), crate::Error> {
+    pub(crate) fn output(self, source: &Source, in_place: bool) -> Result<(), crate::Error> {
         use atomic_write::atomic_write;
-        match source {
-            Source::File(path) => Ok(atomic_write(path, self.data)?),
-            Source::Stdin => {
+        match (source, in_place) {
+            (Source::Stdin, _) | (Source::File(_), false) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
                 handle.write(self.data.as_bytes())?;
                 Ok(())
             }
+            (Source::File(path), true) => Ok(atomic_write(path, self.data)?),
         }
     }
 }
