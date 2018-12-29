@@ -14,7 +14,7 @@ Transforming the file in-place:
 - Now: `sd -i -s 'str' '' file.txt`
 - Future: `sd -i -s 'str' '' *.txt`
 
-To reflect this change, `--input` is also renamed to `--in-place`.
+To reflect this change, `--input` is also renamed to `--in-place`. This is the first and most likely the last breaking change in this project.
 
 ### Improvements
 
