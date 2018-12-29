@@ -16,23 +16,45 @@ Non-regex find & replace. No more backslashes or remembering which characters ar
 
 **Easy to read, easy to write**
 
-Find & replace expressions are split up, which makes them easy to read and write.
+Find & replace expressions are split up, which makes them easy to read and write. No more messing with unclosed and escaped slashes.
 
 ## Comparison to sed
 
 While sed does a whole lot more, `sd` focuses on doing just one thing and doing it well.
 
 Some cherry-picked examples, where `sd` shines:
+
+- Simpler syntax for replacing all occurrences:
+  - sd: `sd before after`
+  - sed: `sed s/before/after/g`
 - Replace newlines with commas:
   - sd: `sd '\r' ','`
-  - sed: `sed ':a;N;$!ba;s/\r/,/g'`
-- Extracting stuff out of strings with special characters
-  - sd: `echo "{((sample with /path/))}" | sd '\{\(\(.*(/.*/)\)\)\}' '$1'`
-  - sed
-    - incorrect, but closest I could get after 15 minutes of struggle
-    - `echo "{((sample with /path/))}" | sed 's/{((\.\*\(\/.*\/\)))}/\1/g'`
+  - sed: `sed ':a;N;$!ba;s/\r/,/g'`, or use a different tool like `tr`.
+- Familiar regex syntax by default:
+  - sd: `echo "start middle end" | sd 'start (.+) end' '$1'`
+  - sed: basic REs have an unfamiliar and limited syntax, `-E` for more familiar syntax of extended regular expressions is widely supported but not available on some platforms like Solaris:
+    - `echo "start middle end" | sed 's/start \(..*\) end/\1/g'`
+    - `echo "start middle end" | sed -E 's/start (.+) end/\1/g'`
+- Extracting stuff out of strings containing slashes:
+  - sd: `echo "sample with /path/" | sd '.*(/.*/)' '$1'`
+  - sed: you need to know that the delimiters for `s` can be replaced with other arbitrary characters
+    - `echo "sample with /path/" | sed -E 's|.*(/.*/)|\1|g'`
+- In place modification of files:
+  - sd: `sd before after -i file.txt`
+  - sed: you need to be careful to use `-e` or else some platforms will consider the next argument to be a backup suffix
+    - `sed -i -e 's/before/after/g' file.txt`
 
-Note: although `sed` does have a nicer regex syntax with `-r`, it is a non-portable GNU-ism and thus doesn't work on MacOS, BSD, or Solaris. 
+## Installation
+
+### Cargo
+
+```sh
+cargo install sd
+```
+
+### OS Packages
+
+* **Arch linux:** There's an [AUR package for sd](https://aur.archlinux.org/packages/sd/).
 
 ## Quick Guide
 
