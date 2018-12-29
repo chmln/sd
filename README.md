@@ -102,15 +102,15 @@ In the unlikely case you stumble upon ambiguities, resolve them by using `${var}
 4. **Find & replace in a file**
 
 ```sh
-> sd 'window.fetch' 'fetch' -i http.js
+> sd -i 'window.fetch' 'fetch' http.js
 ```
 
 That's it. The file is modified in-place.
 
-To do a dry run, just use stdin/stdout:
+To do a dry run:
 
 ```sh
-> sd 'window.fetch' 'fetch' < http.js 
+> sd 'window.fetch' 'fetch' http.js 
 ```
 
 5. **Find & replace across project**
@@ -118,7 +118,7 @@ To do a dry run, just use stdin/stdout:
 Good ol' unix philosophy to the rescue.
 
 ```sh
-fd -t f --exec sd 'from "react"' 'from "preact"' -i {}
+fd -t f --exec sd -i 'from "react"' 'from "preact"' {}
 ```
 
 Same, but with backups (consider version control).
@@ -126,6 +126,6 @@ Same, but with backups (consider version control).
 ```bash
 for file in $(fd -t f); do
   cp "$file" "$file.bk"
-  sd 'from "react"' 'from "preact"' -i "$file"; 
+  sd -i 'from "react"' 'from "preact"' "$file"; 
 done
 ```
