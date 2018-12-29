@@ -9,7 +9,7 @@ where
 {
     fn from(err: T) -> Error {
         Error {
-            message: format!("{}", err)
+            message: format!("{}", err),
         }
     }
 }

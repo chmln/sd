@@ -3,11 +3,12 @@ mod error;
 mod input;
 pub(crate) mod utils;
 
-pub(crate) use {
-    crate::error::Error,
-    crate::input::{Replacer, Source},
+pub(crate) use self::{
+    error::Error,
+    input::{Replacer, Source},
+    utils::Result,
 };
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     app::run()
 }

@@ -1,4 +1,4 @@
-use crate::{Error, Replacer, Source};
+use crate::{Replacer, Result, Source};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -24,18 +24,19 @@ pub(crate) struct Options {
     /// The regexp or string (if -s) to search for.
     find: String,
 
-    /// What to replace each match with. Unless in string mode, you may 
+    /// What to replace each match with. Unless in string mode, you may
     /// use captured values like $1, $2, etc.
     replace_with: String,
 
-    /// The path to file (optional). 
-    file_path: Option<String>,
+    /// The path to file (optional).
+    files: Vec<String>,
 }
 
-pub(crate) fn run() -> Result<(), Error> {
+pub(crate) fn run() -> Result<()> {
     let args = Options::from_args();
-    let source = Source::from(args.file_path);
-    let replacer = Replacer::new(&args.find, &args.replace_with, args.literal_mode)?;
-    replacer.replace(&source, args.in_place)?;
+    let source = Source::from(args.files);
+    let replacer =
+        Replacer::new(&args.find, &args.replace_with, args.literal_mode)?;
+    replacer.run(&source, args.in_place)?;
     Ok(())
 }

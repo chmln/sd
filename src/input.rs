@@ -1,8 +1,27 @@
-use {
-    crate::{utils, Error},
-    regex::Regex,
-    std::{fs::File, io::prelude::*},
-};
+use crate::{utils, Result};
+use regex::Regex;
+use std::{fs::File, io::prelude::*};
+
+pub(crate) enum Source {
+    Stdin,
+    Files(Vec<String>),
+}
+
+impl Source {
+    pub(crate) fn from(file_paths: Vec<String>) -> Self {
+        if file_paths.len() == 0 {
+            return Source::Stdin;
+        }
+        return Source::Files(file_paths);
+    }
+
+    fn file_to_string(path: impl AsRef<str>) -> Result<String> {
+        let mut file = File::open(path.as_ref())?;
+        let mut buffer = String::new();
+        file.read_to_string(&mut buffer)?;
+        Ok(buffer)
+    }
+}
 
 pub(crate) enum Replacer<'a> {
     Regex(Regex, &'a str),
@@ -10,68 +29,77 @@ pub(crate) enum Replacer<'a> {
 }
 
 impl<'a> Replacer<'a> {
-    pub(crate) fn new(look_for: &'a str, replace_with: &'a str, is_literal: bool) -> Result<Self, Error> {
+    pub(crate) fn new(
+        look_for: &'a str,
+        replace_with: &'a str,
+        is_literal: bool,
+    ) -> Result<Self> {
         if is_literal {
             return Ok(Replacer::Literal(look_for, replace_with));
         }
         return Ok(Replacer::Regex(regex::Regex::new(look_for)?, replace_with));
     }
 
-    pub(crate) fn replace(&self, source: &Source, in_place: bool) -> Result<(), Error> {
-        let content = source.to_string()?;
-        let replaced = match self {
+    pub(crate) fn replace(&self, content: &str) -> String {
+        match self {
             Replacer::Regex(regex, replace_with) => {
-                let replaced = regex.replace_all(&content, *replace_with).to_string();
+                let replaced =
+                    regex.replace_all(&content, *replace_with).to_string();
                 utils::unescape(&replaced).unwrap_or_else(|| replaced)
-            }
-            Replacer::Literal(search, replace_with) => content.replace(search, replace_with),
-        };
-
-        Replacer::output(source, replaced, in_place)
-    }
-
-    fn output(source: &Source, data: String, in_place: bool) -> Result<(), Error> {
-        use atomic_write::atomic_write;
-        match (source, in_place) {
-            (Source::Stdin, _) | (Source::File(_), false) => {
-                let stdout = std::io::stdout();
-                let mut handle = stdout.lock();
-                handle.write(data.as_bytes())?;
-                Ok(())
-            }
-            (Source::File(path), true) => Ok(atomic_write(path, data)?),
+            },
+            Replacer::Literal(search, replace_with) => {
+                content.replace(search, replace_with)
+            },
         }
     }
-}
 
-pub(crate) enum Source {
-    Stdin,
-    File(String),
-}
+    pub(crate) fn run(&self, source: &Source, in_place: bool) -> Result<()> {
+        use atomic_write::atomic_write;
+        use rayon::prelude::*;
 
-impl Source {
-    pub(crate) fn from(maybe_path: Option<String>) -> Self {
-        maybe_path
-            .map(Source::File)
-            .unwrap_or_else(|| Source::Stdin)
-    }
-
-    pub(crate) fn to_string(&self) -> Result<String, Error> {
-        match self {
+        match source {
             Source::Stdin => {
                 let mut buffer = String::new();
                 let stdin = std::io::stdin();
                 let mut handle = stdin.lock();
                 handle.read_to_string(&mut buffer)?;
-                Ok(buffer)
-            }
-            Source::File(path) => {
-                let file = File::open(path)?;
-                let mut buf_reader = std::io::BufReader::new(file);
-                let mut buffer = String::new();
-                buf_reader.read_to_string(&mut buffer)?;
-                Ok(buffer)
-            }
+
+                let stdout = std::io::stdout();
+                let mut handle = stdout.lock();
+                handle.write(&self.replace(&buffer).as_bytes())?;
+                Ok(())
+            },
+            Source::Files(paths) => {
+                if in_place {
+                    paths
+                        .par_iter()
+                        .map(|p| {
+                            Ok(atomic_write(
+                                p,
+                                self.replace(&Source::file_to_string(p)?),
+                            )?)
+                        })
+                        .collect::<Result<Vec<()>>>()?;
+                    Ok(())
+                }
+                else {
+                    let stdout = std::io::stdout();
+                    let mut handle = stdout.lock();
+
+                    paths
+                        .iter()
+                        .map(|p| {
+                            handle.write(
+                                &self
+                                    .replace(&Source::file_to_string(p)?)
+                                    .as_bytes(),
+                            )?;
+                            Ok(())
+                        })
+                        .collect::<Result<Vec<()>>>()?;
+                    Ok(())
+                }
+            },
         }
     }
 }
