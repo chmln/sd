@@ -1,0 +1,11 @@
+edition = "2018"
+max_width = 80
+wrap_comments = true
+control_brace_style = "ClosingNextLine"
+format_strings = true
+merge_imports = true
+match_block_trailing_comma = true
+normalize_comments = true
+reorder_impl_items = true
+use_field_init_shorthand = true
+
