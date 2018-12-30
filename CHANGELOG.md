@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2018-12-30
+
+### Added
+
+- Option to set regex flags via `-f` or `--flags`:
+  - `m` (multi-line)
+  - `c` (case-sensitive)
+  - `i` (case-insensitive)
+- Smart case-sensitivity is used by default with regular expressions
+
+### Improvements
+
+- You may now pass multiple files to `sd`
+  - this is now valid: `sd -i "\n" "," *.txt`
 
 ## [0.3.0] - 2018-12-29
 
