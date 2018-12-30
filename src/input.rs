@@ -33,11 +33,27 @@ impl<'a> Replacer<'a> {
         look_for: &'a str,
         replace_with: &'a str,
         is_literal: bool,
+        flags: Option<String>
     ) -> Result<Self> {
         if is_literal {
             return Ok(Replacer::Literal(look_for, replace_with));
         }
-        return Ok(Replacer::Regex(regex::Regex::new(look_for)?, replace_with));
+
+        let mut regex = regex::RegexBuilder::new(look_for);
+        regex.case_insensitive(!utils::regex_case_sensitive(look_for));
+
+        if let Some(flags) = flags {
+            for c in flags.chars() {
+                match c {
+                    'c' => { regex.case_insensitive(false); },
+                    'i' => { regex.case_insensitive(true); },
+                    'm' => { regex.multi_line(true); }
+                    _ => {}
+                };
+            }
+        }
+        
+        return Ok(Replacer::Regex(regex.build()?, replace_with));
     }
 
     pub(crate) fn replace(&self, content: &str) -> String {
@@ -54,9 +70,6 @@ impl<'a> Replacer<'a> {
     }
 
     pub(crate) fn run(&self, source: &Source, in_place: bool) -> Result<()> {
-        use atomic_write::atomic_write;
-        use rayon::prelude::*;
-
         match source {
             Source::Stdin => {
                 let mut buffer = String::new();
@@ -70,6 +83,9 @@ impl<'a> Replacer<'a> {
                 Ok(())
             },
             Source::Files(paths) => {
+                use atomic_write::atomic_write;
+                use rayon::prelude::*;
+
                 if in_place {
                     paths
                         .par_iter()

@@ -12,14 +12,25 @@ use structopt::StructOpt;
     raw(setting = "structopt::clap::AppSettings::UnifiedHelpMessage"),
 )]
 pub(crate) struct Options {
-    /// Transform the file contents in-place. Otherwise, transformation will be
-    /// emitted to stdout.
     #[structopt(short = "i", long = "in-place")]
+    /// Modify the files in-place. Otherwise, transformations will be
+    /// emitted to stdout by default.
     in_place: bool,
 
-    /// Treat expressions as non-regex strings.
     #[structopt(short = "s", long = "string-mode")]
+    /// Treat expressions as non-regex strings.
     literal_mode: bool,
+
+    #[structopt(short = "f", long = "flags")]
+    /** Regex flags. May be combined (like `-f mc`).
+
+    c - case-sensitive
+    m - multi-line matching
+    i - case-insensitive
+
+    Smart-case is enabled by default. 
+    */
+    flags: Option<String>,
 
     /// The regexp or string (if -s) to search for.
     find: String,
@@ -28,15 +39,19 @@ pub(crate) struct Options {
     /// use captured values like $1, $2, etc.
     replace_with: String,
 
-    /// The path to file (optional).
+    /// The path to file(s). This is optional - sd can also read from STDIN.
     files: Vec<String>,
 }
 
 pub(crate) fn run() -> Result<()> {
     let args = Options::from_args();
     let source = Source::from(args.files);
-    let replacer =
-        Replacer::new(&args.find, &args.replace_with, args.literal_mode)?;
+    let replacer = Replacer::new(
+        &args.find,
+        &args.replace_with,
+        args.literal_mode,
+        args.flags,
+    )?;
     replacer.run(&source, args.in_place)?;
     Ok(())
 }
