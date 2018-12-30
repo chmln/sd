@@ -14,7 +14,7 @@ use structopt::StructOpt;
 pub(crate) struct Options {
     #[structopt(short = "i", long = "in-place")]
     /// Modify the files in-place. Otherwise, transformations will be
-    /// emitted to stdout by default.
+    /// emitted to STDOUT by default.
     in_place: bool,
 
     #[structopt(short = "s", long = "string-mode")]
