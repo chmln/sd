@@ -1,6 +1,6 @@
 use crate::{utils, Result};
 use regex::Regex;
-use std::{fs::File, io::prelude::*};
+use std::{borrow::Cow, fs::File, io::prelude::*};
 
 pub(crate) enum Source {
     Stdin,
@@ -56,15 +56,20 @@ impl<'a> Replacer<'a> {
         return Ok(Replacer::Regex(regex.build()?, replace_with));
     }
 
-    pub(crate) fn replace(&self, content: &str) -> String {
+    pub(crate) fn replace<'r>(&self, content: impl Into<Cow<'r, str>>) -> Cow<'r, str> {
+        let content = content.into();
         match self {
             Replacer::Regex(regex, replace_with) => {
+                if regex.find(&content).is_none() {
+                    return content;
+                }
+
                 let replaced =
                     regex.replace_all(&content, *replace_with).to_string();
-                utils::unescape(&replaced).unwrap_or_else(|| replaced)
+                utils::unescape(&replaced).unwrap_or_else(|| replaced).into()
             },
             Replacer::Literal(search, replace_with) => {
-                content.replace(search, replace_with)
+                content.replace(search, replace_with).into()
             },
         }
     }
@@ -92,7 +97,7 @@ impl<'a> Replacer<'a> {
                         .map(|p| {
                             Ok(atomic_write(
                                 p,
-                                self.replace(&Source::file_to_string(p)?),
+                                &*self.replace(&Source::file_to_string(p)?),
                             )?)
                         })
                         .collect::<Result<Vec<()>>>()?;
