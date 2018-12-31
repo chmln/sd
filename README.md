@@ -31,7 +31,7 @@ Some cherry-picked examples, where `sd` shines:
 - Simpler syntax for replacing all occurrences:
   - sd: `sd before after`
   - sed: `sed s/before/after/g`
-- Replace newlines with commas:
+- Replace carriage returns with commas:
   - sd: `sd '\r' ','`
   - sed: `sed ':a;N;$!ba;s/\r/,/g'`
 - Extracting stuff out of strings containing slashes:
