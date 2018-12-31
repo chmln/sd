@@ -32,8 +32,8 @@ Some cherry-picked examples, where `sd` shines:
   - sd: `sd before after`
   - sed: `sed s/before/after/g`
 - Replace newlines with commas:
-  - sd: `sd '\r' ','`
-  - sed: `sed ':a;N;$!ba;s/\r/,/g'`
+  - sd: `sd '\n' ','`
+  - sed: `sed ':a;N;$!ba;s/\n/,/g'`
 - Extracting stuff out of strings containing slashes:
   - sd: `echo "sample with /path/" | sd '.*(/.*/)' '$1'`
   - sed: use different delimiters every time depending on expression so that the command is not completely unreadable
