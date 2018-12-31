@@ -22,10 +22,6 @@ Find & replace expressions are split up, which makes them easy to read and write
 
 Smart-cased regular expressions also come with a sane syntax that's not opt-in. Defaults follow common sense and are tailored for typical daily use. 
 
-**High performance**
-
-Multiple times faster than `sed` beyond trivial cases. (Benchmarks incoming).
-
 ## Comparison to sed
 
 While sed does a whole lot more, `sd` focuses on doing just one thing and doing it well.
