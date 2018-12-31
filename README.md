@@ -122,7 +122,7 @@ To do a dry run:
 Good ol' unix philosophy to the rescue.
 
 ```sh
-fd -t f --exec sd -i 'from "react"' 'from "preact"' {}
+sd -i 'from "react"' 'from "preact"' $(fd -t f)
 ```
 
 Same, but with backups (consider version control).
