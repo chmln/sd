@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2019-01-01
+
+### Improvements
+
+- Significant performance improvements (see benchmarks in README)
+
 ## [0.4.0] - 2018-12-30
 
 ### Added
