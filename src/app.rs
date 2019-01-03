@@ -48,7 +48,7 @@ pub(crate) fn run() -> Result<()> {
     let source = Source::from(args.files);
     let replacer = Replacer::new(
         args.find, 
-        &args.replace_with, 
+        args.replace_with, 
         args.literal_mode, 
         args.flags
     )?;

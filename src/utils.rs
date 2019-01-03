@@ -1,5 +1,9 @@
 pub(crate) type Result<T> = std::result::Result<T, crate::Error>;
 
+pub(crate) fn unescape(s: &str) -> Option<String> {
+    unescape::unescape(s)
+}
+
 pub(crate) fn regex_case_sensitive(pattern: &str) -> bool {
     use regex_syntax::Parser;
     Parser::new()

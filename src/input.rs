@@ -23,16 +23,16 @@ impl Source {
     }
 }
 
-pub(crate) struct Replacer<'a> {
+pub(crate) struct Replacer {
     regex: Regex,
-    replace_with: &'a str,
+    replace_with: String,
     is_literal: bool,
 }
 
-impl<'a> Replacer<'a> {
+impl Replacer {
     pub(crate) fn new(
         look_for: String,
-        replace_with: &'a str,
+        replace_with: String,
         is_literal: bool,
         flags: Option<String>,
     ) -> Result<Self> {
@@ -45,15 +45,21 @@ impl<'a> Replacer<'a> {
 
         let mut regex = regex::RegexBuilder::new(&look_for);
         regex.case_insensitive(
-            !is_literal && !utils::regex_case_sensitive(&look_for)
+            !is_literal && !utils::regex_case_sensitive(&look_for),
         );
 
         if let (Some(flags), false) = (flags, is_literal) {
             for c in flags.chars() {
                 match c {
-                    'c' => { regex.case_insensitive(false); },
-                    'i' => { regex.case_insensitive(true); },
-                    'm' => { regex.multi_line(true); },
+                    'c' => {
+                        regex.case_insensitive(false);
+                    },
+                    'i' => {
+                        regex.case_insensitive(true);
+                    },
+                    'm' => {
+                        regex.multi_line(true);
+                    },
                     _ => {},
                 };
             }
@@ -61,7 +67,8 @@ impl<'a> Replacer<'a> {
 
         return Ok(Replacer {
             regex: regex.build()?,
-            replace_with,
+            replace_with: utils::unescape(&replace_with)
+                .unwrap_or_else(|| replace_with),
             is_literal,
         });
     }
@@ -74,13 +81,13 @@ impl<'a> Replacer<'a> {
 
         if self.is_literal {
             self.regex
-                .replace_all(&content, regex::NoExpand(self.replace_with))
+                .replace_all(&content, regex::NoExpand(&self.replace_with))
                 .to_string()
                 .into()
         }
         else {
             self.regex
-                .replace_all(&content, self.replace_with)
+                .replace_all(&content, &*self.replace_with)
                 .to_string()
                 .into()
         }
@@ -143,44 +150,48 @@ mod tests {
 
     #[test]
     fn default_global() -> Result<()> {
-        let r = Replacer::new("a".to_string(), "b", false, None)?;
+        let r = Replacer::new("a".into(), "b".into(), false, None)?;
         assert_eq!(r.replace("aaa"), "bbb");
         Ok(())
     }
 
     #[test]
     fn escaped_char_preservation() -> Result<()> {
-        let r = Replacer::new("a".to_string(), "b", false, None)?;
+        let r = Replacer::new("a".into(), "b".into(), false, None)?;
         assert_eq!(r.replace("a\\n"), "b\\n");
         Ok(())
     }
 
     #[test]
     fn smart_case_insensitive() -> Result<()> {
-        let r = Replacer::new("abc".to_string(), "x", false, None)?;
+        let r = Replacer::new("abc".into(), "x".into(), false, None)?;
         assert_eq!(r.replace("abcABCAbcabC"), "xxxx");
         Ok(())
     }
 
     #[test]
     fn smart_case_sensitive() -> Result<()> {
-        let r = Replacer::new("Abc".to_string(), "x", false, None)?;
+        let r = Replacer::new("Abc".into(), "x".into(), false, None)?;
         assert_eq!(r.replace("abcABCAbcabC"), "abcABCxabC");
         Ok(())
     }
 
     #[test]
     fn no_smart_case_literals() -> Result<()> {
-        let r = Replacer::new("abc".to_string(), "x", true, None)?;
+        let r = Replacer::new("abc".into(), "x".into(), true, None)?;
         assert_eq!(r.replace("abcABCAbcabC"), "xABCAbcabC");
         Ok(())
     }
 
     #[test]
     fn sanity_check_literal_replacements() -> Result<()> {
-        let r = Replacer::new("((special[]))".to_string(), "x", true, None)?;
+        let r = Replacer::new(
+            "((special[]))".to_string(),
+            "x".to_string(),
+            true,
+            None,
+        )?;
         assert_eq!(r.replace("((special[]))y"), "xy");
         Ok(())
     }
 }
-
