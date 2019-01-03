@@ -23,53 +23,64 @@ impl Source {
     }
 }
 
-pub(crate) enum Replacer<'a> {
-    Regex(Regex, &'a str),
-    Literal(&'a str, &'a str),
+pub(crate) struct Replacer<'a> {
+    regex: Regex,
+    replace_with: &'a str,
+    is_literal: bool,
 }
 
 impl<'a> Replacer<'a> {
     pub(crate) fn new(
-        look_for: &'a str,
+        look_for: String,
         replace_with: &'a str,
         is_literal: bool,
-        flags: Option<String>
+        flags: Option<String>,
     ) -> Result<Self> {
-        if is_literal {
-            return Ok(Replacer::Literal(look_for, replace_with));
+        let look_for = if is_literal {
+            regex::escape(&look_for)
         }
+        else {
+            look_for
+        };
 
-        let mut regex = regex::RegexBuilder::new(look_for);
-        regex.case_insensitive(!utils::regex_case_sensitive(look_for));
+        let mut regex = regex::RegexBuilder::new(&look_for);
+        regex.case_insensitive(!utils::regex_case_sensitive(&look_for));
 
-        if let Some(flags) = flags {
+        if let (Some(flags), false) = (flags, is_literal) {
             for c in flags.chars() {
                 match c {
                     'c' => { regex.case_insensitive(false); },
                     'i' => { regex.case_insensitive(true); },
-                    'm' => { regex.multi_line(true); }
-                    _ => {}
+                    'm' => { regex.multi_line(true); },
+                    _ => {},
                 };
             }
         }
-        
-        return Ok(Replacer::Regex(regex.build()?, replace_with));
+
+        return Ok(Replacer {
+            regex: regex.build()?,
+            replace_with,
+            is_literal,
+        });
     }
 
-    pub(crate) fn replace<'r>(&self, content: impl Into<Cow<'r, str>>) -> Cow<'r, str> {
+    fn replace<'r>(&self, content: impl Into<Cow<'r, str>>) -> Cow<'r, str> {
         let content = content.into();
-        match self {
-            Replacer::Regex(regex, replace_with) => {
-                if regex.find(&content).is_none() {
-                    return content;
-                }
+        if self.regex.find(&content).is_none() {
+            return content;
+        }
 
-                    regex.replace_all(&content, *replace_with).to_string().into()
-                
-            },
-            Replacer::Literal(search, replace_with) => {
-                content.replace(search, replace_with).into()
-            },
+        if self.is_literal {
+            self.regex
+                .replace_all(&content, regex::NoExpand(self.replace_with))
+                .to_string()
+                .into()
+        }
+        else {
+            self.regex
+                .replace_all(&content, self.replace_with)
+                .to_string()
+                .into()
         }
     }
 
@@ -123,3 +134,6 @@ impl<'a> Replacer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {}

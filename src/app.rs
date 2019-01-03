@@ -28,7 +28,7 @@ pub(crate) struct Options {
     m - multi-line matching
     i - case-insensitive
 
-    Smart-case is enabled by default. 
+    Smart-case is enabled by default.
     */
     flags: Option<String>,
 
@@ -47,10 +47,10 @@ pub(crate) fn run() -> Result<()> {
     let args = Options::from_args();
     let source = Source::from(args.files);
     let replacer = Replacer::new(
-        &args.find,
-        &args.replace_with,
-        args.literal_mode,
-        args.flags,
+        args.find, 
+        &args.replace_with, 
+        args.literal_mode, 
+        args.flags
     )?;
     replacer.run(&source, args.in_place)?;
     Ok(())
