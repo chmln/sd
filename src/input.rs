@@ -36,11 +36,14 @@ impl Replacer {
         is_literal: bool,
         flags: Option<String>,
     ) -> Result<Self> {
-        let look_for = if is_literal {
-            regex::escape(&look_for)
+        let (look_for, replace_with) = if is_literal {
+            (regex::escape(&look_for), replace_with)
         }
         else {
-            look_for
+            (
+                look_for,
+                utils::unescape(&replace_with).unwrap_or_else(|| replace_with),
+            )
         };
 
         let mut regex = regex::RegexBuilder::new(&look_for);
@@ -67,8 +70,7 @@ impl Replacer {
 
         return Ok(Replacer {
             regex: regex.build()?,
-            replace_with: utils::unescape(&replace_with)
-                .unwrap_or_else(|| replace_with),
+            replace_with,
             is_literal,
         });
     }
@@ -185,13 +187,27 @@ mod tests {
 
     #[test]
     fn sanity_check_literal_replacements() -> Result<()> {
-        let r = Replacer::new(
-            "((special[]))".to_string(),
-            "x".to_string(),
-            true,
-            None,
-        )?;
+        let r = Replacer::new("((special[]))".into(), "x".into(), true, None)?;
         assert_eq!(r.replace("((special[]))y"), "xy");
         Ok(())
     }
+
+    #[test]
+    fn unescape_regex_replacements() -> Result<()> {
+        let r = Replacer::new("test".into(), r"\n".into(), false, None)?;
+        assert_eq!(r.replace("testtest"), "\n\n");
+
+        // escaping the newline char
+        let r = Replacer::new("test".into(), r"\\n".into(), false, None)?;
+        assert_eq!(r.replace("testtest"), r"\n\n");
+        Ok(())
+    }
+
+    #[test]
+    fn no_unescape_literal_replacements() -> Result<()> {
+        let r = Replacer::new("test".into(), r"\n".into(), true, None)?;
+        assert_eq!(r.replace("testtest"), r"\n\n");
+        Ok(())
+    }
+
 }
