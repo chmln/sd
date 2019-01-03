@@ -44,7 +44,9 @@ impl<'a> Replacer<'a> {
         };
 
         let mut regex = regex::RegexBuilder::new(&look_for);
-        regex.case_insensitive(!utils::regex_case_sensitive(&look_for));
+        regex.case_insensitive(
+            !is_literal && !utils::regex_case_sensitive(&look_for)
+        );
 
         if let (Some(flags), false) = (flags, is_literal) {
             for c in flags.chars() {
@@ -136,4 +138,49 @@ impl<'a> Replacer<'a> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_global() -> Result<()> {
+        let r = Replacer::new("a".to_string(), "b", false, None)?;
+        assert_eq!(r.replace("aaa"), "bbb");
+        Ok(())
+    }
+
+    #[test]
+    fn escaped_char_preservation() -> Result<()> {
+        let r = Replacer::new("a".to_string(), "b", false, None)?;
+        assert_eq!(r.replace("a\\n"), "b\\n");
+        Ok(())
+    }
+
+    #[test]
+    fn smart_case_insensitive() -> Result<()> {
+        let r = Replacer::new("abc".to_string(), "x", false, None)?;
+        assert_eq!(r.replace("abcABCAbcabC"), "xxxx");
+        Ok(())
+    }
+
+    #[test]
+    fn smart_case_sensitive() -> Result<()> {
+        let r = Replacer::new("Abc".to_string(), "x", false, None)?;
+        assert_eq!(r.replace("abcABCAbcabC"), "abcABCxabC");
+        Ok(())
+    }
+
+    #[test]
+    fn no_smart_case_literals() -> Result<()> {
+        let r = Replacer::new("abc".to_string(), "x", true, None)?;
+        assert_eq!(r.replace("abcABCAbcabC"), "xABCAbcabC");
+        Ok(())
+    }
+
+    #[test]
+    fn sanity_check_literal_replacements() -> Result<()> {
+        let r = Replacer::new("((special[]))".to_string(), "x", true, None)?;
+        assert_eq!(r.replace("((special[]))y"), "xy");
+        Ok(())
+    }
+}
+
