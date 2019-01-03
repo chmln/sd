@@ -64,9 +64,8 @@ impl<'a> Replacer<'a> {
                     return content;
                 }
 
-                let replaced =
-                    regex.replace_all(&content, *replace_with).to_string();
-                utils::unescape(&replaced).unwrap_or_else(|| replaced).into()
+                    regex.replace_all(&content, *replace_with).to_string().into()
+                
             },
             Replacer::Literal(search, replace_with) => {
                 content.replace(search, replace_with).into()
