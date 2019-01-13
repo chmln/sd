@@ -121,7 +121,7 @@ impl Replacer {
                                 &*self.replace(&Source::file_to_string(p)?),
                             )?)
                         })
-                        .collect::<Result<Vec<()>>>()?;
+                        .collect::<Vec<Result<()>>>();
                     Ok(())
                 }
                 else {
