@@ -1,6 +1,6 @@
 pub(crate) struct Error {
     // user-facing error output
-    message: String,
+    pub(crate) message: String,
 }
 
 impl<T> From<T> for Error

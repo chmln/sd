@@ -109,18 +109,20 @@ impl Replacer {
                 Ok(())
             },
             Source::Files(paths) => {
-                use atomic_write::atomic_write;
+                use atomicwrites::{
+                    AtomicFile,
+                    Error as AtomicWriteError,
+                    OverwriteBehavior::AllowOverwrite,
+                };
                 use rayon::prelude::*;
 
                 if in_place {
                     paths
                         .par_iter()
-                        .map(|p| {
-                            Ok(atomic_write(
-                                p,
-                                &*self.replace(&Source::file_to_string(p)?),
-                            )?)
-                        })
+                        .map(|p| AtomicFile::new(p, AllowOverwrite).write(|f| {
+                            f.write(self.replace(&Source::file_to_string(p)?).as_bytes())?;
+                            Ok(())
+                        }).map_err(|e: AtomicWriteError<crate::Error>| crate::Error { message: format!("{}", e) }))
                         .collect::<Vec<Result<()>>>();
                     Ok(())
                 }
