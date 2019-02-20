@@ -14,7 +14,7 @@ categories = ["command-line-utilities", "text-processing", "development-tools"]
 [dependencies]
 regex = "1.1.0"
 structopt = "0.2.14"
-atomic-write = "0.2.0"
+atomicwrites = "0.2.2"
 rayon = "1.0.3"
 regex-syntax = "0.6.4"
 unescape = "0.1.0"
