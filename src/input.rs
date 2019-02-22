@@ -1,4 +1,4 @@
-use crate::{utils, Result};
+use crate::{utils, Error, Result};
 use regex::Regex;
 use std::{borrow::Cow, fs::File, io::prelude::*};
 
@@ -110,20 +110,27 @@ impl Replacer {
             },
             Source::Files(paths) => {
                 use atomicwrites::{
-                    AtomicFile,
-                    Error as AtomicWriteError,
-                    OverwriteBehavior::AllowOverwrite,
+                    AtomicFile, OverwriteBehavior::AllowOverwrite,
                 };
                 use rayon::prelude::*;
 
                 if in_place {
                     paths
                         .par_iter()
-                        .map(|p| AtomicFile::new(p, AllowOverwrite).write(|f| {
-                            f.write(self.replace(&Source::file_to_string(p)?).as_bytes())?;
-                            Ok(())
-                        }).map_err(|e: AtomicWriteError<crate::Error>| crate::Error { message: format!("{}", e) }))
-                        .collect::<Vec<Result<()>>>();
+                        .map(|p| {
+                            AtomicFile::new(p, AllowOverwrite)
+                                .write(|f| {
+                                    f.write(
+                                        self.replace(&Source::file_to_string(
+                                            p,
+                                        )?)
+                                        .as_bytes(),
+                                    )
+                                    .map_err(|e| Error::new(e))
+                                })
+                                .map_err(|e| Error::new(e))
+                        })
+                        .collect::<Vec<Result<usize>>>();
                     Ok(())
                 }
                 else {
