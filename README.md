@@ -87,6 +87,13 @@ cargo install sd
 
 [AUR package for sd](https://aur.archlinux.org/packages/sd/).
 
+
+### FreeBSD
+
+```sh
+pkg install sd
+```
+
 ## Quick Guide
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
