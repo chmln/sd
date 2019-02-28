@@ -20,6 +20,7 @@ regex-syntax = "0.6.5"
 unescape = "0.1.0"
 
 [profile.release]
-opt-level = 3
+codegen-units = 1
 lto = true
-debug = false
+opt-level = 'z'
+panic = 'abort'
