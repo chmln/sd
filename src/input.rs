@@ -1,6 +1,6 @@
 use crate::{utils, Error, Result};
 use regex::Regex;
-use std::{borrow::Cow, fs::File, io::prelude::*};
+use std::{borrow::Cow, fs::File, fs::set_permissions, io::prelude::*};
 
 pub(crate) enum Source {
     Stdin,
@@ -66,13 +66,13 @@ impl Replacer {
                     _ => {},
                 };
             }
-        }
+        };
 
-        return Ok(Replacer {
+        Ok(Replacer {
             regex: regex.build()?,
             replace_with,
             is_literal,
-        });
+        })
     }
 
     fn replace<'r>(&self, content: impl Into<Cow<'r, str>>) -> Cow<'r, str> {
@@ -95,9 +95,27 @@ impl Replacer {
         }
     }
 
+    fn replace_file(&self, path: impl AsRef<str>) -> Result<()> {
+        use atomicwrites::{AtomicFile, OverwriteBehavior::AllowOverwrite};
+        let path = path.as_ref();
+        let mut file = File::open(path)?;
+        let permissions = file.metadata()?.permissions();
+        let mut buffer = String::new();
+        file.read_to_string(&mut buffer)?;
+
+        AtomicFile::new(path, AllowOverwrite)
+            .write(|f| -> Result<usize> {
+                f.write(self.replace(&buffer).as_bytes())
+                    .map_err(|e| Error::new(e))
+            })
+            .map_err(Error::new)?;
+        set_permissions(path, permissions)?;
+        Ok(())
+    }
+
     pub(crate) fn run(&self, source: &Source, in_place: bool) -> Result<()> {
-        match source {
-            Source::Stdin => {
+        match (source, in_place) {
+            (Source::Stdin, _) => {
                 let mut buffer = String::new();
                 let stdin = std::io::stdin();
                 let mut handle = stdin.lock();
@@ -108,48 +126,31 @@ impl Replacer {
                 handle.write(&self.replace(&buffer).as_bytes())?;
                 Ok(())
             },
-            Source::Files(paths) => {
-                use atomicwrites::{
-                    AtomicFile, OverwriteBehavior::AllowOverwrite,
-                };
+            (Source::Files(paths), true) => {
                 use rayon::prelude::*;
 
-                if in_place {
-                    paths
-                        .par_iter()
-                        .map(|p| {
-                            AtomicFile::new(p, AllowOverwrite)
-                                .write(|f| {
-                                    f.write(
-                                        self.replace(&Source::file_to_string(
-                                            p,
-                                        )?)
-                                        .as_bytes(),
-                                    )
-                                    .map_err(|e| Error::new(e))
-                                })
-                                .map_err(|e| Error::new(e))
-                        })
-                        .collect::<Vec<Result<usize>>>();
-                    Ok(())
-                }
-                else {
-                    let stdout = std::io::stdout();
-                    let mut handle = stdout.lock();
+                paths
+                    .par_iter()
+                    .map(|p| self.replace_file(p))
+                    .collect::<Vec<Result<()>>>();
+                Ok(())
+            },
+            (Source::Files(paths), false) => {
+                let stdout = std::io::stdout();
+                let mut handle = stdout.lock();
 
-                    paths
-                        .iter()
-                        .map(|p| {
-                            handle.write(
-                                &self
-                                    .replace(&Source::file_to_string(p)?)
-                                    .as_bytes(),
-                            )?;
-                            Ok(())
-                        })
-                        .collect::<Result<Vec<()>>>()?;
-                    Ok(())
-                }
+                paths
+                    .iter()
+                    .map(|p| {
+                        handle.write(
+                            &self
+                                .replace(&Source::file_to_string(p)?)
+                                .as_bytes(),
+                        )?;
+                        Ok(())
+                    })
+                    .collect::<Result<Vec<()>>>()?;
+                Ok(())
             },
         }
     }
