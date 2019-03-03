@@ -1,0 +1,39 @@
+trigger:
+  batch: true
+  branches:
+    include: [master] # branch names which will trigger a build
+pr:
+  autoCancel: true
+  branches:
+    include: [master]
+
+jobs:
+- job: test
+  displayName: Typecheck & test
+  pool:
+      vmImage: ubuntu-16.04
+  steps:
+  - script: |
+      curl https://sh.rustup.rs -sSf | sh -s -- -y
+      echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+    displayName: Install Rust stable
+  - script: |
+      cd binary
+      cargo check
+    displayName: cargo check
+  - script: |
+      cd binary
+      cargo test
+    displayName: cargo test
+
+- template: .ci/template.yml
+  parameters:
+    name: Linux
+    vmImage: ubuntu-16.04
+    target: x86_64-unknown-linux-gnu
+
+- template: .ci/template.yml
+  parameters:
+    name: macOS
+    vmImage: macOS-10.13
+    target: x86_64-apple-darwin
