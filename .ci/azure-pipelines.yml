@@ -26,13 +26,13 @@ jobs:
       cargo test
     displayName: cargo test
 
-- template: .ci/template.yml
+- template: template.yml
   parameters:
     name: Linux
     vmImage: ubuntu-16.04
     target: x86_64-unknown-linux-gnu
 
-- template: .ci/template.yml
+- template: template.yml
   parameters:
     name: macOS
     vmImage: macOS-10.13
