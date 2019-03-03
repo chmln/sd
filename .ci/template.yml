@@ -9,14 +9,13 @@ jobs:
     #    curl https://sh.rustup.rs -sSf | sh -s -- -y
     #    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
     #  displayName: Install Rust
-  - ${{ if eq(parameters.name, 'Linux') }}:
-    - script: cargo build --release --target=${{ parameters.target }}
-      displayName: Build binary
-    - script: |
-        mkdir release
-        mv target/${{ parameters.target }}/release/sd release/linux-x64
-      displayName: Package binary
-    - task: PublishPipelineArtifact@0
-      inputs:
-        artifactName: Binary for ${{ parameters.name }}
-        targetPath: release/
+  - script: cargo build --release --target=${{ parameters.target }}
+    displayName: Build binary
+  - script: |
+      mkdir release
+      mv target/${{ parameters.target }}/release/sd release/linux-x64
+    displayName: Package binary
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: Binary for ${{ parameters.name }}
+      targetPath: release/
