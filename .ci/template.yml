@@ -2,7 +2,6 @@ jobs:
 - job: ${{ parameters.name }}
   condition: eq(variables['build.sourceBranch'], 'refs/heads/master')
   dependsOn: test
-  condition: succeeded()
   pool:
       vmImage: ${{ parameters.vmImage }}
   steps:
