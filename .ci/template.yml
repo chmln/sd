@@ -1,6 +1,6 @@
 jobs:
 - job: ${{ parameters.name }}
-  condition: eq(variables['build.sourceBranch'], 'refs/heads/master')
+  condition: and(eq($(Build.SourceBranch), 'refs/heads/master'), contains($(Build.SourceBranch), 'tags'))
   dependsOn: test
   pool:
       vmImage: ${{ parameters.vmImage }}
