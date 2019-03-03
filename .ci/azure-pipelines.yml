@@ -19,10 +19,6 @@ jobs:
     displayName: Install Rust stable
   - script: |
       cd binary
-      cargo check
-    displayName: cargo check
-  - script: |
-      cd binary
       cargo test
     displayName: cargo test
 
