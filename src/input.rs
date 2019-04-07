@@ -1,6 +1,6 @@
-use crate::{utils, Result};
+use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs::File, fs::set_permissions, io::prelude::*};
+use std::{fs::File, io::prelude::*};
 
 pub(crate) enum Source {
     Stdin,
@@ -35,7 +35,9 @@ impl Replacer {
         else {
             (
                 look_for,
-                utils::unescape(&replace_with).unwrap_or_else(|| replace_with).into_bytes(),
+                utils::unescape(&replace_with)
+                    .unwrap_or_else(|| replace_with)
+                    .into_bytes(),
             )
         };
 
@@ -76,7 +78,10 @@ impl Replacer {
         let content = content.as_ref();
         if self.is_literal {
             self.regex
-                .replace_all(&content, regex::bytes::NoExpand(&self.replace_with))
+                .replace_all(
+                    &content,
+                    regex::bytes::NoExpand(&self.replace_with),
+                )
                 .into_owned()
         }
         else {
@@ -88,40 +93,40 @@ impl Replacer {
 
     fn replace_file(&self, path: impl AsRef<str>) -> Result<()> {
         use memmap::{Mmap, MmapMut};
+        use std::ops::DerefMut;
 
         let path = std::path::Path::new(path.as_ref());
         let source = File::open(path)?;
         let mmap_source = unsafe { Mmap::map(&source)? };
         let meta = source.metadata()?;
-        let permissions = meta.permissions();
 
         let target = tempfile::NamedTempFile::new_in(path.parent().unwrap())?;
-        let replaced = self.replace(&mmap_source[..]);
         let file = target.as_file();
-
         file.set_len(meta.len())?;
+        file.set_permissions(meta.permissions())?;
+
         let mut mmap_target = unsafe { MmapMut::map_mut(&file).unwrap() };
-        (&mut mmap_target[..]).write(&replaced)?;
+        mmap_target
+            .deref_mut()
+            .write_all(&self.replace(&mmap_source[..]))?;
         mmap_target.flush()?;
 
         target.persist(path)?;
-        set_permissions(path, permissions)?;
         Ok(())
     }
 
     pub(crate) fn run(&self, source: &Source, in_place: bool) -> Result<()> {
         match (source, in_place) {
             (Source::Stdin, _) => {
-                let mut buffer = String::new();
+                let mut buffer = Vec::new();
                 let stdin = std::io::stdin();
                 let mut handle = stdin.lock();
-                handle.read_to_string(&mut buffer)?;
-                let buffer = buffer.as_bytes();
+                handle.read_to_end(&mut buffer)?;
 
                 if self.has_matches(&buffer) {
                     let stdout = std::io::stdout();
                     let mut handle = stdout.lock();
-                    handle.write(&self.replace(buffer))?;
+                    handle.write_all(&self.replace(buffer))?;
                 }
                 Ok(())
             },
@@ -130,9 +135,9 @@ impl Replacer {
 
                 paths
                     .par_iter()
-                    .map(|p| self.replace_file(p))
-                    .collect::<Result<Vec<()>>>()
-                    .map(|_| ())
+                    .map(|p| self.replace_file(p).map_err(Error::log))
+                    .collect::<Vec<Result<()>>>();
+                Ok(())
             },
             (Source::Files(paths), false) => {
                 let stdout = std::io::stdout();
@@ -141,14 +146,10 @@ impl Replacer {
                 paths
                     .iter()
                     .map(|path| {
-                        unsafe {
-                            let file = memmap::Mmap::map(&File::open(&path)?)?;
-                            handle.write(
-                                &self
-                                    .replace(&file[..])
-                            )?;
-                            Ok(())
-                        }
+                        let file =
+                            unsafe { memmap::Mmap::map(&File::open(&path)?)? };
+                        handle.write_all(&self.replace(&file[..]))?;
+                        Ok(())
                     })
                     .collect::<Result<Vec<()>>>()?;
                 Ok(())
@@ -185,14 +186,20 @@ mod tests {
     #[test]
     fn smart_case_sensitive() -> Result<()> {
         let r = Replacer::new("Abc".into(), "x".into(), false, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("abcABCAbcabC")), Ok("abcABCxabC"));
+        assert_eq!(
+            std::str::from_utf8(&r.replace("abcABCAbcabC")),
+            Ok("abcABCxabC")
+        );
         Ok(())
     }
 
     #[test]
     fn no_smart_case_literals() -> Result<()> {
         let r = Replacer::new("abc".into(), "x".into(), true, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("abcABCAbcabC")), Ok("xABCAbcabC"));
+        assert_eq!(
+            std::str::from_utf8(&r.replace("abcABCAbcabC")),
+            Ok("xABCAbcabC")
+        );
         Ok(())
     }
 
