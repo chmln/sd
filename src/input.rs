@@ -71,7 +71,7 @@ impl Replacer {
     }
 
     fn has_matches(&self, content: &[u8]) -> bool {
-        self.regex.find(&content).is_some()
+        self.regex.is_match(content)
     }
 
     fn replace(&self, content: impl AsRef<[u8]>) -> Vec<u8> {
