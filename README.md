@@ -85,8 +85,9 @@ cargo install sd
 
 ### Arch Linux
 
-[AUR package for sd](https://aur.archlinux.org/packages/sd/).
-
+```sh
+pacman -S sd
+```
 
 ### FreeBSD
 
