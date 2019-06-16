@@ -77,20 +77,15 @@ impl Replacer {
         self.regex.is_match(content)
     }
 
-    fn replace(&self, content: impl AsRef<[u8]>) -> Vec<u8> {
-        let content = content.as_ref();
+    fn replace<'a>(&'a self, content: &'a [u8]) -> std::borrow::Cow<'a, [u8]> {
         if self.is_literal {
-            self.regex
-                .replace_all(
-                    &content,
-                    regex::bytes::NoExpand(&self.replace_with),
-                )
-                .into_owned()
+            self.regex.replace_all(
+                &content,
+                regex::bytes::NoExpand(&self.replace_with),
+            )
         }
         else {
-            self.regex
-                .replace_all(&content, &*self.replace_with)
-                .into_owned()
+            self.regex.replace_all(&content, &*self.replace_with)
         }
     }
 
@@ -100,18 +95,21 @@ impl Replacer {
 
         let path = std::path::Path::new(path.as_ref());
         let source = File::open(path)?;
-        let mmap_source = unsafe { Mmap::map(&source)? };
         let meta = source.metadata()?;
+        let mmap_source = unsafe { Mmap::map(&source)? };
+        let replaced = self.replace(mmap_source.as_ref());
 
-        let target = tempfile::NamedTempFile::new_in(path.parent().unwrap())?;
+        let target = tempfile::NamedTempFile::new_in(
+            path.parent().ok_or_else(|| Error {
+                message: "Invalid path given".to_owned(),
+            })?,
+        )?;
         let file = target.as_file();
-        file.set_len(meta.len())?;
+        file.set_len(replaced.len() as u64)?;
         file.set_permissions(meta.permissions())?;
 
-        let mut mmap_target = unsafe { MmapMut::map_mut(&file).unwrap() };
-        mmap_target
-            .deref_mut()
-            .write_all(&self.replace(&mmap_source[..]))?;
+        let mut mmap_target = unsafe { MmapMut::map_mut(&file)? };
+        mmap_target.deref_mut().write_all(&replaced)?;
         mmap_target.flush()?;
 
         target.persist(path)?;
@@ -129,7 +127,7 @@ impl Replacer {
                 if self.has_matches(&buffer) {
                     let stdout = std::io::stdout();
                     let mut handle = stdout.lock();
-                    handle.write_all(&self.replace(buffer))?;
+                    handle.write_all(&self.replace(&buffer))?;
                 }
                 Ok(())
             },
