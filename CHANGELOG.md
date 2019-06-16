@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2]
+
+- Fixed pre-allocated memmap buffer size
+- Fixed failing tests
+
+## [0.6.0] - 2019-06-15
+
+### Improvements
+
+- `sd` now uses memory-mapped files, allowing replacement on files of any size
+- `-p`/`--preview` flag is now added to preview changes
+  - as of right now, results are simply emitted to stdout
+  - in a future version, the output will be changed to contain only relevant information
+- a `w` regex flag is added to match full words only, e.g. `sd -f w foo bar file.txt`
+
+### Deprecations
+
+- `--in-place` is now deprecated and assumed whenever a list of files is given
+
 ## [0.5.0] - 2019-02-22
 
 ### Improvements
