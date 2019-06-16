@@ -10,7 +10,7 @@ resources:
       type: github
       name: xoac/rust-azure-pipelines
       ref: refs/heads/master ## TODO you may want to change it to refs/tags/TAG_NAME.
-      endpoint: PipelinesTemplates
+      endpoint: githubConnection
 
 jobs:
 # Check formatting
