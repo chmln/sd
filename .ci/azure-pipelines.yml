@@ -4,112 +4,87 @@ trigger:
   tags:
     include: ['*']
 
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: xoac/rust-azure-pipelines
+      ref: refs/heads/master ## TODO you may want to change it to refs/tags/TAG_NAME.
+      endpoint: PipelinesTemplates
+
 jobs:
-  - job: 'Test'
-    strategy:
-      matrix:
-        windows-stable:
-          imageName: 'vs2017-win2016'
-          rustup_toolchain: stable
-        mac-stable:
-          imageName: 'macos-10.13'
-          rustup_toolchain: stable
-        linux-stable:
-          imageName: 'ubuntu-16.04'
-          rustup_toolchain: stable
-        linux-beta:
-          imageName: 'ubuntu-16.04'
-          rustup_toolchain: beta
-        linux-nightly:
-          imageName: 'ubuntu-16.04'
-          rustup_toolchain: nightly
-    pool:
-      vmImage: $(imageName)
-    steps:
-      - script: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
-          echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
-        displayName: Install rust
-        condition: ne( variables['Agent.OS'], 'Windows_NT' )
+# Check formatting
+- template: ci/rustfmt.yml@templates
+  parameters:
+    name: rustfmt
+    displayName: Check formatting
 
-      - script: |
-            curl -sSf -o rustup-init.exe https://win.rustup.rs
-            rustup-init.exe -y --default-toolchain %RUSTUP_TOOLCHAIN%
-            echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
-        displayName: Windows install rust
-        condition: eq( variables['Agent.OS'], 'Windows_NT' )
+# This represents the minimum Rust version supported.
+# Tests are not run as tests may require newer versions of rust.
+- template: ci/cargo-check.yml@templates
+  parameters:
+    name: minrust
+    rust_version: 1.31.0 # The 2018 edition
+    displayName: Check rust min ver
 
-      - script: cargo build --all
-        displayName: Cargo build
+################
+# Test stage   #
+###############
 
-      - script: cargo test --all
-        displayName: Cargo test
+# Test stable
+- template: ci/test.yml@templates
+  parameters:
+    name: cargo_test_stable
+    displayName: Cargo test
+    cross: true # Test on Windows and macOS
 
-  - job: 'Cross'
-    strategy:
-      matrix:
-        musl:
-          target: 'x86_64-unknown-linux-musl'
-          imageName: 'ubuntu-16.04'
-        gnu:
-          target: 'x86_64-unknown-linux-gnu'
-          imageName: 'ubuntu-16.04'
-        mac:
-          target: 'x86_64-apple-darwin'
-          imageName: 'macos-10.13'
-    pool:
-      vmImage: $(imageName)
-    steps:
-      - script: |
-          DATE="$(date +%Y-%m-%d)"
-          echo "##vso[task.setvariable variable=build.date]$DATE"
-        displayName: "Create date variable"
-      - script: |
-          MY_TAG="$(Build.SourceBranch)"
-          MY_TAG=${MY_TAG#refs/tags/}
-          echo $MY_TAG
-          echo "##vso[task.setvariable variable=build.my_tag]$MY_TAG"
-        displayName: "Create my tag variable"
-      - script: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
-        displayName: Install rust
-      - script: |
-          set -eou
-          D=$(mktemp -d)
-          git clone https://github.com/rust-embedded/cross.git "$D"
-          cd "$D"
-          curl -O -L "https://gist.githubusercontent.com/nickbabcock/c7bdc8e5974ed9956abf46ffd7dc13ff/raw/e211bc17ea88e505003ad763fac7060b4ac1d8d0/patch"
-          git apply patch
-          cargo install --path .
-          rm -rf "$D"
-        displayName: Install cross
-      - script: cross build --release --all --target $TARGET
-        displayName: Build
-      - task: CopyFiles@2
-        displayName: Copy assets
-        inputs:
-          sourceFolder: '$(Build.SourcesDirectory)/target/$(TARGET)/release'
-          contents: |
-            sd
-          targetFolder: '$(Build.BinariesDirectory)/sd'
-      - task: ArchiveFiles@2
-        displayName: Gather assets
-        inputs:
-          rootFolderOrFile: '$(Build.BinariesDirectory)/sd'
-          archiveType: 'tar'
-          tarCompression: 'gz'
-          archiveFile: '$(Build.ArtifactStagingDirectory)/sd-$(build.my_tag)-$(TARGET).tar.gz'
-      - task: GithubRelease@0
-        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-        inputs:
-          gitHubConnection: 'chmln'
-          repositoryName: 'chmln/sd'
-          action: 'edit'
-          target: '$(build.sourceVersion)'
-          tagSource: 'manual'
-          tag: '$(build.my_tag)'
-          assets: '$(Build.ArtifactStagingDirectory)/sd-$(build.my_tag)-$(TARGET).tar.gz'
-          title: '$(build.my_tag) - $(build.date)'
-          assetUploadMode: 'replace'
-          addChangeLog: false
+# Test nightly
+- template: ci/test.yml@templates
+  parameters:
+    name: cargo_test_nightly
+    displayName: Cargo test
+    rust_version: nightly
+
+# Test cross
+# List of supported targets is available here: https://github.com/rust-embedded/cross#supported-targets
+- template: ci/cargo-cross.yml@templates
+  parameters:
+        name: cargo_cross
+        displayName: Cross check and test
+        rust_version: stable # You can specify here beta nightly or even 1.31
+        test_targets:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - x86_64-pc-windows-gnu
+
+###################
+#    DEPLOY PART  #
+###################
+# TODO you need to modify git parameters and specify variable in pipeline. See [README.md](https://github.com/xoac/rust-azure-pipelines/blob/master/README.md)
+
+# Release binary
+- template: ci/github-release.yml@templates
+  parameters:
+   name: github_release
+   dependsOn:
+      - minrust
+      - rustfmt
+      - cargo_test_stable
+      - cargo_cross
+   rust_version: stable
+   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+   contents: |
+     *
+     !*.rlib
+     !*.d
+     !.*
+   targets:
+    - x86_64-unknown-linux-gnu
+    - x86_64-pc-windows-gnu
+    - x86_64-pc-windows-msvc
+    - x86_64-apple-darwin
+   github:
+    gitHubConnection: githubConnection
+    repositoryName: chmln/sd
+    isPreRelease: true
+
