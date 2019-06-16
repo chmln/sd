@@ -42,11 +42,8 @@ impl Replacer {
         };
 
         let mut regex = regex::bytes::RegexBuilder::new(&look_for);
-        regex.case_insensitive(
-            !is_literal && !utils::regex_case_sensitive(&look_for),
-        );
 
-        if let (Some(flags), false) = (flags, is_literal) {
+        if let Some(flags) = flags {
             for c in flags.chars() {
                 match c {
                     'c' => {
@@ -57,6 +54,12 @@ impl Replacer {
                     },
                     'm' => {
                         regex.multi_line(true);
+                    },
+                    'w' => {
+                        regex = regex::bytes::RegexBuilder::new(&format!(
+                            "\\b{}\\b",
+                            look_for
+                        ));
                     },
                     _ => {},
                 };
@@ -162,70 +165,58 @@ impl Replacer {
 mod tests {
     use super::*;
 
-    #[test]
-    fn default_global() -> Result<()> {
-        let r = Replacer::new("a".into(), "b".into(), false, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("aaa")), Ok("bbb"));
-        Ok(())
+    fn replace<'a>(
+        look_for: impl Into<String>,
+        replace_with: impl Into<String>,
+        literal: bool,
+        flags: Option<&'static str>,
+        src: &'static str,
+        target: &'static str,
+    ) {
+        let replacer = Replacer::new(
+            look_for.into(),
+            replace_with.into(),
+            literal,
+            flags.map(ToOwned::to_owned),
+        )
+        .unwrap();
+        assert_eq!(std::str::from_utf8(&replacer.replace(src)), Ok(target));
     }
 
     #[test]
-    fn escaped_char_preservation() -> Result<()> {
-        let r = Replacer::new("a".into(), "b".into(), false, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("a\\n")), Ok("b\\n"));
-        Ok(())
+    fn default_global() {
+        replace("a", "b", false, None, "aaa", "bbb");
     }
 
     #[test]
-    fn smart_case_insensitive() -> Result<()> {
-        let r = Replacer::new("abc".into(), "x".into(), false, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("abcABCAbcabC")), Ok("xxxx"));
-        Ok(())
+    fn escaped_char_preservation() {
+        replace("a", "b", false, None, "a\\n", "b\\n");
     }
 
     #[test]
-    fn smart_case_sensitive() -> Result<()> {
-        let r = Replacer::new("Abc".into(), "x".into(), false, None)?;
-        assert_eq!(
-            std::str::from_utf8(&r.replace("abcABCAbcabC")),
-            Ok("abcABCxabC")
-        );
-        Ok(())
+    fn case_sensitive_default() {
+        replace("abc", "x", false, None, "abcABC", "xABC");
+        replace("abc", "x", true, None, "abcABC", "xABC");
     }
 
     #[test]
-    fn no_smart_case_literals() -> Result<()> {
-        let r = Replacer::new("abc".into(), "x".into(), true, None)?;
-        assert_eq!(
-            std::str::from_utf8(&r.replace("abcABCAbcabC")),
-            Ok("xABCAbcabC")
-        );
-        Ok(())
+    fn sanity_check_literal_replacements() {
+        replace("((special[]))", "x", true, None, "((special[]))y", "xy");
     }
 
     #[test]
-    fn sanity_check_literal_replacements() -> Result<()> {
-        let r = Replacer::new("((special[]))".into(), "x".into(), true, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("((special[]))y")), Ok("xy"));
-        Ok(())
+    fn unescape_regex_replacements() {
+        replace("test", r"\n", false, None, "testtest", "\n\n");
     }
 
     #[test]
-    fn unescape_regex_replacements() -> Result<()> {
-        let r = Replacer::new("test".into(), r"\n".into(), false, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("testtest")), Ok("\n\n"));
-
-        // escaping the newline char
-        let r = Replacer::new("test".into(), r"\\n".into(), false, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("testtest")), Ok(r"\n\n"));
-        Ok(())
+    fn no_unescape_literal_replacements() {
+        replace("test", r"\n", true, None, "testtest", r"\n\n");
     }
 
     #[test]
-    fn no_unescape_literal_replacements() -> Result<()> {
-        let r = Replacer::new("test".into(), r"\n".into(), true, None)?;
-        assert_eq!(std::str::from_utf8(&r.replace("testtest")), Ok(r"\n\n"));
-        Ok(())
+    fn full_word_replace() {
+        replace("abc", "def", false, Some("w"), "abcd abc", "abcd def");
     }
 
 }
