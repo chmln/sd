@@ -18,6 +18,7 @@ jobs:
   parameters:
     name: rustfmt
     displayName: Check formatting
+    rust_version: nightly
 
 # This represents the minimum Rust version supported.
 # Tests are not run as tests may require newer versions of rust.
@@ -86,5 +87,4 @@ jobs:
    github:
     gitHubConnection: githubConnection
     repositoryName: chmln/sd
-    isPreRelease: true
 
