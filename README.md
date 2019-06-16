@@ -85,8 +85,9 @@ cargo install sd
 
 ### Arch Linux
 
-[AUR package for sd](https://aur.archlinux.org/packages/sd/).
-
+```sh
+pacman -S sd
+```
 
 ### FreeBSD
 
@@ -152,6 +153,8 @@ To do a dry run:
 ```
 
 5. **Find & replace across project**
+
+This example uses [fd](https://github.com/sharkdp/fd).
 
 Good ol' unix philosophy to the rescue.
 

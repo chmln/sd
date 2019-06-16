@@ -3,12 +3,6 @@ pub(crate) struct Error {
     pub(crate) message: String,
 }
 
-impl Error {
-    pub(crate) fn new<T: std::fmt::Display>(message: T) -> Self {
-        Self { message: format!("{}", message) }
-    }
-}
-
 impl<T> From<T> for Error
 where
     T: std::error::Error,
@@ -17,6 +11,13 @@ where
         Error {
             message: format!("{}", err),
         }
+    }
+}
+
+impl Error {
+    pub(crate) fn log(err: Self) -> Self {
+        println!("{}", err);
+        err
     }
 }
 

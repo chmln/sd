@@ -12,9 +12,13 @@ use structopt::StructOpt;
     raw(setting = "structopt::clap::AppSettings::UnifiedHelpMessage"),
 )]
 pub(crate) struct Options {
+    #[structopt(short = "p", long = "preview")]
+    preview: bool,
+
     #[structopt(short = "i", long = "in-place")]
-    /// Modify the files in-place. Otherwise, transformations will be
-    /// emitted to STDOUT by default.
+    // Deprecated. TODO: remove in next release.
+    /// (Deprecated). Modify the files in-place. Otherwise, transformations
+    /// will be emitted to STDOUT by default.
     in_place: bool,
 
     #[structopt(short = "s", long = "string-mode")]
@@ -25,10 +29,10 @@ pub(crate) struct Options {
     /** Regex flags. May be combined (like `-f mc`).
 
     c - case-sensitive
-    m - multi-line matching
     i - case-insensitive
+    m - multi-line matching
+    w - match full words only
 
-    Smart-case is enabled by default.
     */
     flags: Option<String>,
 
@@ -45,13 +49,19 @@ pub(crate) struct Options {
 
 pub(crate) fn run() -> Result<()> {
     let args = Options::from_args();
+    if args.in_place {
+        eprintln!(
+            "Warning: --in-place is now redundant and will be removed in a \
+             future release."
+        );
+    }
     let source = Source::from(args.files);
     let replacer = Replacer::new(
-        args.find, 
-        args.replace_with, 
-        args.literal_mode, 
-        args.flags
+        args.find,
+        args.replace_with,
+        args.literal_mode,
+        args.flags,
     )?;
-    replacer.run(&source, args.in_place)?;
+    replacer.run(&source, !args.preview)?;
     Ok(())
 }
