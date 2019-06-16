@@ -178,7 +178,10 @@ mod tests {
             flags.map(ToOwned::to_owned),
         )
         .unwrap();
-        assert_eq!(std::str::from_utf8(&replacer.replace(src)), Ok(target));
+        assert_eq!(
+            std::str::from_utf8(&replacer.replace(src.as_bytes())),
+            Ok(target)
+        );
     }
 
     #[test]
