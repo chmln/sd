@@ -1,8 +1,6 @@
 edition = "2018"
 max_width = 80
 wrap_comments = true
-control_brace_style = "ClosingNextLine"
-brace_style = "PreferSameLine"
 format_strings = true
 merge_imports = true
 match_block_trailing_comma = true

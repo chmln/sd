@@ -20,7 +20,7 @@ Find & replace expressions are split up, which makes them easy to read and write
 
 **Smart, common-sense defaults**
 
-Smart-cased regular expressions also come with a sane syntax that's not opt-in. Defaults follow common sense and are tailored for typical daily use. 
+Defaults follow common sense and are tailored for typical daily use. 
 
 ## Comparison to sed
 
@@ -40,7 +40,7 @@ Some cherry-picked examples, where `sd` shines:
     - `echo "sample with /path/" | sed -E 's/.*(/.*/)/\1/g'`
     - `echo "sample with /path/" | sed -E 's|.*(/.*/)|\1|g'`
 - In place modification of files:
-  - sd: `sd -i before after file.txt`
+  - sd: `sd before after file.txt`
   - sed: you need to remember to use `-e` or else some platforms will consider the next argument to be a backup suffix
     - `sed -i -e 's/before/after/g' file.txt`
     
@@ -134,6 +134,7 @@ In the unlikely case you stumble upon ambiguities, resolve them by using `${var}
 ```sh
 > echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
  and 
+ 
 > echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
 123_dollars and 45_cents
 ```
@@ -141,15 +142,15 @@ In the unlikely case you stumble upon ambiguities, resolve them by using `${var}
 4. **Find & replace in a file**
 
 ```sh
-> sd -i 'window.fetch' 'fetch' http.js
+> sd 'window.fetch' 'fetch' http.js
 ```
 
 That's it. The file is modified in-place.
 
-To do a dry run:
+To preview changes:
 
 ```sh
-> sd 'window.fetch' 'fetch' http.js 
+> sd -p 'window.fetch' 'fetch' http.js 
 ```
 
 5. **Find & replace across project**
@@ -159,7 +160,7 @@ This example uses [fd](https://github.com/sharkdp/fd).
 Good ol' unix philosophy to the rescue.
 
 ```sh
-sd -i 'from "react"' 'from "preact"' $(fd -t f)
+sd 'from "react"' 'from "preact"' $(fd -t f)
 ```
 
 Same, but with backups (consider version control).
@@ -167,6 +168,6 @@ Same, but with backups (consider version control).
 ```bash
 for file in $(fd -t f); do
   cp "$file" "$file.bk"
-  sd -i 'from "react"' 'from "preact"' "$file"; 
+  sd 'from "react"' 'from "preact"' "$file"; 
 done
 ```
