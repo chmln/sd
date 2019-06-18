@@ -110,8 +110,8 @@ impl Replacer {
         mmap_target.deref_mut().write_all(&replaced)?;
         mmap_target.flush()?;
 
-        drop(source);
         drop(mmap_source);
+        drop(source);
 
         target.persist(path)?;
         Ok(())
