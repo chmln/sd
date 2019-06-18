@@ -47,20 +47,20 @@ impl Replacer {
                 match c {
                     'c' => {
                         regex.case_insensitive(false);
-                    },
+                    }
                     'i' => {
                         regex.case_insensitive(true);
-                    },
+                    }
                     'm' => {
                         regex.multi_line(true);
-                    },
+                    }
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(
                             "\\b{}\\b",
                             look_for
                         ));
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 };
             }
         };
@@ -131,7 +131,7 @@ impl Replacer {
                     handle.write_all(&self.replace(&buffer))?;
                 }
                 Ok(())
-            },
+            }
             (Source::Files(paths), true) => {
                 use rayon::prelude::*;
 
@@ -140,7 +140,7 @@ impl Replacer {
                     .map(|p| self.replace_file(p).map_err(Error::log))
                     .collect::<Vec<Result<()>>>();
                 Ok(())
-            },
+            }
             (Source::Files(paths), false) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
@@ -155,7 +155,7 @@ impl Replacer {
                     })
                     .collect::<Result<Vec<()>>>()?;
                 Ok(())
-            },
+            }
         }
     }
 }
