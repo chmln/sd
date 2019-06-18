@@ -7,7 +7,6 @@ use structopt::StructOpt;
     about = "",
     raw(setting = "structopt::clap::AppSettings::ColoredHelp"),
     raw(setting = "structopt::clap::AppSettings::NextLineHelp"),
-    raw(setting = "structopt::clap::AppSettings::DisableVersion"),
     raw(setting = "structopt::clap::AppSettings::UnifiedHelpMessage"),
 )]
 pub(crate) struct Options {

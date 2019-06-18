@@ -21,6 +21,7 @@ tempfile = "3.0.8"
 
 [build-dependencies]
 structopt = "0.2.16"
+man = "0.3.0"
 
 [profile.release]
 opt-level = 3
