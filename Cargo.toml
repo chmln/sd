@@ -1,6 +1,6 @@
 [package]
 name = "sd"
-version = "0.6.2"
+version = "0.6.3"
 edition = "2018"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "An intuitive find & replace CLI"
