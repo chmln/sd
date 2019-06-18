@@ -52,16 +52,13 @@ jobs:
   parameters:
         name: cargo_cross
         displayName: Cross check and test
-        rust_version: stable # You can specify here beta nightly or even 1.31
+        rust_version: stable
         test_targets:
-          - x86_64-unknown-linux-gnu
           - x86_64-unknown-linux-musl
-          - x86_64-pc-windows-gnu
 
 ###################
 #    DEPLOY PART  #
 ###################
-# TODO you need to modify git parameters and specify variable in pipeline. See [README.md](https://github.com/xoac/rust-azure-pipelines/blob/master/README.md)
 
 # Release binary
 - template: ci/github-release.yml@templates
