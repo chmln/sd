@@ -94,7 +94,12 @@ impl Replacer {
         let path = std::path::Path::new(path.as_ref());
         let source = File::open(path)?;
         let meta = source.metadata()?;
-        let mmap_source = unsafe { Mmap::map(&source)? };
+        let mmap_source = unsafe {
+            match Mmap::map(&source) {
+                Ok(mmap_source) => mmap_source,
+                Err(_) => return Ok(()),
+            }
+        };
         let replaced = self.replace(mmap_source.as_ref());
 
         let target = tempfile::NamedTempFile::new_in(
@@ -125,11 +130,15 @@ impl Replacer {
                 let mut handle = stdin.lock();
                 handle.read_to_end(&mut buffer)?;
 
+                let stdout = std::io::stdout();
+                let mut handle = stdout.lock();
+
                 if self.has_matches(&buffer) {
-                    let stdout = std::io::stdout();
-                    let mut handle = stdout.lock();
                     handle.write_all(&self.replace(&buffer))?;
+                } else {
+                    handle.write_all(&buffer)?;
                 }
+
                 Ok(())
             }
             (Source::Files(paths), true) => {
