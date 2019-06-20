@@ -83,6 +83,13 @@ Result: ~11.93 times faster
 cargo install sd
 ```
 
+### Alpine Linux
+
+```sh
+apk add sd
+```
+Before installing, ensure the appropriate [repository](https://pkgs.alpinelinux.org/packages?name=sd) is enabled.
+
 ### Arch Linux
 
 ```sh
