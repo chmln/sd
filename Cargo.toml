@@ -27,3 +27,4 @@ man = "0.3.0"
 opt-level = 3
 lto = true
 debug = false
+codegen-units = 1
