@@ -79,6 +79,14 @@ Result: ~11.93 times faster
 
 ### Cargo
 
+[Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) is the Rust package manager.
+
+You can install cargo by
+```sh
+curl https://sh.rustup.rs -sSf | sh
+```
+
+Then
 ```sh
 cargo install sd
 ```
