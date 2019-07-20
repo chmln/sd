@@ -104,6 +104,12 @@ Before installing, ensure the appropriate [repository](https://pkgs.alpinelinux.
 pacman -S sd
 ```
 
+### Fedora
+
+```sh
+dnf install sd
+```
+
 ### FreeBSD
 
 ```sh
