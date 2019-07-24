@@ -54,6 +54,9 @@ impl Replacer {
                     'm' => {
                         regex.multi_line(true);
                     }
+                    's' => {
+                        regex.dot_matches_new_line(true);
+                    }
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(
                             "\\b{}\\b",
