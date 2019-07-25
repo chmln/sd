@@ -29,6 +29,7 @@ pub(crate) struct Options {
     c - case-sensitive
     i - case-insensitive
     m - multi-line matching
+    s - make `.` match newlines
     w - match full words only
 
     */
