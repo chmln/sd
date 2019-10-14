@@ -181,13 +181,13 @@ This example uses [fd](https://github.com/sharkdp/fd).
 Good ol' unix philosophy to the rescue.
 
 ```sh
-sd 'from "react"' 'from "preact"' $(fd -t f)
+sd 'from "react"' 'from "preact"' $(fd --type files)
 ```
 
 Same, but with backups (consider version control).
 
 ```bash
-for file in $(fd -t f); do
+for file in $(fd --type file); do
   cp "$file" "$file.bk"
   sd 'from "react"' 'from "preact"' "$file"; 
 done
