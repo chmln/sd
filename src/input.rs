@@ -1,4 +1,4 @@
-use crate::{utils, Error, Result};
+use crate::{err, utils, Result};
 use regex::bytes::Regex;
 use std::{fs::File, io::prelude::*};
 
@@ -47,23 +47,23 @@ impl Replacer {
                 match c {
                     'c' => {
                         regex.case_insensitive(false);
-                    }
+                    },
                     'i' => {
                         regex.case_insensitive(true);
-                    }
+                    },
                     'm' => {
                         regex.multi_line(true);
-                    }
+                    },
                     's' => {
                         regex.dot_matches_new_line(true);
-                    }
+                    },
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(
                             "\\b{}\\b",
                             look_for
                         ));
-                    }
-                    _ => {}
+                    },
+                    _ => {},
                 };
             }
         };
@@ -106,9 +106,7 @@ impl Replacer {
         let replaced = self.replace(mmap_source.as_ref());
 
         let target = tempfile::NamedTempFile::new_in(
-            path.parent().ok_or_else(|| Error {
-                message: "Invalid path given".to_owned(),
-            })?,
+            path.parent().ok_or_else(|| err!("Invalid path given"))?,
         )?;
         let file = target.as_file();
         file.set_len(replaced.len() as u64)?;
@@ -143,16 +141,16 @@ impl Replacer {
                 }
 
                 Ok(())
-            }
+            },
             (Source::Files(paths), true) => {
                 use rayon::prelude::*;
 
                 paths
                     .par_iter()
-                    .map(|p| self.replace_file(p).map_err(Error::log))
+                    .map(|p| self.replace_file(p))
                     .collect::<Vec<Result<()>>>();
                 Ok(())
-            }
+            },
             (Source::Files(paths), false) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
@@ -167,7 +165,7 @@ impl Replacer {
                     })
                     .collect::<Result<Vec<()>>>()?;
                 Ok(())
-            }
+            },
         }
     }
 }
@@ -232,5 +230,4 @@ mod tests {
     fn full_word_replace() {
         replace("abc", "def", false, Some("w"), "abcd abc", "abcd def");
     }
-
 }

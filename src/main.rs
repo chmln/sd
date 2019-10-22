@@ -1,13 +1,9 @@
 mod app;
-mod error;
 mod input;
 pub(crate) mod utils;
 
-pub(crate) use self::{
-    error::Error,
-    input::{Replacer, Source},
-    utils::Result,
-};
+pub(crate) use self::input::{Replacer, Source};
+pub(crate) use anyhow::{anyhow as err, Result};
 
 fn main() -> Result<()> {
     use structopt::StructOpt;

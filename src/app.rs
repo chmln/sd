@@ -2,12 +2,9 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(
-    // hide author from help
-    author = "",
-    about = "",
-    raw(setting = "structopt::clap::AppSettings::ColoredHelp"),
-    raw(setting = "structopt::clap::AppSettings::NextLineHelp"),
-    raw(setting = "structopt::clap::AppSettings::UnifiedHelpMessage"),
+    setting(structopt::clap::AppSettings::ColoredHelp),
+    setting(structopt::clap::AppSettings::NextLineHelp),
+    setting(structopt::clap::AppSettings::UnifiedHelpMessage)
 )]
 pub(crate) struct Options {
     #[structopt(short = "p", long = "preview")]
