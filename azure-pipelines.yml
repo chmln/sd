@@ -13,13 +13,6 @@ resources:
       endpoint: githubConnection
 
 jobs:
-# Check formatting
-- template: ci/rustfmt.yml@templates
-  parameters:
-    name: rustfmt
-    displayName: Check formatting
-    rust_version: nightly
-
 # This represents the minimum Rust version supported.
 # Tests are not run as tests may require newer versions of rust.
 - template: ci/cargo-check.yml@templates
@@ -38,23 +31,6 @@ jobs:
     name: cargo_test_stable
     displayName: Cargo test
     cross: true # Test on Windows and macOS
-
-# Test nightly
-- template: ci/test.yml@templates
-  parameters:
-    name: cargo_test_nightly
-    displayName: Cargo test
-    rust_version: nightly
-
-# Test cross
-# List of supported targets is available here: https://github.com/rust-embedded/cross#supported-targets
-- template: ci/cargo-cross.yml@templates
-  parameters:
-        name: cargo_cross
-        displayName: Cross check and test
-        rust_version: stable
-        test_targets:
-          - x86_64-unknown-linux-musl
 
 ###################
 #    DEPLOY PART  #
