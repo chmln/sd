@@ -181,7 +181,7 @@ This example uses [fd](https://github.com/sharkdp/fd).
 Good ol' unix philosophy to the rescue.
 
 ```sh
-sd 'from "react"' 'from "preact"' $(fd --type files)
+sd 'from "react"' 'from "preact"' $(fd --type file)
 ```
 
 Same, but with backups (consider version control).
