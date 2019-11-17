@@ -1,20 +1,15 @@
-use structopt::StructOpt;
+use structopt::{clap::AppSettings, StructOpt};
 
 #[derive(Debug, StructOpt)]
 #[structopt(
-    setting(structopt::clap::AppSettings::ColoredHelp),
-    setting(structopt::clap::AppSettings::NextLineHelp),
-    setting(structopt::clap::AppSettings::UnifiedHelpMessage)
+    setting(AppSettings::ColoredHelp),
+    setting(AppSettings::NextLineHelp),
+    setting(AppSettings::UnifiedHelpMessage)
 )]
 pub(crate) struct Options {
     #[structopt(short = "p", long = "preview")]
+    /// Output result into stdout and do not modify files.
     pub preview: bool,
-
-    #[structopt(short = "i", long = "in-place")]
-    // Deprecated. TODO: remove in next release.
-    /// (Deprecated). Modify the files in-place. Otherwise, transformations
-    /// will be emitted to STDOUT by default.
-    pub in_place: bool,
 
     #[structopt(short = "s", long = "string-mode")]
     /// Treat expressions as non-regex strings.

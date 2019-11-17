@@ -9,10 +9,11 @@ pub(crate) enum Source {
 
 impl Source {
     pub(crate) fn from(file_paths: Vec<String>) -> Self {
-        if file_paths.len() == 0 {
-            return Source::Stdin;
+        if file_paths.is_empty() {
+            Source::Stdin
+        } else {
+            Source::Files(file_paths)
         }
-        return Source::Files(file_paths);
     }
 }
 
