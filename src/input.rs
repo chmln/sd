@@ -97,17 +97,13 @@ impl Replacer {
         let path = std::path::Path::new(path.as_ref());
         let source = File::open(path)?;
         let meta = source.metadata()?;
-        let mmap_source = unsafe {
-            match Mmap::map(&source) {
-                Ok(mmap_source) => mmap_source,
-                Err(_) => return Ok(()),
-            }
-        };
-        let replaced = self.replace(mmap_source.as_ref());
+        let mmap_source = unsafe { Mmap::map(&source)? };
+        let replaced = self.replace(&mmap_source);
 
-        let target = tempfile::NamedTempFile::new_in(
-            path.parent().ok_or_else(|| err!("Invalid path given"))?,
-        )?;
+        let target =
+            tempfile::NamedTempFile::new_in(path.parent().ok_or_else(
+                || err!("Invalid path given: {}", path.display()),
+            )?)?;
         let file = target.as_file();
         file.set_len(replaced.len() as u64)?;
         file.set_permissions(meta.permissions())?;
@@ -145,26 +141,23 @@ impl Replacer {
             (Source::Files(paths), true) => {
                 use rayon::prelude::*;
 
-                paths
-                    .par_iter()
-                    .map(|p| self.replace_file(p))
-                    .collect::<Vec<Result<()>>>();
+                #[allow(unused_must_use)]
+                paths.par_iter().for_each(|p| {
+                    self.replace_file(p);
+                });
+
                 Ok(())
             },
             (Source::Files(paths), false) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
 
-                paths
-                    .iter()
-                    .map(|path| {
-                        let file =
-                            unsafe { memmap::Mmap::map(&File::open(&path)?)? };
-                        handle.write_all(&self.replace(&file[..]))?;
-                        Ok(())
-                    })
-                    .collect::<Result<Vec<()>>>()?;
-                Ok(())
+                paths.iter().try_for_each(|path| -> Result<()> {
+                    let file =
+                        unsafe { memmap::Mmap::map(&File::open(path)?)? };
+                    handle.write_all(&self.replace(&file))?;
+                    Ok(())
+                })
             },
         }
     }
