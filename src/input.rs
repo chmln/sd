@@ -43,20 +43,13 @@ impl Replacer {
         let mut regex = regex::bytes::RegexBuilder::new(&look_for);
 
         if let Some(flags) = flags {
-            for c in flags.chars() {
+            flags.chars().for_each(|c| {
+                #[rustfmt::skip]
                 match c {
-                    'c' => {
-                        regex.case_insensitive(false);
-                    },
-                    'i' => {
-                        regex.case_insensitive(true);
-                    },
-                    'm' => {
-                        regex.multi_line(true);
-                    },
-                    's' => {
-                        regex.dot_matches_new_line(true);
-                    },
+                    'c' => { regex.case_insensitive(false); },
+                    'i' => { regex.case_insensitive(true); },
+                    'm' => { regex.multi_line(true); },
+                    's' => { regex.dot_matches_new_line(true); },
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(
                             "\\b{}\\b",
@@ -65,7 +58,7 @@ impl Replacer {
                     },
                     _ => {},
                 };
-            }
+            });
         };
 
         Ok(Replacer {
