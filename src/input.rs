@@ -104,7 +104,7 @@ impl Replacer {
 
         let mut mmap_target = unsafe { MmapMut::map_mut(&file)? };
         mmap_target.deref_mut().write_all(&replaced)?;
-        mmap_target.flush()?;
+        mmap_target.flush_async()?;
 
         drop(mmap_source);
         drop(source);
@@ -137,7 +137,9 @@ impl Replacer {
 
                 #[allow(unused_must_use)]
                 paths.par_iter().for_each(|p| {
-                    self.replace_file(p);
+                    self.replace_file(p).map_err(|e| {
+                        eprintln!("Error processing {}: {}", p, e)
+                    });
                 });
 
                 Ok(())
@@ -146,10 +148,11 @@ impl Replacer {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
 
-                paths.iter().try_for_each(|path| -> Result<()> {
+                paths.iter().try_for_each(|path| {
                     let file =
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
                     handle.write_all(&self.replace(&file))?;
+
                     Ok(())
                 })
             },
