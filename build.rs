@@ -9,7 +9,7 @@ fn main() {
 
     fs::create_dir_all(&out_dir).unwrap();
 
-    Shell::variants().into_iter().for_each(|shell| {
+    Shell::variants().iter().for_each(|shell| {
         app.gen_completions("sd", Shell::from_str(shell).unwrap(), &out_dir);
     });
 
