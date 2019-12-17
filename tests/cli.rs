@@ -1,6 +1,6 @@
 use anyhow::Result;
-use assert_cmd::prelude::*;
-use std::{io::prelude::*, process::Command};
+use assert_cmd::Command;
+use std::io::prelude::*;
 
 fn sd() -> Command {
     Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Error invoking sd")
@@ -43,8 +43,7 @@ fn replace_into_stdout() -> Result<()> {
 #[test]
 fn stdin() -> Result<()> {
     sd().args(&["abc\\d+", ""])
-        .with_stdin()
-        .buffer("abc123def")
+        .write_stdin("abc123def")
         .assert()
         .success()
         .stdout("def");
