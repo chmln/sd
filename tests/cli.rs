@@ -14,11 +14,12 @@ fn assert_file(path: &std::path::Path, content: &str) {
 fn in_place() -> Result<()> {
     let mut file = tempfile::NamedTempFile::new()?;
     file.write(b"abc123def")?;
+    let path = file.into_temp_path();
 
-    sd().args(&["abc\\d+", "", file.path().to_str().unwrap()])
+    sd().args(&["abc\\d+", "", path.to_str().unwrap()])
         .assert()
         .success();
-    assert_file(file.path(), "def");
+    assert_file(&path.to_path_buf(), "def");
 
     Ok(())
 }
