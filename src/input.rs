@@ -1,4 +1,4 @@
-use crate::{err, utils, Result};
+use crate::{utils, Error, Result};
 use regex::bytes::Regex;
 use std::{fs::File, io::prelude::*};
 
@@ -94,10 +94,10 @@ impl Replacer {
         let mmap_source = unsafe { Mmap::map(&source)? };
         let replaced = self.replace(&mmap_source);
 
-        let target =
-            tempfile::NamedTempFile::new_in(path.parent().ok_or_else(
-                || err!("Invalid path given: {}", path.display()),
-            )?)?;
+        let target = tempfile::NamedTempFile::new_in(
+            path.parent()
+                .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
+        )?;
         let file = target.as_file();
         file.set_len(replaced.len() as u64)?;
         file.set_permissions(meta.permissions())?;
