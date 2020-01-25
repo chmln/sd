@@ -42,6 +42,7 @@ impl Replacer {
         };
 
         let mut regex = regex::bytes::RegexBuilder::new(&look_for);
+        regex.multi_line(true);
 
         if let Some(flags) = flags {
             flags.chars().for_each(|c| {
@@ -49,7 +50,8 @@ impl Replacer {
                 match c {
                     'c' => { regex.case_insensitive(false); },
                     'i' => { regex.case_insensitive(true); },
-                    'm' => { regex.multi_line(true); },
+                    'm' => {},
+                    'e' => { regex.multi_line(false); },
                     's' => { regex.dot_matches_new_line(true); },
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(

@@ -2,7 +2,7 @@
 pub enum Error {
     #[error("invalid regex {0}")]
     Regex(#[from] regex::Error),
-    #[error("{0}")]
+    #[error(transparent)]
     File(#[from] std::io::Error),
     #[error("failed to move file: {0}")]
     TempfilePersist(#[from] tempfile::PersistError),
