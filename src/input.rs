@@ -86,11 +86,11 @@ impl Replacer {
         }
     }
 
-    fn replace_file(&self, path: impl AsRef<str>) -> Result<()> {
+    fn replace_file(&self, path: &str) -> Result<()> {
         use memmap::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
-        let path = std::path::Path::new(path.as_ref());
+        let path = std::path::Path::new(path);
         let source = File::open(path)?;
         let meta = source.metadata()?;
         let mmap_source = unsafe { Mmap::map(&source)? };
@@ -118,7 +118,7 @@ impl Replacer {
     pub(crate) fn run(&self, source: &Source, in_place: bool) -> Result<()> {
         match (source, in_place) {
             (Source::Stdin, _) => {
-                let mut buffer = Vec::new();
+                let mut buffer = Vec::with_capacity(256);
                 let stdin = std::io::stdin();
                 let mut handle = stdin.lock();
                 handle.read_to_end(&mut buffer)?;
