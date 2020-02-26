@@ -12,27 +12,22 @@ resources:
       ref: refs/heads/master
       endpoint: githubConnection
 stages:
-- stage: check
-  displayName: "Quick checks"
-  jobs:
-  - template: ci/scenarios/check.yml@rust_pipelines
-
 - stage: test
-  displayName: "Multi OS native tests"
+  displayName: "Test"
   jobs:
   - template: ci/scenarios/test.yml@rust_pipelines
     parameters:
       min_rust_supported: 1.31  # Use first rust version you wanna support
 
 - stage: build
-  displayName: "Builds"
+  displayName: "Build"
   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
   dependsOn:
     - test
 
 # Deploy binaries to github only if tags start with `v` for example `v0.1.5`
 - stage: deploy
-  displayName: "Deploys"
+  displayName: "Deploy"
   dependsOn:
     - build
   jobs:

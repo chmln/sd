@@ -133,7 +133,7 @@ impl Replacer {
                 }
 
                 Ok(())
-            },
+            }
             (Source::Files(paths), true) => {
                 use rayon::prelude::*;
 
@@ -145,7 +145,7 @@ impl Replacer {
                 });
 
                 Ok(())
-            },
+            }
             (Source::Files(paths), false) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
@@ -157,7 +157,7 @@ impl Replacer {
 
                     Ok(())
                 })
-            },
+            }
         }
     }
 }
