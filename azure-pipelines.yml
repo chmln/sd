@@ -9,7 +9,7 @@ resources:
     - repository: rust_pipelines
       type: github
       name: xoac/rust-azure-pipelines
-      ref: refs/master
+      ref: refs/44d2fbcce717cfe7d27466a39e8692e33da30412
       endpoint: githubConnection
 stages:
 - stage: check
