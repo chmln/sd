@@ -16,8 +16,6 @@ stages:
   displayName: "Test"
   jobs:
   - template: ci/scenarios/test.yml@rust_pipelines
-    parameters:
-      min_rust_supported: 1.31  # Use first rust version you wanna support
 
 - stage: build
   displayName: "Build"
