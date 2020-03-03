@@ -37,7 +37,7 @@ Some cherry-picked examples, where `sd` shines:
 - Extracting stuff out of strings containing slashes:
   - sd: `echo "sample with /path/" | sd '.*(/.*/)' '$1'`
   - sed: use different delimiters every time depending on expression so that the command is not completely unreadable
-    - `echo "sample with /path/" | sed -E 's/.*(/.*/)/\1/g'`
+    - `echo "sample with /path/" | sed -E 's/.*(\\/.*\\/)/\1/g'`
     - `echo "sample with /path/" | sed -E 's|.*(/.*/)|\1|g'`
 - In place modification of files:
   - sd: `sd before after file.txt`
