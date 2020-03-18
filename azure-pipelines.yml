@@ -15,7 +15,10 @@ stages:
 - stage: test
   displayName: "Test"
   jobs:
-  - template: ci/scenarios/test.yml@rust_pipelines
+  - template: ci/templates/jobs/cargo-test.yml@rust_pipelines
+    parameters:
+      test-flags:
+        nocapture: true
 
 - stage: build
   displayName: "Build"
