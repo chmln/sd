@@ -17,11 +17,11 @@ stages:
   jobs:
   - template: ci/jobs/cargo-test.yaml@rust_pipelines
 
+  #condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
 - stage: build
   displayName: "Build"
-  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
   jobs:
-  - template: ci/jobs/cargo-build.yml@rust_pipelines
+  - template: ci/scenarios/builds.yml@rust_pipelines
   dependsOn:
     - test
 
