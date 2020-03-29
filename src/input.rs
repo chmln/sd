@@ -1,14 +1,18 @@
 use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs::File, io::prelude::*};
+use std::{
+    fs::File,
+    io::prelude::*,
+    path::{Path, PathBuf},
+};
 
 pub(crate) enum Source {
     Stdin,
-    Files(Vec<String>),
+    Files(Vec<PathBuf>),
 }
 
 impl Source {
-    pub(crate) fn from(file_paths: Vec<String>) -> Self {
+    pub(crate) fn infer(file_paths: Vec<PathBuf>) -> Self {
         if file_paths.is_empty() {
             Source::Stdin
         } else {
@@ -52,7 +56,12 @@ impl Replacer {
                     'i' => { regex.case_insensitive(true); },
                     'm' => {},
                     'e' => { regex.multi_line(false); },
-                    's' => { regex.dot_matches_new_line(true); },
+                    's' => {
+                        if !flags.contains("m") {
+                            regex.multi_line(false);
+                        }
+                        regex.dot_matches_new_line(true);
+                    },
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(
                             "\\b{}\\b",
@@ -86,7 +95,7 @@ impl Replacer {
         }
     }
 
-    fn replace_file(&self, path: &str) -> Result<()> {
+    fn replace_file(&self, path: &Path) -> Result<()> {
         use memmap::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
@@ -140,7 +149,7 @@ impl Replacer {
                 #[allow(unused_must_use)]
                 paths.par_iter().for_each(|p| {
                     self.replace_file(p).map_err(|e| {
-                        eprintln!("Error processing {}: {}", p, e)
+                        eprintln!("Error processing {}: {}", p.display(), e)
                     });
                 });
 

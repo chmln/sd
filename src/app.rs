@@ -15,15 +15,17 @@ pub(crate) struct Options {
     /// Treat expressions as non-regex strings.
     pub literal_mode: bool,
 
-    #[structopt(short = "f", long = "flags")]
+    #[structopt(short = "f", long = "flags", verbatim_doc_comment)]
+    #[rustfmt::skip]
     /** Regex flags. May be combined (like `-f mc`).
 
-    c - case-sensitive
-    i - case-insensitive
-    m - multi-line matching
-    s - make `.` match newlines
-    w - match full words only
-
+c - case-sensitive
+e - disable multi-line matching
+i - case-insensitive
+m - multi-line matching
+s - make `.` match newlines
+w - match full words only
+{n}
     */
     pub flags: Option<String>,
 
@@ -35,5 +37,5 @@ pub(crate) struct Options {
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
-    pub files: Vec<String>,
+    pub files: Vec<std::path::PathBuf>,
 }

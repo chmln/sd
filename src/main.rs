@@ -10,7 +10,7 @@ fn main() -> Result<()> {
     use structopt::StructOpt;
     let args = app::Options::from_args();
 
-    let source = Source::from(args.files);
+    let source = Source::infer(args.files);
     let replacer = Replacer::new(
         args.find,
         args.replace_with,
