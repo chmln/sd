@@ -6,57 +6,30 @@ trigger:
 
 resources:
   repositories:
-    - repository: templates
+    - repository: rust_pipelines
       type: github
       name: xoac/rust-azure-pipelines
-      ref: refs/tags/v0.0.2
+      ref: refs/heads/master
       endpoint: githubConnection
+stages:
+- stage: test
+  displayName: "Test"
+  jobs:
+  - template: ci/jobs/cargo-test.yaml@rust_pipelines
 
-jobs:
-# This represents the minimum Rust version supported.
-# Tests are not run as tests may require newer versions of rust.
-- template: ci/cargo-check.yml@templates
-  parameters:
-    name: minrust
-    rust_version: 1.31.0 # The 2018 edition
-    displayName: Check rust min ver
+- stage: build
+  displayName: "Build"
+  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+  dependsOn:
+    - test
 
-################
-# Test stage   #
-###############
-
-# Test stable
-- template: ci/test.yml@templates
-  parameters:
-    name: cargo_test_stable
-    displayName: Cargo test
-    cross: true # Test on Windows and macOS
-
-###################
-#    DEPLOY PART  #
-###################
-
-# Release binary
-- template: ci/github-release.yml@templates
-  parameters:
-   name: github_release
-   dependsOn:
-      - minrust
-      - cargo_test_stable
-   rust_version: stable
-   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-   contents: |
-     *
-     !*.rlib
-     !*.d
-     !.*
-   targets:
-    - x86_64-unknown-linux-gnu
-    - x86_64-unknown-linux-musl
-    - x86_64-pc-windows-gnu
-    - x86_64-pc-windows-msvc
-    - x86_64-apple-darwin
-   github:
-    gitHubConnection: githubConnection
-    repositoryName: chmln/sd
-
+# Deploy binaries to github only if tags start with `v` for example `v0.1.5`
+- stage: deploy
+  displayName: "Deploy"
+  dependsOn:
+    - build
+  jobs:
+  - template: ci/scenarios/github/release.yml@rust_pipelines
+    parameters:
+      job_condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+      gitHubConnection: githubConnection
