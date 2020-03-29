@@ -408,7 +408,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "sd"
-version = "0.6.5"
+version = "0.7.0"
 dependencies = [
  "anyhow 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_cmd 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
