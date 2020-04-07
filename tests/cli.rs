@@ -25,13 +25,26 @@ fn in_place() -> Result<()> {
 }
 
 #[test]
+fn in_place_with_empty_result_file() -> Result<()> {
+    let mut file = tempfile::NamedTempFile::new()?;
+    file.write(b"a7c")?;
+    let path = file.into_temp_path();
+
+    sd().args(&["a\\dc", "", path.to_str().unwrap()])
+        .assert()
+        .success();
+    assert_file(&path.to_path_buf(), "");
+
+    Ok(())
+}
+
+#[test]
 fn replace_into_stdout() -> Result<()> {
     let mut file = tempfile::NamedTempFile::new()?;
     file.write(b"abc123def")?;
 
     #[rustfmt::skip]
-    sd()
-        .args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
+    sd().args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
         .assert()
         .success()
         .stdout("def");
