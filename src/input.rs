@@ -113,9 +113,11 @@ impl Replacer {
         file.set_len(replaced.len() as u64)?;
         file.set_permissions(meta.permissions())?;
 
-        let mut mmap_target = unsafe { MmapMut::map_mut(&file)? };
-        mmap_target.deref_mut().write_all(&replaced)?;
-        mmap_target.flush_async()?;
+        if !replaced.is_empty() {
+            let mut mmap_target = unsafe { MmapMut::map_mut(&file)? };
+            mmap_target.deref_mut().write_all(&replaced)?;
+            mmap_target.flush_async()?;
+        }
 
         drop(mmap_source);
         drop(source);
