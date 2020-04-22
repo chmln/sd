@@ -84,9 +84,8 @@ impl Replacer {
         self.regex.is_match(content)
     }
 
-    fn check_not_empty(path: &Path) -> Result<()> {
+    fn check_not_empty(mut file: File) -> Result<()> {
         let mut buf: [u8; 1] = Default::default();
-        let mut file = std::fs::File::open(path)?;
         file.read_exact(&mut buf)?;
         Ok(())
     }
@@ -106,7 +105,7 @@ impl Replacer {
         use memmap::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
-        if let Err(_) = Self::check_not_empty(path) {
+        if let Err(_) = Self::check_not_empty(File::open(path)?) {
             return Ok(());
         }
 
