@@ -84,6 +84,13 @@ impl Replacer {
         self.regex.is_match(content)
     }
 
+    fn check_not_empty(path: &Path) -> Result<()> {
+        let mut buf: [u8; 1] = Default::default();
+        let mut file = std::fs::File::open(path)?;
+        file.read_exact(&mut buf)?;
+        Ok(())
+    }
+
     fn replace<'a>(&'a self, content: &'a [u8]) -> std::borrow::Cow<'a, [u8]> {
         if self.is_literal {
             self.regex.replace_all(
@@ -99,7 +106,10 @@ impl Replacer {
         use memmap::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
-        let path = std::path::Path::new(path);
+        if let Err(_) = Self::check_not_empty(path) {
+            return Ok(());
+        }
+
         let source = File::open(path)?;
         let meta = source.metadata()?;
         let mmap_source = unsafe { Mmap::map(&source)? };
