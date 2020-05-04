@@ -171,6 +171,9 @@ impl Replacer {
                 let mut handle = stdout.lock();
 
                 paths.iter().try_for_each(|path| {
+                    if let Err(_) = Self::check_not_empty(File::open(path)?) {
+                        return Ok(());
+                    }
                     let file =
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
                     handle.write_all(&self.replace(&file))?;
