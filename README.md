@@ -116,6 +116,16 @@ dnf install sd
 pkg install sd
 ```
 
+### Windows - Chocolatey
+
+[Chocolatey](https://www.chocolatey.org/) is a Windows package manager.
+
+First [install Chocolatey](https://chocolatey.org/docs/installation) then
+
+```ps
+choco install sd-cli
+```
+
 ## Quick Guide
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
