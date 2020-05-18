@@ -116,6 +116,12 @@ dnf install sd
 pkg install sd
 ```
 
+### Windows
+
+```sh
+choco install sd-cli
+```
+
 ## Quick Guide
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
