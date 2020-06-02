@@ -122,6 +122,12 @@ pkg install sd
 choco install sd-cli
 ```
 
+### macOS
+
+```sh
+brew install sd
+```
+
 ## Quick Guide
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
