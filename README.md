@@ -128,6 +128,12 @@ choco install sd-cli
 brew install sd
 ```
 
+### Void Linux
+
+```sh
+xbps-install sd
+```
+
 ## Quick Guide
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
