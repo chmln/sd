@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   test:
-    name: Test for ${{ matrix.os }}
+    name: Test for ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
