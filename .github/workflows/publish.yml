@@ -1,0 +1,59 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+
+    - name: Set the version
+      id: version
+      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        target: ${{ matrix.target }}
+
+
+    - name: Build
+      run: cargo build --release --locked
+
+    - name: Strip binary
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      run: strip target/release/sd
+
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v1-release
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/sd
+        asset_name: sd-${{ steps.version.outputs.VERSION }}-${{ matrix.target }}
+        tag: ${{ github.ref }}
