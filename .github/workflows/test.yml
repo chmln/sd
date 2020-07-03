@@ -3,8 +3,8 @@ name: Test
 on: [pull_request]
 
 jobs:
-  publish:
-    name: Publish for ${{ matrix.os }}
+  test:
+    name: Test for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -34,7 +34,6 @@ jobs:
         profile: minimal
         override: true
         target: ${{ matrix.target }}
-
 
     - name: Test
       run: cargo test
