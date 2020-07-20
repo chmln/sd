@@ -210,3 +210,15 @@ for file in $(fd --type file); do
   sd 'from "react"' 'from "preact"' "$file"; 
 done
 ```
+
+### Edge cases
+replace/-with string needs extra `--` before it, if starts with double-minus
+(this is a limitation of the bash itself)
+
+```bash
+echo "test/test" | sd '/' -- '--inteneded--'
+test--inteneded--test
+
+echo "start/--/end" | sd --string-mode -- '--' 'middle'
+start/middle/end
+```
