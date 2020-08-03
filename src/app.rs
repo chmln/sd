@@ -37,5 +37,7 @@ w - match full words only
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
+    /// Note: sd modifies files in-place by default. See documentation for 
+    /// examples.
     pub files: Vec<std::path::PathBuf>,
 }
