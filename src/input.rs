@@ -3,6 +3,7 @@ use regex::bytes::Regex;
 use std::{
     fs::File,
     io::prelude::*,
+    io::BufWriter,
     path::{Path, PathBuf},
 };
 
@@ -124,7 +125,8 @@ impl Replacer {
 
         if !replaced.is_empty() {
             let mut mmap_target = unsafe { MmapMut::map_mut(&file)? };
-            mmap_target.deref_mut().write_all(&replaced)?;
+            BufWriter::with_capacity(1_000_000_000, mmap_target.deref_mut())
+                .write_all(&replaced)?;
             mmap_target.flush_async()?;
         }
 
