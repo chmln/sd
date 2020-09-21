@@ -91,47 +91,54 @@ Then
 cargo install sd
 ```
 
-### Alpine Linux
+### 🐧 Alpine Linux
 
 ```sh
 apk add sd
 ```
 Before installing, ensure the appropriate [repository](https://pkgs.alpinelinux.org/packages?name=sd) is enabled.
 
-### Arch Linux
+### 🐧 Arch Linux
 
 ```sh
 pacman -S sd
 ```
 
-### Fedora
+### 🐧 Fedora
 
 ```sh
 dnf install sd
 ```
 
-### FreeBSD
+### 😈 FreeBSD
 
 ```sh
 pkg install sd
 ```
 
-### Windows
+### 🌈 Windows
 
 ```sh
 choco install sd-cli
 ```
 
-### macOS
+### 🍏 macOS
 
 ```sh
 brew install sd
 ```
 
-### Void Linux
+### 🐧 Void Linux
 
 ```sh
 xbps-install sd
+```
+
+### 🐧 Homebrew-on-Linux
+
+```sh
+brew tap tgotwig/linux-sd
+brew install sd
 ```
 
 ## Quick Guide
