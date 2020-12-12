@@ -216,8 +216,8 @@ replace/-with string needs extra `--` before it, if starts with double-minus
 (this is a limitation of the bash itself)
 
 ```bash
-echo "test/test" | sd '/' -- '--inteneded--'
-test--inteneded--test
+echo "test/test" | sd '/' -- '--intended--'
+test--intended--test
 
 echo "start/--/end" | sd --string-mode -- '--' 'middle'
 start/middle/end
