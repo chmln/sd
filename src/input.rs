@@ -12,16 +12,20 @@ pub(crate) enum Source {
 }
 
 impl Source {
-    pub(crate) fn infer(file_paths: Vec<PathBuf>) -> Self {
-        if file_paths.is_empty() {
-            Source::Stdin
-        } else {
-            Source::Files(file_paths)
-        }
+    pub(crate) fn glob(glob: String) -> Result<Self> {
+        Ok(Self::Files(
+            globwalk::glob(glob)?
+                .into_iter()
+                .filter_map(|entry| {
+                    if let Ok(e) = entry {
+                        Some(e.into_path())
+                    } else { None }
+                })                .collect(),
+        ))
     }
 }
 
-pub(crate) struct Replacer {
+pub struct Replacer {
     regex: Regex,
     replace_with: Vec<u8>,
     is_literal: bool,
@@ -73,7 +77,7 @@ impl Replacer {
             });
         };
 
-        Ok(Replacer {
+        Ok(Self {
             regex: regex.build()?,
             replace_with,
             is_literal,
@@ -134,9 +138,19 @@ impl Replacer {
         target.persist(path)?;
         Ok(())
     }
+}
 
-    pub(crate) fn run(&self, source: &Source, in_place: bool) -> Result<()> {
-        match (source, in_place) {
+pub(crate) struct App {
+    replacer: Replacer,
+    source: Source,
+}
+
+impl App {
+    pub(crate) fn new(source: Source, replacer: Replacer) -> Self {
+        Self { source, replacer }
+    }
+    pub(crate) fn run(&self, in_place: bool) -> Result<()> {
+        match (&self.source, in_place) {
             (Source::Stdin, _) => {
                 let mut buffer = Vec::with_capacity(256);
                 let stdin = std::io::stdin();
@@ -146,8 +160,8 @@ impl Replacer {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
 
-                if self.has_matches(&buffer) {
-                    handle.write_all(&self.replace(&buffer))?;
+                if self.replacer.has_matches(&buffer) {
+                    handle.write_all(&self.replacer.replace(&buffer))?;
                 } else {
                     handle.write_all(&buffer)?;
                 }
@@ -159,7 +173,7 @@ impl Replacer {
 
                 #[allow(unused_must_use)]
                 paths.par_iter().for_each(|p| {
-                    self.replace_file(p).map_err(|e| {
+                    self.replacer.replace_file(p).map_err(|e| {
                         eprintln!("Error processing {}: {}", p.display(), e)
                     });
                 });
@@ -171,12 +185,13 @@ impl Replacer {
                 let mut handle = stdout.lock();
 
                 paths.iter().try_for_each(|path| {
-                    if let Err(_) = Self::check_not_empty(File::open(path)?) {
+                    if let Err(_) = Replacer::check_not_empty(File::open(path)?)
+                    {
                         return Ok(());
                     }
                     let file =
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
-                    handle.write_all(&self.replace(&file))?;
+                    handle.write_all(&self.replacer.replace(&file))?;
 
                     Ok(())
                 })
@@ -197,7 +212,7 @@ mod tests {
         src: &'static str,
         target: &'static str,
     ) {
-        let replacer = Replacer::new(
+        let replacer = App::new(
             look_for.into(),
             replace_with.into(),
             literal,

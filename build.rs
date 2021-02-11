@@ -1,4 +1,4 @@
-include!("src/app.rs");
+include!("src/cli.rs");
 
 fn main() {
     use std::{env::var, fs, str::FromStr};

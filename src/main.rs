@@ -1,22 +1,31 @@
-mod app;
+mod cli;
 mod error;
 mod input;
 pub(crate) mod utils;
 
-pub(crate) use self::input::{Replacer, Source};
+pub(crate) use self::input::{App, Source};
 pub(crate) use error::{Error, Result};
+use input::Replacer;
 
 fn main() -> Result<()> {
     use structopt::StructOpt;
-    let args = app::Options::from_args();
+    let options = cli::Options::from_args();
 
-    let source = Source::infer(args.files);
-    let replacer = Replacer::new(
-        args.find,
-        args.replace_with,
-        args.literal_mode,
-        args.flags,
-    )?;
-    replacer.run(&source, !args.preview)?;
+    let source = match options.glob {
+        Some(glob) => Source::glob(glob)?,
+        None if options.files.len() > 0 => Source::Files(options.files),
+        _ => Source::Stdin,
+    };
+
+    App::new(
+        source,
+        Replacer::new(
+            options.find,
+            options.replace_with,
+            options.literal_mode,
+            options.flags,
+        )?,
+    )
+    .run(!options.preview)?;
     Ok(())
 }
