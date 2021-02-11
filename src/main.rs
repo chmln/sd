@@ -1,11 +1,12 @@
 mod cli;
 mod error;
 mod input;
+pub(crate) mod replacer;
 pub(crate) mod utils;
 
 pub(crate) use self::input::{App, Source};
 pub(crate) use error::{Error, Result};
-use input::Replacer;
+use replacer::Replacer;
 
 fn main() -> Result<()> {
     use structopt::StructOpt;
