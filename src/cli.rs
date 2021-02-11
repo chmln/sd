@@ -15,6 +15,12 @@ pub(crate) struct Options {
     /// Treat expressions as non-regex strings.
     pub literal_mode: bool,
 
+    #[structopt(short = "r")]
+    /// Recursively replace files matching specified glob.{n}
+    ///Examples: "*", "subdir/**/*", "folder/*.css", etc.{n}
+    /// {n}
+    pub glob: Option<String>,
+
     #[structopt(short = "f", long = "flags", verbatim_doc_comment)]
     #[rustfmt::skip]
     /** Regex flags. May be combined (like `-f mc`).
@@ -25,7 +31,7 @@ i - case-insensitive
 m - multi-line matching
 s - make `.` match newlines
 w - match full words only
-{n}
+{n}{n}
     */
     pub flags: Option<String>,
 
@@ -37,7 +43,7 @@ w - match full words only
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
-    /// Note: sd modifies files in-place by default. See documentation for 
+    ///{n}{n}Note: sd modifies files in-place by default. See documentation for
     /// examples.
     pub files: Vec<std::path::PathBuf>,
 }
