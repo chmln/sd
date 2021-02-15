@@ -25,6 +25,7 @@ fn main() -> Result<()> {
             options.replace_with,
             options.literal_mode,
             options.flags,
+            options.replacements
         )?,
     )
     .run(!options.preview)?;

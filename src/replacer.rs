@@ -6,6 +6,7 @@ pub(crate) struct Replacer {
     regex: Regex,
     replace_with: Vec<u8>,
     is_literal: bool,
+    replacements: usize,
 }
 
 impl Replacer {
@@ -14,6 +15,7 @@ impl Replacer {
         replace_with: String,
         is_literal: bool,
         flags: Option<String>,
+        replacements: Option<usize>,
     ) -> Result<Self> {
         let (look_for, replace_with) = if is_literal {
             (regex::escape(&look_for), replace_with.into_bytes())
@@ -58,6 +60,7 @@ impl Replacer {
             regex: regex.build()?,
             replace_with,
             is_literal,
+            replacements: replacements.unwrap_or(0),
         })
     }
 
@@ -76,12 +79,17 @@ impl Replacer {
         content: &'a [u8],
     ) -> std::borrow::Cow<'a, [u8]> {
         if self.is_literal {
-            self.regex.replace_all(
+            self.regex.replacen(
                 &content,
+                self.replacements,
                 regex::bytes::NoExpand(&self.replace_with),
             )
         } else {
-            self.regex.replace_all(&content, &*self.replace_with)
+            self.regex.replacen(
+                &content,
+                self.replacements,
+                &*self.replace_with,
+            )
         }
     }
 
@@ -137,6 +145,7 @@ mod tests {
             replace_with.into(),
             literal,
             flags.map(ToOwned::to_owned),
+            None,
         )
         .unwrap();
         assert_eq!(
@@ -181,4 +190,3 @@ mod tests {
         replace("abc", "def", false, Some("w"), "abcd abc", "abcd def");
     }
 }
-

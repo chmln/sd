@@ -21,6 +21,10 @@ pub(crate) struct Options {
     /// {n}
     pub glob: Option<String>,
 
+    #[structopt(short = "n")]
+    /// Limit the number of replacements
+    pub replacements: Option<usize>,
+
     #[structopt(short = "f", long = "flags", verbatim_doc_comment)]
     #[rustfmt::skip]
     /** Regex flags. May be combined (like `-f mc`).
