@@ -47,8 +47,7 @@ jobs:
         override: true
         target: ${{ matrix.target }}
 
-
-    - name: Build
+    - name: Test
       uses: actions-rs/cargo@v1
       with:
         use-cross: ${{ matrix.use-cross }}

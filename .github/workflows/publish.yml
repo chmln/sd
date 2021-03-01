@@ -52,11 +52,11 @@ jobs:
 
 
     - name: Build
-    - uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@v1
       with:
         use-cross: ${{ matrix.use-cross }}
         command: build
-        args: --target ${{ matrix.target }}
+        args: --target ${{ matrix.target }} --release --locked
 
     - name: Strip binary
       if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
