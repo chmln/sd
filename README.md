@@ -104,6 +104,12 @@ Before installing, ensure the appropriate [repository](https://pkgs.alpinelinux.
 pacman -S sd
 ```
 
+### Gentoo (unc3nsored overlay)
+```
+emerge -av sys-apps/sd
+```
+Before installing, ensure the appropriate [overlay](https://github.com/xxc3nsoredxx/unc3nsored) is enabled.
+
 ### Fedora
 
 ```sh
