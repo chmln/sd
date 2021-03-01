@@ -11,21 +11,33 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            use-cross: false
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
+            use-cross: false
+
+          - os: ubuntu-latest
+            target: arm-unknown-linux-gnueabihf
+            use-cross: true
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            use-cross: false
 
           - os: macos-latest
             target: x86_64-apple-darwin
+            use-cross: false
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
         fetch-depth: 1
+
+    - name: Set the version
+      id: version
+      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -35,5 +47,10 @@ jobs:
         override: true
         target: ${{ matrix.target }}
 
-    - name: Test
-      run: cargo test
+
+    - name: Build
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: ${{ matrix.use-cross }}
+        command: test
+        args: --target ${{ matrix.target }}
