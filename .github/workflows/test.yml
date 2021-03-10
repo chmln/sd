@@ -39,10 +39,6 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Set the version
-      id: version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
