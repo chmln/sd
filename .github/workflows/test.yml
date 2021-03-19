@@ -31,7 +31,7 @@ jobs:
 
           - os: macos-latest
             target: aarch64-apple-darwin
-            use-cross: false
+            use-cross: true
 
     steps:
     - name: Checkout repository
@@ -46,6 +46,16 @@ jobs:
         profile: minimal
         override: true
         target: ${{ matrix.target }}
+
+    - name: Create .cargo/config.toml
+      if: ${{ matrix.use-cross == true }}
+      shell: bash
+      run: |
+           mkdir .cargo
+           cat > .cargo/config.toml <<EOF
+           [target.${{ matrix.target }}]
+           rustflags = ["--cfg", "sd_cross_compile"]
+           EOF
 
     - name: Test
       uses: actions-rs/cargo@v1
