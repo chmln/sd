@@ -1,66 +1,70 @@
-use anyhow::Result;
-use assert_cmd::Command;
-use std::io::prelude::*;
+#[cfg(test)]
+#[cfg(not(sd_cross_compile))] // Cross-compilation does not allow to spawn threads but `command.assert()` would do.
+mod cli {
+    use anyhow::Result;
+    use assert_cmd::Command;
+    use std::io::prelude::*;
 
-fn sd() -> Command {
-    Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Error invoking sd")
-}
+    fn sd() -> Command {
+        Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Error invoking sd")
+    }
 
-fn assert_file(path: &std::path::Path, content: &str) {
-    assert_eq!(content, std::fs::read_to_string(path).unwrap());
-}
+    fn assert_file(path: &std::path::Path, content: &str) {
+        assert_eq!(content, std::fs::read_to_string(path).unwrap());
+    }
 
-#[test]
-fn in_place() -> Result<()> {
-    let mut file = tempfile::NamedTempFile::new()?;
-    file.write(b"abc123def")?;
-    let path = file.into_temp_path();
+    #[test]
+    fn in_place() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write(b"abc123def")?;
+        let path = file.into_temp_path();
 
-    sd().args(&["abc\\d+", "", path.to_str().unwrap()])
-        .assert()
-        .success();
-    assert_file(&path.to_path_buf(), "def");
+        sd().args(&["abc\\d+", "", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path.to_path_buf(), "def");
 
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn in_place_with_empty_result_file() -> Result<()> {
-    let mut file = tempfile::NamedTempFile::new()?;
-    file.write(b"a7c")?;
-    let path = file.into_temp_path();
+    #[test]
+    fn in_place_with_empty_result_file() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write(b"a7c")?;
+        let path = file.into_temp_path();
 
-    sd().args(&["a\\dc", "", path.to_str().unwrap()])
-        .assert()
-        .success();
-    assert_file(&path.to_path_buf(), "");
+        sd().args(&["a\\dc", "", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path.to_path_buf(), "");
 
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn replace_into_stdout() -> Result<()> {
-    let mut file = tempfile::NamedTempFile::new()?;
-    file.write(b"abc123def")?;
+    #[test]
+    fn replace_into_stdout() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write(b"abc123def")?;
 
-    #[rustfmt::skip]
+        #[rustfmt::skip]
     sd().args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
         .assert()
         .success()
         .stdout("def");
 
-    assert_file(file.path(), "abc123def");
+        assert_file(file.path(), "abc123def");
 
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn stdin() -> Result<()> {
-    sd().args(&["abc\\d+", ""])
-        .write_stdin("abc123def")
-        .assert()
-        .success()
-        .stdout("def");
+    #[test]
+    fn stdin() -> Result<()> {
+        sd().args(&["abc\\d+", ""])
+            .write_stdin("abc123def")
+            .assert()
+            .success()
+            .stdout("def");
 
-    Ok(())
+        Ok(())
+    }
 }
