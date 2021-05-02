@@ -8,8 +8,6 @@ pub enum Error {
     TempfilePersist(#[from] tempfile::PersistError),
     #[error("file doesn't have parent path: {0}")]
     InvalidPath(std::path::PathBuf),
-    #[error("Bad glob: {0}")]
-    Glob(#[from] globwalk::GlobError),
 }
 
 // pretty-print the error

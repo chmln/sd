@@ -12,10 +12,12 @@ fn main() -> Result<()> {
     use structopt::StructOpt;
     let options = cli::Options::from_args();
 
-    let source = match options.glob {
-        Some(glob) => Source::glob(glob)?,
-        None if options.files.len() > 0 => Source::Files(options.files),
-        _ => Source::Stdin,
+    let source = if options.recursive {
+        Source::recursive()?
+    } else if options.files.len() > 0 {
+        Source::Files(options.files)
+    } else {
+        Source::Stdin
     };
 
     App::new(
@@ -25,9 +27,9 @@ fn main() -> Result<()> {
             options.replace_with,
             options.literal_mode,
             options.flags,
-            options.replacements
+            options.replacements,
         )?,
     )
-    .run(!options.preview)?;
+    .run(options.preview)?;
     Ok(())
 }

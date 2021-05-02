@@ -93,6 +93,36 @@ impl Replacer {
         }
     }
 
+    pub(crate) fn replace_preview<'a>(
+        &'a self,
+        content: &[u8],
+    ) -> std::borrow::Cow<'a, [u8]> {
+        let mut v = Vec::<u8>::new();
+        let mut captures = self.regex.captures_iter(content);
+
+        self.regex.split(content).for_each(|sur_text| {
+            use regex::bytes::Replacer;
+
+            &v.extend(sur_text);
+            if let Some(capture) = captures.next() {
+                v.extend_from_slice(
+                    ansi_term::Color::Green.prefix().to_string().as_bytes(),
+                );
+                if self.is_literal {
+                    regex::bytes::NoExpand(&self.replace_with)
+                        .replace_append(&capture, &mut v);
+                } else {
+                    (&*self.replace_with).replace_append(&capture, &mut v);
+                }
+                v.extend_from_slice(
+                    ansi_term::Color::Green.suffix().to_string().as_bytes(),
+                );
+            }
+        });
+
+        return std::borrow::Cow::Owned(v);
+    }
+
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
         use memmap::{Mmap, MmapMut};
         use std::ops::DerefMut;

@@ -1,22 +1,23 @@
 use crate::{Replacer, Result};
 use std::{fs::File, io::prelude::*, path::PathBuf};
 
+#[derive(Debug)]
 pub(crate) enum Source {
     Stdin,
     Files(Vec<PathBuf>),
 }
 
 impl Source {
-    pub(crate) fn glob(glob: String) -> Result<Self> {
+    pub(crate) fn recursive() -> Result<Self> {
         Ok(Self::Files(
-            globwalk::glob(glob)?
-                .into_iter()
-                .filter_map(|entry| {
-                    if let Ok(e) = entry {
-                        Some(e.into_path())
-                    } else {
-                        None
-                    }
+            ignore::WalkBuilder::new(".")
+                .hidden(false)
+                .filter_entry(|e| e.file_name() != ".git")
+                .build()
+                .filter_map(|d| d.ok())
+                .filter_map(|d| match d.file_type() {
+                    Some(t) if t.is_file() => Some(d.into_path()),
+                    _ => None,
                 })
                 .collect(),
         ))
@@ -32,8 +33,11 @@ impl App {
     pub(crate) fn new(source: Source, replacer: Replacer) -> Self {
         Self { source, replacer }
     }
-    pub(crate) fn run(&self, in_place: bool) -> Result<()> {
-        match (&self.source, in_place) {
+    pub(crate) fn run(&self, preview: bool) -> Result<()> {
+        let is_tty = atty::is(atty::Stream::Stdout);
+        dbg!(&self.source);
+
+        match (&self.source, preview) {
             (Source::Stdin, _) => {
                 let mut buffer = Vec::with_capacity(256);
                 let stdin = std::io::stdin();
@@ -43,15 +47,15 @@ impl App {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
 
-                if self.replacer.has_matches(&buffer) {
-                    handle.write_all(&self.replacer.replace(&buffer))?;
+                handle.write_all(&if is_tty {
+                    self.replacer.replace_preview(&buffer)
                 } else {
-                    handle.write_all(&buffer)?;
-                }
+                    self.replacer.replace(&buffer)
+                })?;
 
                 Ok(())
             }
-            (Source::Files(paths), true) => {
+            (Source::Files(paths), false) => {
                 use rayon::prelude::*;
 
                 #[allow(unused_must_use)]
@@ -63,7 +67,7 @@ impl App {
 
                 Ok(())
             }
-            (Source::Files(paths), false) => {
+            (Source::Files(paths), true) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
 
@@ -74,7 +78,11 @@ impl App {
                     }
                     let file =
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
-                    handle.write_all(&self.replacer.replace(&file))?;
+                    if self.replacer.has_matches(&file) {
+                        println!("{}", path.display());
+                        handle
+                            .write_all(&self.replacer.replace_preview(&file))?;
+                    }
 
                     Ok(())
                 })

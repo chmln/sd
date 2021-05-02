@@ -16,10 +16,8 @@ pub(crate) struct Options {
     pub literal_mode: bool,
 
     #[structopt(short = "r")]
-    /// Recursively replace files matching specified glob.{n}
-    ///Examples: "*", "subdir/**/*", "folder/*.css", etc.{n}
-    /// {n}
-    pub glob: Option<String>,
+    /// Recursively replace files
+    pub recursive: bool,
 
     #[structopt(short = "n")]
     /// Limit the number of replacements
