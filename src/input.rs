@@ -35,7 +35,6 @@ impl App {
     }
     pub(crate) fn run(&self, preview: bool) -> Result<()> {
         let is_tty = atty::is(atty::Stream::Stdout);
-        dbg!(&self.source);
 
         match (&self.source, preview) {
             (Source::Stdin, _) => {
