@@ -78,7 +78,6 @@ impl App {
                     let file =
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
                     if self.replacer.has_matches(&file) {
-                        println!("{}", path.display());
                         handle
                             .write_all(&self.replacer.replace_preview(&file))?;
                     }
