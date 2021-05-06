@@ -5,7 +5,9 @@ fn main() {
     use structopt::clap::Shell;
 
     let mut app = Options::clap();
-    let out_dir = var("SHELL_COMPLETIONS_DIR").or(var("OUT_DIR")).unwrap();
+    let out_dir = var("SHELL_COMPLETIONS_DIR")
+        .or_else(|_| var("OUT_DIR"))
+        .unwrap();
 
     fs::create_dir_all(&out_dir).unwrap();
 

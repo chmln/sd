@@ -25,8 +25,8 @@ impl Source {
 }
 
 pub(crate) struct App {
-    replacer: Replacer,
     source: Source,
+    replacer: Replacer,
 }
 
 impl App {
@@ -71,8 +71,7 @@ impl App {
                 let mut handle = stdout.lock();
 
                 paths.iter().try_for_each(|path| {
-                    if let Err(_) = Replacer::check_not_empty(File::open(path)?)
-                    {
+                    if Replacer::check_not_empty(File::open(path)?).is_err() {
                         return Ok(());
                     }
                     let file =
