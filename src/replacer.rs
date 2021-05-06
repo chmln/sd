@@ -1,6 +1,6 @@
 use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs::File, io::prelude::*, path::Path};
+use std::{fs, fs::File, io::prelude::*, path::Path};
 
 pub(crate) struct Replacer {
     regex: Regex,
@@ -132,7 +132,7 @@ impl Replacer {
         }
 
         let source = File::open(path)?;
-        let meta = source.metadata()?;
+        let meta = fs::metadata(path)?;
         let mmap_source = unsafe { Mmap::map(&source)? };
         let replaced = self.replace(&mmap_source);
 
@@ -153,7 +153,7 @@ impl Replacer {
         drop(mmap_source);
         drop(source);
 
-        target.persist(path)?;
+        target.persist(fs::canonicalize(path)?)?;
         Ok(())
     }
 }

@@ -13,6 +13,18 @@ mod cli {
         assert_eq!(content, std::fs::read_to_string(path).unwrap());
     }
 
+    fn create_soft_link<P: AsRef<std::path::Path>>(
+        src: &P,
+        dst: &P,
+    ) -> Result<()> {
+        #[cfg(target_family = "unix")]
+        std::os::unix::fs::symlink(src, dst)?;
+        #[cfg(target_family = "windows")]
+        std::os::windows::fs::symlink_file(src, dst)?;
+
+        Ok(())
+    }
+
     #[test]
     fn in_place() -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
@@ -37,6 +49,26 @@ mod cli {
             .assert()
             .success();
         assert_file(&path.to_path_buf(), "");
+
+        Ok(())
+    }
+
+    #[test]
+    fn in_place_following_symlink() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path();
+        let file = path.join("file");
+        let link = path.join("link");
+
+        create_soft_link(&file, &link)?;
+        std::fs::write(&file, "abc123def")?;
+
+        sd().args(&["abc\\d+", "", link.to_str().unwrap()])
+            .assert()
+            .success();
+
+        assert_file(&file.to_path_buf(), "def");
+        assert!(std::fs::symlink_metadata(link)?.file_type().is_symlink());
 
         Ok(())
     }
