@@ -46,11 +46,14 @@ mod cli {
         let mut file = tempfile::NamedTempFile::new()?;
         file.write(b"abc123def")?;
 
-        #[rustfmt::skip]
-    sd().args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
-        .assert()
-        .success()
-        .stdout("def");
+        sd().args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
+            .assert()
+            .success()
+            .stdout(format!(
+                "{}{}def",
+                ansi_term::Color::Green.prefix().to_string(),
+                ansi_term::Color::Green.suffix().to_string()
+            ));
 
         assert_file(file.path(), "abc123def");
 
