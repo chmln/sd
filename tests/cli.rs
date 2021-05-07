@@ -82,7 +82,7 @@ mod cli {
             .assert()
             .success()
             .stdout(format!(
-                "{}{}def",
+                "{}{}def\n",
                 ansi_term::Color::Green.prefix().to_string(),
                 ansi_term::Color::Green.suffix().to_string()
             ));

@@ -69,6 +69,7 @@ impl App {
             (Source::Files(paths), true) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
+                let print_path = paths.len() > 1;
 
                 paths.iter().try_for_each(|path| {
                     if let Err(_) = Replacer::check_not_empty(File::open(path)?)
@@ -78,8 +79,17 @@ impl App {
                     let file =
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
                     if self.replacer.has_matches(&file) {
+                        if print_path {
+                            writeln!(
+                                handle,
+                                "----- FILE {} -----",
+                                path.display()
+                            )?;
+                        }
+
                         handle
                             .write_all(&self.replacer.replace_preview(&file))?;
+                        writeln!(handle)?;
                     }
 
                     Ok(())
