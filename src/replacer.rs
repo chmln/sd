@@ -23,7 +23,7 @@ impl Replacer {
             (
                 look_for,
                 utils::unescape(&replace_with)
-                    .unwrap_or_else(|| replace_with)
+                    .unwrap_or(replace_with)
                     .into_bytes(),
             )
         };
@@ -40,7 +40,7 @@ impl Replacer {
                     'm' => {},
                     'e' => { regex.multi_line(false); },
                     's' => {
-                        if !flags.contains("m") {
+                        if !flags.contains('m') {
                             regex.multi_line(false);
                         }
                         regex.dot_matches_new_line(true);
@@ -103,7 +103,7 @@ impl Replacer {
         self.regex.split(content).for_each(|sur_text| {
             use regex::bytes::Replacer;
 
-            &v.extend(sur_text);
+            v.extend(sur_text);
             if let Some(capture) = captures.next() {
                 v.extend_from_slice(
                     ansi_term::Color::Green.prefix().to_string().as_bytes(),
@@ -120,14 +120,14 @@ impl Replacer {
             }
         });
 
-        return std::borrow::Cow::Owned(v);
+        std::borrow::Cow::Owned(v)
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
         use memmap::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
-        if let Err(_) = Self::check_not_empty(File::open(path)?) {
+        if Self::check_not_empty(File::open(path)?).is_err() {
             return Ok(());
         }
 
