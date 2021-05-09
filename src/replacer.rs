@@ -97,30 +97,68 @@ impl Replacer {
         &'a self,
         content: &[u8],
     ) -> std::borrow::Cow<'a, [u8]> {
-        let mut v = Vec::<u8>::new();
-        let mut captures = self.regex.captures_iter(content);
+        use itertools::Itertools;
+        use regex::bytes::Replacer;
 
-        self.regex.split(content).for_each(|sur_text| {
-            use regex::bytes::Replacer;
+        let mut output = Vec::<u8>::new();
+        let captures =
+            self.regex.captures_iter(content).enumerate().collect_vec();
+        let num_captures = captures.len();
+        let split = self.regex.split(content).collect::<Vec<_>>();
 
-            &v.extend(sur_text);
-            if let Some(capture) = captures.next() {
-                v.extend_from_slice(
-                    ansi_term::Color::Green.prefix().to_string().as_bytes(),
-                );
-                if self.is_literal {
-                    regex::bytes::NoExpand(&self.replace_with)
-                        .replace_append(&capture, &mut v);
+        captures.into_iter().for_each(|(capture_index, capture)| {
+            let text_before = split.get(capture_index).unwrap();
+            let text_after = split.get(capture_index + 1);
+
+            let l_pos = text_before
+                .iter()
+                .positions(|c| c == &b'\n')
+                .collect::<Vec<_>>();
+
+            if let Some(i) = l_pos
+                .get(l_pos.len() - 3)
+                .or_else(|| l_pos.get(l_pos.len() - 2))
+                .or_else(|| l_pos.get(l_pos.len() - 1))
+            {
+                output.extend_from_slice(&text_before[*i..]);
+            }
+
+            output.extend_from_slice(
+                ansi_term::Color::Green.prefix().to_string().as_bytes(),
+            );
+
+            if self.is_literal {
+                regex::bytes::NoExpand(&self.replace_with)
+                    .replace_append(&capture, &mut output);
+            } else {
+                (&*self.replace_with).replace_append(&capture, &mut output);
+            }
+
+            output.extend_from_slice(
+                ansi_term::Color::Green.suffix().to_string().as_bytes(),
+            );
+
+            if let Some(text_after) = text_after {
+                let pos = text_after
+                    .iter()
+                    .positions(|c| c == &b'\n')
+                    .collect::<Vec<_>>();
+
+                if let Some(i) =
+                    pos.get(2).or_else(|| pos.get(1)).or_else(|| pos.get(0))
+                {
+                    output.extend_from_slice(&text_after[..*i]);
+                    output.push(b'\n');
+                    if num_captures > 1 && capture_index != num_captures - 1 {
+                        output.extend_from_slice(&[b'.', b'.', b'.', b'\n'])
+                    }
                 } else {
-                    (&*self.replace_with).replace_append(&capture, &mut v);
+                    output.extend_from_slice(&text_after);
                 }
-                v.extend_from_slice(
-                    ansi_term::Color::Green.suffix().to_string().as_bytes(),
-                );
             }
         });
 
-        return std::borrow::Cow::Owned(v);
+        return std::borrow::Cow::Owned(output);
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {

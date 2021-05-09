@@ -12,7 +12,7 @@ repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
 
 [dependencies]
-regex = "1.4.3"
+regex = "1.5.4"
 structopt = "0.3.21"
 rayon = "1.5.0"
 unescape = "0.1.0"
@@ -23,10 +23,12 @@ globwalk = "0.8.1"
 atty = "0.2.14"
 ignore = "0.4.17"
 ansi_term = "0.12.1"
+colored-diff = "0.2.2"
+itertools = "0.10.0"
 
 [dev-dependencies]
 assert_cmd = "1.0.3"
-anyhow = "1.0.38"
+anyhow = "1.0.40"
 
 [build-dependencies]
 structopt = "0.3.21"
