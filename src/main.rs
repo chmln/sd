@@ -12,10 +12,10 @@ fn main() -> Result<()> {
     use structopt::StructOpt;
     let options = cli::Options::from_args();
 
-    let source = if options.recursive {
-        Source::recursive()?
-    } else if options.files.len() > 0 {
+    let source = if options.files.len() > 0 {
         Source::Files(options.files)
+    } else if atty::is(atty::Stream::Stdin) {
+        Source::recursive()?
     } else {
         Source::Stdin
     };

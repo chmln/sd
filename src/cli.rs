@@ -15,10 +15,6 @@ pub(crate) struct Options {
     /// Treat expressions as non-regex strings.
     pub literal_mode: bool,
 
-    #[structopt(short = "r")]
-    /// Recursively replace files
-    pub recursive: bool,
-
     #[structopt(short = "n")]
     /// Limit the number of replacements
     pub replacements: Option<usize>,
