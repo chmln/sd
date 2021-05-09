@@ -10,6 +10,7 @@ license = "MIT"
 homepage = "https://github.com/chmln/sd"
 repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
+resolver = "2"
 
 [dependencies]
 regex = "1.5.4"
@@ -19,11 +20,9 @@ unescape = "0.1.0"
 memmap = "0.7.0"
 tempfile = "3.2.0"
 thiserror = "1.0.24"
-globwalk = "0.8.1"
 atty = "0.2.14"
 ignore = "0.4.17"
 ansi_term = "0.12.1"
-colored-diff = "0.2.2"
 itertools = "0.10.0"
 
 [dev-dependencies]

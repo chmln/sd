@@ -1,6 +1,6 @@
 use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs, fs::File, io::prelude::*, path::Path};
+use std::{fs, fs::File, io::prelude::*, path::Path, borrow::Cow};
 
 pub(crate) struct Replacer {
     regex: Regex,
@@ -77,7 +77,7 @@ impl Replacer {
     pub(crate) fn replace<'a>(
         &'a self,
         content: &'a [u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
+    ) -> Cow<'a, [u8]> {
         if self.is_literal {
             self.regex.replacen(
                 &content,
@@ -96,13 +96,16 @@ impl Replacer {
     pub(crate) fn replace_preview<'a>(
         &'a self,
         content: &[u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
+    ) -> Cow<'a, [u8]> {
         use itertools::Itertools;
         use regex::bytes::Replacer;
 
         let mut output = Vec::<u8>::new();
-        let captures =
-            self.regex.captures_iter(content).enumerate().collect_vec();
+        let captures = self
+            .regex
+            .captures_iter(content)
+            .enumerate()
+            .collect::<Vec<_>>();
         let num_captures = captures.len();
         let split = self.regex.split(content).collect::<Vec<_>>();
 
@@ -158,7 +161,7 @@ impl Replacer {
             }
         });
 
-        return std::borrow::Cow::Owned(output);
+        return Cow::Owned(output);
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
