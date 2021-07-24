@@ -80,21 +80,25 @@ impl App {
                         unsafe { memmap::Mmap::map(&File::open(path)?)? };
 
                     if self.replacer.has_matches(&file) {
-                        ansi_term::Color::Blue
-                            .paint(path.display().to_string().as_bytes())
-                            .write_to(&mut handle)?;
+                        if paths.len() > 1 {
+                            ansi_term::Color::Blue
+                                .paint(path.display().to_string().as_bytes())
+                                .write_to(&mut handle)?;
 
-                        handle.write(b"\n")?;
-                        ansi_term::Color::Blue
-                            .paint(separator.as_bytes())
-                            .write_to(&mut handle)?;
+                            handle.write(b"\n")?;
+                            ansi_term::Color::Blue
+                                .paint(separator.as_bytes())
+                                .write_to(&mut handle)?;
 
-                        handle.write(b"\n")?;
+                            handle.write(b"\n")?;
+                        }
 
                         handle
                             .write_all(&self.replacer.replace_preview(&file))?;
 
-                        handle.write(b"\n")?;
+                        if paths.len() > 1 {
+                            handle.write(b"\n")?;
+                        }
                     }
 
                     Ok(())

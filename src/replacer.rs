@@ -1,6 +1,6 @@
 use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs, fs::File, io::prelude::*, path::Path, borrow::Cow};
+use std::{borrow::Cow, fs, fs::File, io::prelude::*, path::Path};
 
 pub(crate) struct Replacer {
     regex: Regex,
@@ -74,10 +74,7 @@ impl Replacer {
         Ok(())
     }
 
-    pub(crate) fn replace<'a>(
-        &'a self,
-        content: &'a [u8],
-    ) -> Cow<'a, [u8]> {
+    pub(crate) fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
         if self.is_literal {
             self.regex.replacen(
                 &content,
@@ -95,39 +92,47 @@ impl Replacer {
 
     pub(crate) fn replace_preview<'a>(
         &'a self,
-        content: &[u8],
+        content: &'a [u8],
     ) -> Cow<'a, [u8]> {
+        use ansi_term::Color;
         use itertools::Itertools;
         use regex::bytes::Replacer;
 
-        let mut output = Vec::<u8>::new();
         let captures = self
             .regex
             .captures_iter(content)
             .enumerate()
             .collect::<Vec<_>>();
         let num_captures = captures.len();
-        let split = self.regex.split(content).collect::<Vec<_>>();
+
+        if num_captures == 0 {
+            return Cow::Borrowed(content);
+        }
+
+        let surrounding_text = self.regex.split(content).collect::<Vec<_>>();
+        let mut output = Vec::<u8>::with_capacity(5000);
 
         captures.into_iter().for_each(|(capture_index, capture)| {
-            let text_before = split.get(capture_index).unwrap();
-            let text_after = split.get(capture_index + 1);
+            let text_before = surrounding_text.get(capture_index).unwrap();
+            let text_after = surrounding_text.get(capture_index + 1);
 
             let l_pos = text_before
                 .iter()
                 .positions(|c| c == &b'\n')
                 .collect::<Vec<_>>();
 
-            if let Some(i) = l_pos
+            if l_pos.len() > 0 {
+                if let Some(i) = l_pos
                 .get(l_pos.len() - 3)
                 .or_else(|| l_pos.get(l_pos.len() - 2))
                 .or_else(|| l_pos.get(l_pos.len() - 1))
             {
                 output.extend_from_slice(&text_before[*i..]);
             }
+            }
 
             output.extend_from_slice(
-                ansi_term::Color::Green.prefix().to_string().as_bytes(),
+                Color::Green.prefix().to_string().as_bytes(),
             );
 
             if self.is_literal {
@@ -138,7 +143,7 @@ impl Replacer {
             }
 
             output.extend_from_slice(
-                ansi_term::Color::Green.suffix().to_string().as_bytes(),
+                Color::Green.suffix().to_string().as_bytes(),
             );
 
             if let Some(text_after) = text_after {
