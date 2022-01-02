@@ -218,13 +218,19 @@ done
 ```
 
 ### Edge cases
-replace/-with string needs extra `--` before it, if starts with double-minus
-(this is a limitation of the bash itself)
+sd will interpret every argument starting with `--` as a (potentially unknown) flag.
+The common convention of using `--` to signal the end of flags is respected:
 
 ```bash
-echo "test/test" | sd '/' -- '--inteneded--'
-test--inteneded--test
+$ echo "./hello foo" | sd "foo" "--world"
+error: Found argument '--world' which wasn't expected, or isn't valid in this context
 
-echo "start/--/end" | sd --string-mode -- '--' 'middle'
-start/middle/end
+USAGE:
+    sd [OPTIONS] <find> <replace-with> [files]...
+
+For more information try --help
+$ echo "./hello foo" | sd "foo" -- "--world"
+./hello --world
+$ echo "./hello --foo" | sd -- "--foo" "--world"
+./hello --world
 ```
