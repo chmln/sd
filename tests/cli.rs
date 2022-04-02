@@ -81,8 +81,9 @@ mod cli {
         sd().args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
             .assert()
             .success()
+
             .stdout(format!(
-                "{}{}def\n",
+                "{}def{}\n",
                 ansi_term::Color::Green.prefix().to_string(),
                 ansi_term::Color::Green.suffix().to_string()
             ));
