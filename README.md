@@ -184,6 +184,8 @@ In the unlikely case you stumble upon ambiguities, resolve them by using `${var}
 123_dollars and 45_cents
 ```
 
+You can use `$$` to display a literal `$`.
+
 4. **Find & replace in a file**
 
 ```sh
