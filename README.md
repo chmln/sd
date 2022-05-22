@@ -128,10 +128,16 @@ pkg install sd
 choco install sd-cli
 ```
 
-### macOS
+### macOS (Homebrew)
 
 ```sh
 brew install sd
+```
+
+### macOS (MacPorts)
+
+```sh
+sudo port install sd
 ```
 
 ### Void Linux
