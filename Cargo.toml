@@ -12,7 +12,7 @@ repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
 
 [dependencies]
-regex = "1.4.3"
+regex = "1.5.5"
 structopt = "0.3.21"
 rayon = "1.5.0"
 unescape = "0.1.0"
