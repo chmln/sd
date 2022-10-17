@@ -205,7 +205,7 @@ This example uses [fd](https://github.com/sharkdp/fd).
 Good ol' unix philosophy to the rescue.
 
 ```sh
-sd 'from "react"' 'from "preact"' $(fd --type file)
+fd -0 -t file | xargs -0 sd 'from "react"' 'from "preact"'
 ```
 
 Same, but with backups (consider version control).
