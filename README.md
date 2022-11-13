@@ -104,6 +104,12 @@ Before installing, ensure the appropriate [repository](https://pkgs.alpinelinux.
 pacman -S sd
 ```
 
+### Debian
+
+```sh
+apt install sd
+```
+
 ### Gentoo (unc3nsored overlay)
 ```
 emerge -av sys-apps/sd
