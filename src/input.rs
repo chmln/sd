@@ -1,9 +1,11 @@
 use crate::{Replacer, Result};
+use std::io::{BufRead, Write};
 use std::{fs::File, io::prelude::*, path::PathBuf};
 
 #[derive(Debug)]
 pub(crate) enum Source {
     Stdin,
+    StdinLineBuffered,
     Files(Vec<PathBuf>),
 }
 
@@ -51,6 +53,35 @@ impl App {
                 } else {
                     self.replacer.replace(&buffer)
                 })?;
+
+                Ok(())
+            }
+            (Source::StdinLineBuffered, _) => {
+                let stdin = std::io::stdin();
+                let stdout = std::io::stdout();
+                let mut handle = stdout.lock();
+
+                let mut buffer = String::new();
+
+                loop {
+                    let bytes_read = stdin
+                        .lock()
+                        .read_line(&mut buffer)
+                        .expect("Error reading from standard input");
+                    if bytes_read == 0 {
+                        break;
+                    }
+                    let output = if is_tty {
+                        self.replacer.replace_preview(buffer.as_bytes())
+                    } else {
+                        self.replacer.replace(buffer.as_bytes())
+                    };
+                    handle
+                        .write_all(output.as_ref())
+                        .expect("Error writing to standard output");
+                    handle.flush().expect("Error flushing output");
+                    buffer.clear();
+                }
 
                 Ok(())
             }
