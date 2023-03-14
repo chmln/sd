@@ -16,6 +16,8 @@ fn main() -> Result<()> {
         Source::recursive()?
     } else if options.files.len() > 0 {
         Source::Files(options.files)
+    } else if options.line_buffered {
+        Source::StdinLineBuffered
     } else {
         Source::Stdin
     };

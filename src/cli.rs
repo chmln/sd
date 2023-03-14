@@ -19,6 +19,10 @@ pub(crate) struct Options {
     /// Recursively replace files
     pub recursive: bool,
 
+    #[structopt(short = "l", long = "line-buffered-mode")]
+    /// Buffered mode. Doesn't support multiline matching
+    pub line_buffered: bool,
+
     #[structopt(short = "n")]
     /// Limit the number of replacements
     pub replacements: Option<usize>,
