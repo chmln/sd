@@ -29,6 +29,14 @@ jobs:
             target: x86_64-apple-darwin
             use-cross: false
 
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            use-cross: true
+
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            use-cross: true
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
