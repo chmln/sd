@@ -66,10 +66,6 @@ jobs:
         command: build
         args: --target ${{ matrix.target }} --release --locked
 
-    - name: Strip binary
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-      run: strip target/${{ matrix.target }}/release/sd
-
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v1-release
       with:
