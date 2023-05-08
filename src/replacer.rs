@@ -124,7 +124,7 @@ impl Replacer {
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
-        use memmap::{Mmap, MmapMut};
+        use memmap2::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
         if let Err(_) = Self::check_not_empty(File::open(path)?) {
@@ -145,7 +145,7 @@ impl Replacer {
         file.set_permissions(meta.permissions())?;
 
         if !replaced.is_empty() {
-            let mut mmap_target = unsafe { MmapMut::map_mut(&file)? };
+            let mut mmap_target = unsafe { MmapMut::map_mut(file)? };
             mmap_target.deref_mut().write_all(&replaced)?;
             mmap_target.flush_async()?;
         }

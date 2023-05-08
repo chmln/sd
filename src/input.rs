@@ -77,7 +77,7 @@ impl App {
                         return Ok(());
                     }
                     let file =
-                        unsafe { memmap::Mmap::map(&File::open(path)?)? };
+                        unsafe { memmap2::Mmap::map(&File::open(path)?)? };
                     if self.replacer.has_matches(&file) {
                         if print_path {
                             writeln!(
