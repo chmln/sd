@@ -14,7 +14,7 @@ fn main() -> Result<()> {
 
     let source = if options.recursive {
         Source::recursive()?
-    } else if options.files.len() > 0 {
+    } else if options.files.is_empty() {
         Source::Files(options.files)
     } else {
         Source::Stdin
