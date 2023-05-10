@@ -103,7 +103,7 @@ impl Replacer {
         self.regex.split(content).for_each(|sur_text| {
             use regex::bytes::Replacer;
 
-            &v.extend(sur_text);
+            v.extend(sur_text);
             if let Some(capture) = captures.next() {
                 v.extend_from_slice(
                     ansi_term::Color::Green.prefix().to_string().as_bytes(),
