@@ -23,7 +23,7 @@ impl Replacer {
             (
                 look_for,
                 utils::unescape(&replace_with)
-                    .unwrap_or_else(|| replace_with)
+                    .unwrap_or(replace_with)
                     .into_bytes(),
             )
         };
@@ -40,7 +40,7 @@ impl Replacer {
                     'm' => {},
                     'e' => { regex.multi_line(false); },
                     's' => {
-                        if !flags.contains("m") {
+                        if !flags.contains('m') {
                             regex.multi_line(false);
                         }
                         regex.dot_matches_new_line(true);
@@ -80,16 +80,13 @@ impl Replacer {
     ) -> std::borrow::Cow<'a, [u8]> {
         if self.is_literal {
             self.regex.replacen(
-                &content,
+                content,
                 self.replacements,
                 regex::bytes::NoExpand(&self.replace_with),
             )
         } else {
-            self.regex.replacen(
-                &content,
-                self.replacements,
-                &*self.replace_with,
-            )
+            self.regex
+                .replacen(content, self.replacements, &*self.replace_with)
         }
     }
 
@@ -103,7 +100,7 @@ impl Replacer {
         self.regex.split(content).for_each(|sur_text| {
             use regex::bytes::Replacer;
 
-            &v.extend(sur_text);
+            v.extend(sur_text);
             if let Some(capture) = captures.next() {
                 v.extend_from_slice(
                     ansi_term::Color::Green.prefix().to_string().as_bytes(),
@@ -127,7 +124,7 @@ impl Replacer {
         use memmap2::{Mmap, MmapMut};
         use std::ops::DerefMut;
 
-        if let Err(_) = Self::check_not_empty(File::open(path)?) {
+        if Self::check_not_empty(File::open(path)?).is_err() {
             return Ok(());
         }
 
@@ -162,7 +159,7 @@ impl Replacer {
 mod tests {
     use super::*;
 
-    fn replace<'a>(
+    fn replace(
         look_for: impl Into<String>,
         replace_with: impl Into<String>,
         literal: bool,

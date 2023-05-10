@@ -28,13 +28,13 @@ mod cli {
     #[test]
     fn in_place() -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
-        file.write(b"abc123def")?;
+        file.write_all(b"abc123def")?;
         let path = file.into_temp_path();
 
-        sd().args(&["abc\\d+", "", path.to_str().unwrap()])
+        sd().args(["abc\\d+", "", path.to_str().unwrap()])
             .assert()
             .success();
-        assert_file(&path.to_path_buf(), "def");
+        assert_file(&path, "def");
 
         Ok(())
     }
@@ -42,13 +42,13 @@ mod cli {
     #[test]
     fn in_place_with_empty_result_file() -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
-        file.write(b"a7c")?;
+        file.write_all(b"a7c")?;
         let path = file.into_temp_path();
 
-        sd().args(&["a\\dc", "", path.to_str().unwrap()])
+        sd().args(["a\\dc", "", path.to_str().unwrap()])
             .assert()
             .success();
-        assert_file(&path.to_path_buf(), "");
+        assert_file(&path, "");
 
         Ok(())
     }
@@ -63,11 +63,11 @@ mod cli {
         create_soft_link(&file, &link)?;
         std::fs::write(&file, "abc123def")?;
 
-        sd().args(&["abc\\d+", "", link.to_str().unwrap()])
+        sd().args(["abc\\d+", "", link.to_str().unwrap()])
             .assert()
             .success();
 
-        assert_file(&file.to_path_buf(), "def");
+        assert_file(&file, "def");
         assert!(std::fs::symlink_metadata(link)?.file_type().is_symlink());
 
         Ok(())
@@ -76,15 +76,15 @@ mod cli {
     #[test]
     fn replace_into_stdout() -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
-        file.write(b"abc123def")?;
+        file.write_all(b"abc123def")?;
 
-        sd().args(&["-p", "abc\\d+", "", file.path().to_str().unwrap()])
+        sd().args(["-p", "abc\\d+", "", file.path().to_str().unwrap()])
             .assert()
             .success()
             .stdout(format!(
                 "{}{}def\n",
-                ansi_term::Color::Green.prefix().to_string(),
-                ansi_term::Color::Green.suffix().to_string()
+                ansi_term::Color::Green.prefix(),
+                ansi_term::Color::Green.suffix()
             ));
 
         assert_file(file.path(), "abc123def");
@@ -94,7 +94,7 @@ mod cli {
 
     #[test]
     fn stdin() -> Result<()> {
-        sd().args(&["abc\\d+", ""])
+        sd().args(["abc\\d+", ""])
             .write_stdin("abc123def")
             .assert()
             .success()

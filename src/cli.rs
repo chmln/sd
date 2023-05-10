@@ -6,7 +6,7 @@ use structopt::{clap::AppSettings, StructOpt};
     setting(AppSettings::NextLineHelp),
     setting(AppSettings::UnifiedHelpMessage)
 )]
-pub(crate) struct Options {
+pub struct Options {
     #[structopt(short = "p", long = "preview")]
     /// Output result into stdout and do not modify files.
     pub preview: bool,
