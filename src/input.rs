@@ -1,4 +1,4 @@
-use crate::{Replacer, Result};
+use crate::{Error, Replacer, Result};
 use std::{fs::File, io::prelude::*, path::PathBuf};
 
 #[derive(Debug)]
@@ -57,14 +57,24 @@ impl App {
             (Source::Files(paths), false) => {
                 use rayon::prelude::*;
 
-                #[allow(unused_must_use)]
-                paths.par_iter().for_each(|p| {
-                    self.replacer.replace_file(p).map_err(|e| {
-                        eprintln!("Error processing {}: {}", p.display(), e)
-                    });
-                });
+                let failed_jobs: Vec<_> = paths
+                    .par_iter()
+                    .filter_map(|p| {
+                        if let Err(e) = self.replacer.replace_file(p) {
+                            Some((p.to_owned(), e))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
 
-                Ok(())
+                if failed_jobs.is_empty() {
+                    Ok(())
+                } else {
+                    let failed_jobs =
+                        crate::error::FailedJobs::from(failed_jobs);
+                    Err(Error::FailedProcessing(failed_jobs))
+                }
             }
             (Source::Files(paths), true) => {
                 let stdout = std::io::stdout();
