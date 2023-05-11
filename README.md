@@ -205,16 +205,13 @@ This example uses [fd](https://github.com/sharkdp/fd).
 Good ol' unix philosophy to the rescue.
 
 ```sh
-sd 'from "react"' 'from "preact"' $(fd --type file)
+fd --type file --exec sd 'from "react"' 'from "preact"'
 ```
 
 Same, but with backups (consider version control).
 
 ```bash
-for file in $(fd --type file); do
-  cp "$file" "$file.bk"
-  sd 'from "react"' 'from "preact"' "$file"; 
-done
+fd --type file --exec cp {} {}.bk \; --exec sd 'from "react"' 'from "preact"'
 ```
 
 ### Edge cases
