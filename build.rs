@@ -32,8 +32,7 @@ fn create_man_page() {
                 .help("Treat expressions as non-regex strings."),
         )
         .flag(Flag::new().short("-f").long("--flags").help(
-            r#"Treat expressions as non-regex strings.
-/** Regex flags. May be combined (like `-f mc`).
+            r#"Regex flags. May be combined (like `-f mc`).
 
 c - case-sensitive
 i - case-insensitive
