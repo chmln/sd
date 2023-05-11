@@ -187,7 +187,5 @@ fd --type file --exec sd 'from "react"' 'from "preact"'
 Same, but with backups (consider version control).
 
 ```bash
-fd --type file --exec \
-  cp {} {}.bk; \
-  sd 'from "react"' 'from "preact"'
+fd --type file --exec cp {} {}.bk \; --exec sd 'from "react"' 'from "preact"'
 ```
