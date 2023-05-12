@@ -1,29 +1,25 @@
-use structopt::{clap::AppSettings, StructOpt};
+use clap::Parser;
 
-#[derive(Debug, StructOpt)]
-#[structopt(
-    setting(AppSettings::ColoredHelp),
-    setting(AppSettings::NextLineHelp),
-    setting(AppSettings::UnifiedHelpMessage)
-)]
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
 pub struct Options {
-    #[structopt(short = "p", long = "preview")]
+    #[clap(short, long)]
     /// Output result into stdout and do not modify files.
     pub preview: bool,
 
-    #[structopt(short = "s", long = "string-mode")]
+    #[clap(short = 's', long = "string-mode")]
     /// Treat expressions as non-regex strings.
     pub literal_mode: bool,
 
-    #[structopt(short = "r")]
+    #[clap(short)]
     /// Recursively replace files
     pub recursive: bool,
 
-    #[structopt(short = "n")]
+    #[clap(short = 'n')]
     /// Limit the number of replacements
     pub replacements: Option<usize>,
 
-    #[structopt(short = "f", long = "flags", verbatim_doc_comment)]
+    #[clap(short, long, verbatim_doc_comment)]
     #[rustfmt::skip]
     /** Regex flags. May be combined (like `-f mc`).
 

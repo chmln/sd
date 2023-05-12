@@ -1,6 +1,7 @@
 mod cli;
 mod error;
 mod input;
+
 pub(crate) mod replacer;
 pub(crate) mod utils;
 
@@ -8,9 +9,10 @@ pub(crate) use self::input::{App, Source};
 pub(crate) use error::{Error, Result};
 use replacer::Replacer;
 
+use clap::Parser;
+
 fn main() -> Result<()> {
-    use structopt::StructOpt;
-    let options = cli::Options::from_args();
+    let options = cli::Options::parse();
 
     let source = if options.recursive {
         Source::recursive()?

@@ -13,7 +13,6 @@ categories = ["command-line-utilities", "text-processing", "development-tools"]
 
 [dependencies]
 regex = "1.4.3"
-structopt = "0.3.21"
 rayon = "1.5.0"
 unescape = "0.1.0"
 memmap2 = "0.5.10"
@@ -23,13 +22,13 @@ globwalk = "0.8.1"
 ignore = "0.4.17"
 ansi_term = "0.12.1"
 is-terminal = "0.4.7"
+clap = { version = "3.2.23", features = ["derive"] }
 
 [dev-dependencies]
 assert_cmd = "1.0.3"
 anyhow = "1.0.38"
 
 [build-dependencies]
-structopt = "0.3.21"
 man = "0.3.0"
 
 [profile.release]
