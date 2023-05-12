@@ -1,3 +1,5 @@
+use is_terminal::IsTerminal;
+
 use crate::{Replacer, Result};
 use std::{fs::File, io::prelude::*, path::PathBuf};
 
@@ -34,7 +36,7 @@ impl App {
         Self { source, replacer }
     }
     pub(crate) fn run(&self, preview: bool) -> Result<()> {
-        let is_tty = atty::is(atty::Stream::Stdout);
+        let is_tty = std::io::stdout().is_terminal();
 
         match (&self.source, preview) {
             (Source::Stdin, _) => {

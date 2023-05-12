@@ -20,9 +20,9 @@ memmap2 = "0.5.10"
 tempfile = "3.2.0"
 thiserror = "1.0.24"
 globwalk = "0.8.1"
-atty = "0.2.14"
 ignore = "0.4.17"
 ansi_term = "0.12.1"
+is-terminal = "0.4.7"
 
 [dev-dependencies]
 assert_cmd = "1.0.3"
