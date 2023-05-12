@@ -55,3 +55,16 @@ w - match full words only
     /// examples.
     pub files: Vec<std::path::PathBuf>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use clap::CommandFactory;
+
+    #[test]
+    fn debug_assert() {
+        let cmd = Options::command();
+        cmd.debug_assert();
+    }
+}
