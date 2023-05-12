@@ -77,68 +77,11 @@ Result: ~11.93 times faster
 
 ## Installation
 
-### Cargo
+Install through
+[`cargo`](https://doc.rust-lang.org/cargo/getting-started/installation.html) with
+`cargo install sd`, or through various package managers
 
-[Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) is the Rust package manager.
-
-You can install cargo by
-```sh
-curl https://sh.rustup.rs -sSf | sh
-```
-
-Then
-```sh
-cargo install sd
-```
-
-### Alpine Linux
-
-```sh
-apk add sd
-```
-Before installing, ensure the appropriate [repository](https://pkgs.alpinelinux.org/packages?name=sd) is enabled.
-
-### Arch Linux
-
-```sh
-pacman -S sd
-```
-
-### Gentoo (unc3nsored overlay)
-```
-emerge -av sys-apps/sd
-```
-Before installing, ensure the appropriate [overlay](https://github.com/xxc3nsoredxx/unc3nsored) is enabled.
-
-### Fedora
-
-```sh
-dnf install sd
-```
-
-### FreeBSD
-
-```sh
-pkg install sd
-```
-
-### Windows
-
-```sh
-choco install sd-cli
-```
-
-### macOS
-
-```sh
-brew install sd
-```
-
-### Void Linux
-
-```sh
-xbps-install sd
-```
+[![Packaging status](https://repology.org/badge/vertical-allrepos/sd-find-replace.svg)](https://repology.org/project/sd-find-replace/versions)
 
 ## Quick Guide
 
