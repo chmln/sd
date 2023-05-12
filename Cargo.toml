@@ -22,7 +22,7 @@ globwalk = "0.8.1"
 ignore = "0.4.17"
 ansi_term = "0.12.1"
 is-terminal = "0.4.7"
-clap = { version = "3.2.23", features = ["derive"] }
+clap = { version = "4.2.7", features = ["derive", "deprecated", "wrap_help"] }
 
 [dev-dependencies]
 assert_cmd = "1.0.3"

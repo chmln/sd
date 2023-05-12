@@ -1,25 +1,36 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about,
+    max_term_width = 100,
+    help_template = "\
+{before-help}{name} v{version}
+{about-with-newline}
+{usage-heading} {usage}
+
+{all-args}{after-help}"
+)]
 pub struct Options {
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// Output result into stdout and do not modify files.
     pub preview: bool,
 
-    #[clap(short = 's', long = "string-mode")]
+    #[arg(short = 's', long = "string-mode")]
     /// Treat expressions as non-regex strings.
     pub literal_mode: bool,
 
-    #[clap(short)]
+    #[arg(short)]
     /// Recursively replace files
     pub recursive: bool,
 
-    #[clap(short = 'n')]
+    #[arg(short = 'n')]
     /// Limit the number of replacements
     pub replacements: Option<usize>,
 
-    #[clap(short, long, verbatim_doc_comment)]
+    #[arg(short, long, verbatim_doc_comment)]
     #[rustfmt::skip]
     /** Regex flags. May be combined (like `-f mc`).
 
@@ -29,7 +40,6 @@ i - case-insensitive
 m - multi-line matching
 s - make `.` match newlines
 w - match full words only
-{n}{n}
     */
     pub flags: Option<String>,
 
