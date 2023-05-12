@@ -48,30 +48,35 @@ Some cherry-picked examples, where `sd` shines:
 
 **Simple replacement on ~1.5 gigabytes of JSON**
 
-`hyperfine -w 3 'sed -E "s/\"/\'/g" *.json >/dev/null' 'sd "\"" "\'" *.json >/dev/null' --export-markdown out.md`
+```sh
+hyperfine --warmup 3 --export-markdown out.md \
+  'sed -E "s/\"/'"'"'/g" *.json > /dev/null' \
+  'sed    "s/\"/'"'"'/g" *.json > /dev/null' \
+  'sd     "\"" "'"'"'"   *.json > /dev/null'
+```
 
 | Command | Mean [s] | Min…Max [s] |
 |:---|---:|---:|
-| `sed -E "s/\"/'/g" *.json >/dev/null` | 2.338 ± 0.008 | 2.332…2.358 |
-| `sed "s/\"/'/g" *.json >/dev/null` | 2.365 ± 0.009 | 2.351…2.378 |
-| `sd "\"" "'" *.json >/dev/null` | **0.997 ± 0.006** | 0.987…1.007 |
+| `sed -E "s/\"/'/g" *.json > /dev/null` | 2.338 ± 0.008 | 2.332…2.358 |
+| `sed    "s/\"/'/g" *.json > /dev/null` | 2.365 ± 0.009 | 2.351…2.378 |
+| `sd     "\"" "'"   *.json > /dev/null` | **0.997 ± 0.006** | 0.987…1.007 |
 
 Result: ~2.35 times faster
 
 **Regex replacement on a ~55M json file**:
 
-```
-hyperfine \
-'sed -E "s:(\w+):\1\1:g" dump.json >/dev/null'\
-"sed 's:\(\w\+\):\1\1:g' dump.json >/dev/null"\
-'sd "(\w+)" "$1$1" dump.json >/dev/null'
+```sh
+hyperfine --warmup 3 --export-markdown out.md \
+  'sed -E "s:(\w+):\1\1:g"    dump.json > /dev/null' \
+  'sed    "s:\(\w\+\):\1\1:g" dump.json > /dev/null' \
+  'sd     "(\w+)" "$1$1"      dump.json > /dev/null'
 ```
 
 | Command | Mean [s] | Min…Max [s] |
 |:---|---:|---:|
-| `sed -E "s:(\w+):\1\1:g" dump.json >/dev/null` | 11.315 ± 0.215 | 11.102…11.725 |
-| `sed 's:\(\w\+\):\1\1:g' dump.json >/dev/null` | 11.239 ± 0.208 | 11.057…11.762 |
-| `sd "(\w+)" "$1$1" dump.json >/dev/null` | **0.942 ± 0.004** | 0.936…0.951 |
+| `sed -E "s:(\w+):\1\1:g"    dump.json > /dev/null` | 11.315 ± 0.215 | 11.102…11.725 |
+| `sed    "s:\(\w\+\):\1\1:g" dump.json > /dev/null` | 11.239 ± 0.208 | 11.057…11.762 |
+| `sd     "(\w+)" "$1$1"      dump.json > /dev/null` | **0.942 ± 0.004** | 0.936…0.951 |
 
 Result: ~11.93 times faster
 
