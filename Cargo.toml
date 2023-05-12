@@ -29,6 +29,8 @@ assert_cmd = "1.0.3"
 anyhow = "1.0.38"
 
 [build-dependencies]
+clap = "4.2.7"
+clap_complete = "4.2.2"
 man = "0.3.0"
 
 [profile.release]
