@@ -3,21 +3,15 @@ include!("src/cli.rs");
 fn main() {
     use std::{env::var, fs};
 
-    use clap::CommandFactory;
+    use clap::{CommandFactory, ValueEnum};
     use clap_complete::{generate_to, Shell};
 
     let out_dir = var("SHELL_COMPLETIONS_DIR").or(var("OUT_DIR")).unwrap();
 
     fs::create_dir_all(&out_dir).unwrap();
 
-    for shell in [
-        Shell::Bash,
-        Shell::Elvish,
-        Shell::Fish,
-        Shell::PowerShell,
-        Shell::Zsh,
-    ] {
-        let mut cmd = Options::command();
+    let mut cmd = Options::command();
+    for &shell in Shell::value_variants() {
         generate_to(shell, &mut cmd, "sd", &out_dir).unwrap();
     }
 
