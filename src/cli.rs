@@ -18,8 +18,13 @@ pub struct Options {
     /// Output result into stdout and do not modify files.
     pub preview: bool,
 
-    #[arg(short = 's', long = "string-mode")]
-    /// Treat expressions as non-regex strings.
+    #[arg(
+        short = 'F',
+        long = "fixed-strings",
+        short_alias = 's',
+        alias = "string-mode"
+    )]
+    /// Treat FIND and REPLACE_WITH args as literal strings
     pub literal_mode: bool,
 
     #[arg(short)]
