@@ -27,6 +27,7 @@ clap = { version = "4.2.7", features = ["derive", "deprecated", "wrap_help"] }
 [dev-dependencies]
 assert_cmd = "1.0.3"
 anyhow = "1.0.38"
+rstest = "0.17.0"
 
 [build-dependencies]
 clap = "4.2.7"
