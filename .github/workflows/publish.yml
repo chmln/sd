@@ -24,9 +24,10 @@ jobs:
             target: arm-unknown-linux-gnueabihf
             use-cross: true
 
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            use-cross: false
+          # This isn't working right now. See this: https://github.com/chmln/sd/pull/179#discussion_r1195840367
+          # - os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          #   use-cross: false
 
           - os: macos-latest
             target: x86_64-apple-darwin
@@ -35,6 +36,10 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             use-cross: false
+
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            use-cross: true
 
     steps:
     - name: Checkout repository
@@ -61,10 +66,6 @@ jobs:
         use-cross: ${{ matrix.use-cross }}
         command: build
         args: --target ${{ matrix.target }} --release --locked
-
-    - name: Strip binary
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-      run: strip target/${{ matrix.target }}/release/sd
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v1-release

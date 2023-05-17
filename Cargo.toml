@@ -36,3 +36,4 @@ man = "0.3.0"
 [profile.release]
 opt-level = 3
 lto = true
+strip = true
