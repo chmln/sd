@@ -1,12 +1,18 @@
 use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs, fs::File, io::prelude::*, path::Path};
+use std::{
+    fs,
+    fs::{File, OpenOptions},
+    io::{prelude::*, SeekFrom},
+    path::Path,
+};
 
 pub(crate) struct Replacer {
     regex: Regex,
     replace_with: Vec<u8>,
     is_literal: bool,
     replacements: usize,
+    no_swap: bool,
 }
 
 impl Replacer {
@@ -16,6 +22,7 @@ impl Replacer {
         is_literal: bool,
         flags: Option<String>,
         replacements: Option<usize>,
+        no_swap: bool,
     ) -> Result<Self> {
         let (look_for, replace_with) = if is_literal {
             (regex::escape(&look_for), replace_with.into_bytes())
@@ -61,6 +68,7 @@ impl Replacer {
             replace_with,
             is_literal,
             replacements: replacements.unwrap_or(0),
+            no_swap,
         })
     }
 
@@ -128,29 +136,42 @@ impl Replacer {
             return Ok(());
         }
 
-        let source = File::open(path)?;
-        let meta = fs::metadata(path)?;
-        let mmap_source = unsafe { Mmap::map(&source)? };
-        let replaced = self.replace(&mmap_source);
+        if self.no_swap {
+            let mut source =
+                OpenOptions::new().read(true).write(true).open(path)?;
+            let mut buffer = Vec::new();
+            source.read_to_end(&mut buffer)?;
 
-        let target = tempfile::NamedTempFile::new_in(
-            path.parent()
-                .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
-        )?;
-        let file = target.as_file();
-        file.set_len(replaced.len() as u64)?;
-        file.set_permissions(meta.permissions())?;
+            let replaced = self.replace(&buffer);
 
-        if !replaced.is_empty() {
-            let mut mmap_target = unsafe { MmapMut::map_mut(file)? };
-            mmap_target.deref_mut().write_all(&replaced)?;
-            mmap_target.flush_async()?;
+            source.seek(SeekFrom::Start(0))?;
+            source.write_all(&replaced)?;
+            source.set_len(replaced.len() as u64)?;
+        } else {
+            let source = File::open(path)?;
+            let meta = fs::metadata(path)?;
+            let mmap_source = unsafe { Mmap::map(&source)? };
+            let replaced = self.replace(&mmap_source);
+
+            let target = tempfile::NamedTempFile::new_in(
+                path.parent()
+                    .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
+            )?;
+            let file = target.as_file();
+            file.set_len(replaced.len() as u64)?;
+            file.set_permissions(meta.permissions())?;
+
+            if !replaced.is_empty() {
+                let mut mmap_target = unsafe { MmapMut::map_mut(file)? };
+                mmap_target.deref_mut().write_all(&replaced)?;
+                mmap_target.flush_async()?;
+            }
+
+            drop(mmap_source);
+            drop(source);
+            target.persist(fs::canonicalize(path)?)?;
         }
 
-        drop(mmap_source);
-        drop(source);
-
-        target.persist(fs::canonicalize(path)?)?;
         Ok(())
     }
 }
@@ -173,6 +194,7 @@ mod tests {
             literal,
             flags.map(ToOwned::to_owned),
             None,
+            false,
         )
         .unwrap();
         assert_eq!(
