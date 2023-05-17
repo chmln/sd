@@ -24,7 +24,7 @@ pub struct Options {
         short_alias = 's',
         alias = "string-mode"
     )]
-    /// Treat expressions as non-regex strings.
+    /// Treat FIND and REPLACE_WITH args as literal strings
     pub literal_mode: bool,
 
     #[arg(short)]
