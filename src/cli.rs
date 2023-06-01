@@ -60,7 +60,8 @@ w - match full words only
     pub no_swap: bool,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
-    ///{n}{n}Note: sd modifies files in-place by default. See documentation for
+    /// 
+    /// Note: sd modifies files in-place by default. See documentation for
     /// examples.
     pub files: Vec<std::path::PathBuf>,
 }

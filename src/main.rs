@@ -1,15 +1,8 @@
 mod cli;
-mod error;
-mod input;
-
-pub(crate) mod replacer;
-pub(crate) mod utils;
-
-pub(crate) use self::input::{App, Source};
-pub(crate) use error::{Error, Result};
-use replacer::Replacer;
 
 use clap::Parser;
+
+use sd::{Result, Source, replace, ReplaceConf};
 
 fn main() -> Result<()> {
     let options = cli::Options::parse();
@@ -22,17 +15,13 @@ fn main() -> Result<()> {
         Source::Stdin
     };
 
-    App::new(
+    replace(options.find, options.replace_with, ReplaceConf {
         source,
-        Replacer::new(
-            options.find,
-            options.replace_with,
-            options.literal_mode,
-            options.flags,
-            options.replacements,
-            options.no_swap,
-        )?,
-    )
-    .run(options.preview)?;
+        preview: options.preview,
+        no_swap: options.no_swap,
+        literal_mode: options.literal_mode,
+        flags: options.flags,
+        replacements: options.replacements,
+    })?;
     Ok(())
 }

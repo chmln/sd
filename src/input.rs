@@ -4,14 +4,31 @@ use crate::{Error, Replacer, Result};
 
 use is_terminal::IsTerminal;
 
+/// The source files we regard as the input.
 #[derive(Debug)]
-pub(crate) enum Source {
+pub enum Source {
     Stdin,
     Files(Vec<PathBuf>),
 }
 
 impl Source {
-    pub(crate) fn recursive() -> Result<Self> {
+    pub fn with_file<T>(file: T) -> Self
+        where T: Into<PathBuf>
+    {
+        Self::with_files(vec![file])
+    }
+
+    pub fn with_files<T>(files: Vec<T>) -> Self
+        where T: Into<PathBuf>
+    {
+        Self::Files(
+            files.into_iter()
+                .map(|file_path| file_path.into())
+                .collect()
+        )
+    }
+
+    pub fn recursive() -> Result<Self> {
         Ok(Self::Files(
             ignore::WalkBuilder::new(".")
                 .hidden(false)
@@ -36,6 +53,7 @@ impl App {
     pub(crate) fn new(source: Source, replacer: Replacer) -> Self {
         Self { source, replacer }
     }
+
     pub(crate) fn run(&self, preview: bool) -> Result<()> {
         let is_tty = std::io::stdout().is_terminal();
 
