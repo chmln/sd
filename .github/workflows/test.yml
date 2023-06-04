@@ -57,7 +57,6 @@ jobs:
       if: ${{ matrix.use-cross == true }}
       shell: bash
       run: |
-           mkdir .cargo
            cat > .cargo/config.toml <<EOF
            [target.${{ matrix.target }}]
            rustflags = ["--cfg", "sd_cross_compile"]
