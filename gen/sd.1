@@ -1,0 +1,63 @@
+.TH SD 1
+.SH NAME
+sd
+.SH SYNOPSIS
+\fBsd\fR [FLAGS] find replace_with [FILES]
+.SH FLAGS
+.TP
+\fB\-p\fR, \fB\-\-preview\fR
+Emit the replacement to STDOUT
+
+.TP
+\fB\-s\fR, \fB\-\-string\-mode\fR
+Treat expressions as non\-regex strings.
+
+.TP
+\fB\-f\fR, \fB\-\-flags\fR
+Regex flags. May be combined (like `\-f mc`).
+
+c \- case\-sensitive
+i \- case\-insensitive
+m \- multi\-line matching
+w \- match full words only
+
+.SH EXIT STATUS
+.TP
+\fB0\fR
+Successful program execution.
+
+.TP
+\fB1\fR
+Unsuccessful program execution.
+
+.TP
+\fB101\fR
+The program panicked.
+.SH EXAMPLES
+.TP
+String\-literal mode
+\fB$ echo 'lots((([]))) of special chars' | sd \-s '((([])))' ''\fR
+.br
+lots of special chars
+.TP
+Regex use. Let's trim some trailing whitespace
+\fB$ echo 'lorem ipsum 23   ' | sd '\s+$' ''\fR
+.br
+lorem ipsum 23
+.TP
+Indexed capture groups
+\fB$ echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'\fR
+.br
+cmd: cargo, channel: nightly, subcmd: watch
+.TP
+Named capture groups
+\fB$ echo "123.45" | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'\fR
+.br
+123 dollars and 45 cents
+.TP
+Find & replace in file
+\fB$ sd 'window.fetch' 'fetch' http.js\fR
+.TP
+Find & replace from STDIN an emit to STDOUT
+\fB$ sd 'window.fetch' 'fetch' < http.js\fR
+
