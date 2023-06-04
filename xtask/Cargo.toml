@@ -1,0 +1,10 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+clap = "4.3.1"
+clap_complete = "4.3.1"
+man = "0.3.0"

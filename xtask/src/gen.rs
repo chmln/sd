@@ -1,25 +1,30 @@
-include!("src/cli.rs");
+include!("../../src/cli.rs");
 
-fn main() {
-    use std::{env::var, fs};
+use std::{fs, path::Path};
 
-    use clap::{CommandFactory, ValueEnum};
-    use clap_complete::{generate_to, Shell};
+use clap::{CommandFactory, ValueEnum};
+use clap_complete::{generate_to, Shell};
+use man::prelude::*;
 
-    let out_dir = var("SHELL_COMPLETIONS_DIR").or(var("OUT_DIR")).unwrap();
+pub fn gen() {
+    let gen_dir = Path::new("gen");
+    gen_shell(gen_dir);
+    gen_man(gen_dir);
+}
 
-    fs::create_dir_all(&out_dir).unwrap();
+fn gen_shell(base_dir: &Path) {
+    let completions_dir = base_dir.join("completions");
+    fs::create_dir_all(&completions_dir).unwrap();
 
     let mut cmd = Options::command();
     for &shell in Shell::value_variants() {
-        generate_to(shell, &mut cmd, "sd", &out_dir).unwrap();
+        generate_to(shell, &mut cmd, "sd", &completions_dir).unwrap();
     }
-
-    create_man_page();
 }
 
-fn create_man_page() {
-    use man::prelude::*;
+fn gen_man(base_dir: &Path) {
+    let man_path = base_dir.join("sd.1");
+
     let page = Manual::new("sd")
         .flag(
             Flag::new()
@@ -84,8 +89,5 @@ w - match full words only
         )
         .render();
 
-    let mut man_path =
-        std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    man_path.push("sd.1");
-    std::fs::write(man_path, page).expect("Error writing man page");
+    std::fs::write(man_path, page).unwrap();
 }

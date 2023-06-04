@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    ".",
+    "xtask",
+]
+
 [package]
 name = "sd"
 version = "0.7.6"
