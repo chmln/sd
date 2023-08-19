@@ -41,6 +41,10 @@ jobs:
             target: aarch64-unknown-linux-musl
             use-cross: true
 
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            use-cross: true
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
