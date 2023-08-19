@@ -102,4 +102,15 @@ mod cli {
 
         Ok(())
     }
+
+    #[test]
+    fn test_slash_in_pattern() -> Result<()> {
+        sd().args(["-s", "</span>", ""])
+            .write_stdin("<span>Hi</span>")
+            .assert()
+            .success()
+            .stdout("<span>Hi");
+
+        Ok(())
+    }
 }
