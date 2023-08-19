@@ -20,7 +20,7 @@ Find & replace expressions are split up, which makes them easy to read and write
 
 **Smart, common-sense defaults**
 
-Defaults follow common sense and are tailored for typical daily use. 
+Defaults follow common sense and are tailored for typical daily use.
 
 ## Comparison to sed
 
@@ -43,7 +43,7 @@ Some cherry-picked examples, where `sd` shines:
   - sd: `sd before after file.txt`
   - sed: you need to remember to use `-e` or else some platforms will consider the next argument to be a backup suffix
     - `sed -i -e 's/before/after/g' file.txt`
-    
+
 ## Benchmarks
 
 **Simple replacement on ~1.5 gigabytes of JSON**
@@ -126,8 +126,8 @@ In the unlikely case you stumble upon ambiguities, resolve them by using `${var}
 
 ```sh
 > echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
- and 
- 
+ and
+
 > echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
 123_dollars and 45_cents
 ```
@@ -143,7 +143,7 @@ That's it. The file is modified in-place.
 To preview changes:
 
 ```sh
-> sd -p 'window.fetch' 'fetch' http.js 
+> sd -p 'window.fetch' 'fetch' http.js
 ```
 
 5. **Find & replace across project**
@@ -178,4 +178,12 @@ $ echo "./hello foo" | sd "foo" -- "-w"
 ./hello -w
 $ echo "./hello --foo" | sd -- "--foo" "-w"
 ./hello -w
+```
+
+### Escaping special characters
+To escape the `$` character, use `$$`:
+
+```bash
+❯ echo "foo" | sd 'foo' '$$bar'
+$bar
 ```
