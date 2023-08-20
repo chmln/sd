@@ -1,6 +1,8 @@
 name: Test
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -30,7 +32,8 @@ jobs:
             target: x86_64-apple-darwin
             use-cross: false
 
-          # This isn't working right now. See this: https://github.com/chmln/sd/pull/179#discussion_r1195840870
+          # For legal reasons, cross doesn't support Apple Silicon. See this: https://github.com/cross-rs/cross-toolchains#darwin-targets
+          # It builds and runs fine, but there's no convenient way to test it in CI, ATM.
           # - os: macos-latest
           #   target: aarch64-apple-darwin
           #   use-cross: false
