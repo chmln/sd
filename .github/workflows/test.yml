@@ -23,10 +23,13 @@ jobs:
             target: arm-unknown-linux-gnueabihf
             use-cross: true
 
-          # This isn't working right now. See this: https://github.com/chmln/sd/pull/179#discussion_r1195840870
-          # - os: windows-latest
-          #   target: x86_64-pc-windows-msvc
-          #   use-cross: false
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            use-cross: false
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            use-cross: false
 
           - os: macos-latest
             target: x86_64-apple-darwin
