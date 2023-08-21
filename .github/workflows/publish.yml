@@ -75,7 +75,7 @@ jobs:
         args: --target ${{ matrix.target }} --release --locked
 
     - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v1-release
+      uses: svenstaro/upload-release-action@2.7.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/${{ matrix.target }}/release/sd
