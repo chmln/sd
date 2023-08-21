@@ -55,6 +55,10 @@ w - match full words only
     /// use captured values like $1, $2, etc.
     pub replace_with: String,
 
+    #[arg(long)]
+    /// Overwrite file instead of creating tmp file and swaping atomically
+    pub no_swap: bool,
+
     /// The path to file(s). This is optional - sd can also read from STDIN.
     ///{n}{n}Note: sd modifies files in-place by default. See documentation for
     /// examples.
