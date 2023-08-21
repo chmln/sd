@@ -18,21 +18,21 @@ repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
 
 [dependencies]
-regex = "1.4.3"
-rayon = "1.5.0"
+regex = "1.9.3"
+rayon = "1.7.0"
 unescape = "0.1.0"
 memmap2 = "0.5.10"
-tempfile = "3.2.0"
-thiserror = "1.0.24"
+tempfile = "3.8.0"
+thiserror = "1.0.47"
 globwalk = "0.8.1"
-ignore = "0.4.17"
+ignore = "0.4.20"
 ansi_term = "0.12.1"
-is-terminal = "0.4.7"
-clap = { version = "4.2.7", features = ["derive", "deprecated", "wrap_help"] }
+is-terminal = "0.4.9"
+clap = { version = "4.3.23", features = ["derive", "deprecated", "wrap_help"] }
 
 [dev-dependencies]
-assert_cmd = "1.0.3"
-anyhow = "1.0.38"
+assert_cmd = "1.0.8"
+anyhow = "1.0.75"
 
 [profile.release]
 opt-level = 3
