@@ -31,7 +31,7 @@ is-terminal = "0.4.9"
 clap = { version = "4.3.23", features = ["derive", "deprecated", "wrap_help"] }
 
 [dev-dependencies]
-assert_cmd = "1.0.8"
+assert_cmd = "2.0.12"
 anyhow = "1.0.75"
 
 [profile.release]
