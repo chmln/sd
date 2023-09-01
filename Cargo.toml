@@ -18,7 +18,7 @@ repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
 
 [dependencies]
-regex = "1.9.3"
+regex = "1.9.4"
 rayon = "1.7.0"
 unescape = "0.1.0"
 memmap2 = "0.7.1"
