@@ -1,4 +1,4 @@
-# sd - s[earch] & d[isplace]
+# sd - `s`earch & `d`isplace
 
 `sd` is an intuitive find & replace CLI.
 
