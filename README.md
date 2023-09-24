@@ -6,21 +6,13 @@
 
 Why use it over any existing tools?
 
-**Painless regular expressions**
+*Painless regular expressions.* &nbsp; `sd` uses regex syntax that you already know from JavaScript and Python. Forget about dealing with quirks of `sed` or `awk` - get productive immediately.
 
-`sd` uses regex syntax that you already know from JavaScript and Python. Forget about dealing with quirks of `sed` or `awk` - get productive immediately.
+*String-literal mode.* &nbsp; Non-regex find & replace. No more backslashes or remembering which characters are special and need to be escaped.
 
-**String-literal mode**
+*Easy to read, easy to write.* &nbsp; Find & replace expressions are split up, which makes them easy to read and write. No more messing with unclosed and escaped slashes.
 
-Non-regex find & replace. No more backslashes or remembering which characters are special and need to be escaped.
-
-**Easy to read, easy to write**
-
-Find & replace expressions are split up, which makes them easy to read and write. No more messing with unclosed and escaped slashes.
-
-**Smart, common-sense defaults**
-
-Defaults follow common sense and are tailored for typical daily use.
+*Smart, common-sense defaults.* &nbsp; Defaults follow common sense and are tailored for typical daily use.
 
 ## Comparison to sed
 
