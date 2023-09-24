@@ -92,75 +92,73 @@ Install through
 
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
 
-
-```sh
-> echo 'lots((([]))) of special chars' | sd -s '((([])))' ''
-lots of special chars
-```
-
+   ```sh
+   > echo 'lots((([]))) of special chars' | sd -s '((([])))' ''
+   lots of special chars
+   ```
 
 2. **Basic regex use** - let's trim some trailing whitespace
 
-```sh
-> echo 'lorem ipsum 23   ' | sd '\s+$' ''
-lorem ipsum 23
-```
+   ```sh
+   > echo 'lorem ipsum 23   ' | sd '\s+$' ''
+   lorem ipsum 23
+   ```
 
 3. **Capture groups**
 
-Indexed capture groups:
+   Indexed capture groups:
 
-```sh
-> echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'
-cmd: cargo, channel: nightly, subcmd: watch
-```
+   ```sh
+   > echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'
+   cmd: cargo, channel: nightly, subcmd: watch
+   ```
 
-Named capture groups:
+   Named capture groups:
 
-```sh
-> echo "123.45" | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'
-123 dollars and 45 cents
-```
+   ```sh
+   > echo "123.45" | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'
+   123 dollars and 45 cents
+   ```
 
-In the unlikely case you stumble upon ambiguities, resolve them by using `${var}` instead of `$var`. Here's an example:
+   In the unlikely case you stumble upon ambiguities, resolve them by using `${var}` instead of `$var`. Here's an example:
 
-```sh
-> echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
- and
+   ```sh
+   > echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars_dollars and $cents_cents'
+    and
 
-> echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
-123_dollars and 45_cents
-```
+   > echo '123.45' | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '${dollars}_dollars and ${cents}_cents'
+   123_dollars and 45_cents
+   ```
 
 4. **Find & replace in a file**
 
-```sh
-> sd 'window.fetch' 'fetch' http.js
-```
+   ```sh
+   > sd 'window.fetch' 'fetch' http.js
+   ```
 
-That's it. The file is modified in-place.
+   That's it. The file is modified in-place.
 
-To preview changes:
+   To preview changes:
 
-```sh
-> sd -p 'window.fetch' 'fetch' http.js
-```
+   ```sh
+   > sd -p 'window.fetch' 'fetch' http.js
+   ```
 
 5. **Find & replace across project**
 
-This example uses [fd](https://github.com/sharkdp/fd).
+   This example uses [fd](https://github.com/sharkdp/fd).
 
-Good ol' unix philosophy to the rescue.
+   Good ol' unix philosophy to the rescue.
 
-```sh
-fd --type file --exec sd 'from "react"' 'from "preact"'
-```
+   ```sh
+   fd --type file --exec sd 'from "react"' 'from "preact"'
+   ```
 
-Same, but with backups (consider version control).
+   Same, but with backups (consider version control).
 
-```bash
-fd --type file --exec cp {} {}.bk \; --exec sd 'from "react"' 'from "preact"'
-```
+   ```bash
+   fd --type file --exec cp {} {}.bk \; --exec sd 'from "react"' 'from "preact"'
+   ```
 
 ### Edge cases
 sd will interpret every argument starting with `-` as a (potentially unknown) flag.
