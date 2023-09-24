@@ -16,25 +16,31 @@ Why use it over any existing tools?
 
 ## Comparison to sed
 
-While sed does a whole lot more, `sd` focuses on doing just one thing and doing it well.
+While sed does a whole lot more, sd focuses on doing just one thing and doing it well. Here are some cherry-picked examples where sd shines.
 
-Some cherry-picked examples, where `sd` shines:
-
-- Simpler syntax for replacing all occurrences:
+Simpler syntax for replacing all occurrences:
   - sd: `sd before after`
   - sed: `sed s/before/after/g`
-- Replace newlines with commas:
+
+Replace newlines with commas:
   - sd: `sd '\n' ','`
   - sed: `sed ':a;N;$!ba;s/\n/,/g'`
-- Extracting stuff out of strings containing slashes:
+
+Extracting stuff out of strings containing slashes:
   - sd: `echo "sample with /path/" | sd '.*(/.*/)' '$1'`
-  - sed: use different delimiters every time depending on expression so that the command is not completely unreadable
-    - `echo "sample with /path/" | sed -E 's/.*(\\/.*\\/)/\1/g'`
-    - `echo "sample with /path/" | sed -E 's|.*(/.*/)|\1|g'`
-- In place modification of files:
+  - sed: `echo "sample with /path/" | sed -E 's/.*(\\/.*\\/)/\1/g'`
+    
+    With sed, you can make it better with a different delimiter,
+    but it is still messy:
+    
+    `echo "sample with /path/" | sed -E 's|.*(/.*/)|\1|g'`
+
+In place modification of files:
   - sd: `sd before after file.txt`
-  - sed: you need to remember to use `-e` or else some platforms will consider the next argument to be a backup suffix
-    - `sed -i -e 's/before/after/g' file.txt`
+  - sed: `sed -i -e 's/before/after/g' file.txt`
+    
+    With sed, you need to remember to use `-e` or else some
+    platforms will consider the next argument to be a backup suffix.
 
 ## Benchmarks
 
