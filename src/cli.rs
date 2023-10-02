@@ -2,6 +2,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(
+    name = "sd",
     author,
     version,
     about,
@@ -40,10 +41,15 @@ pub struct Options {
     /** Regex flags. May be combined (like `-f mc`).
 
 c - case-sensitive
+
 e - disable multi-line matching
+
 i - case-insensitive
+
 m - multi-line matching
+
 s - make `.` match newlines
+
 w - match full words only
     */
     pub flags: Option<String>,
@@ -56,7 +62,8 @@ w - match full words only
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
-    ///{n}{n}Note: sd modifies files in-place by default. See documentation for
+    ///
+    /// Note: sd modifies files in-place by default. See documentation for
     /// examples.
     pub files: Vec<std::path::PathBuf>,
 }

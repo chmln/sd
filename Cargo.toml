@@ -1,4 +1,5 @@
 [workspace]
+package.version = "0.7.6"
 members = [
     ".",
     "xtask",
@@ -6,7 +7,7 @@ members = [
 
 [package]
 name = "sd"
-version = "0.7.6"
+version.workspace = true
 edition = "2018"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "An intuitive find & replace CLI"
@@ -33,6 +34,7 @@ clap = { version = "4.4.3", features = ["derive", "deprecated", "wrap_help"] }
 [dev-dependencies]
 assert_cmd = "2.0.12"
 anyhow = "1.0.75"
+clap_mangen = "0.2.14"
 
 [profile.release]
 opt-level = 3
