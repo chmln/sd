@@ -26,12 +26,12 @@ Register-ArgumentCompleter -Native -CommandName 'sd' -ScriptBlock {
             [CompletionResult]::new('--flags', 'flags', [CompletionResultType]::ParameterName, 'Regex flags. May be combined (like `-f mc`).')
             [CompletionResult]::new('-p', 'p', [CompletionResultType]::ParameterName, 'Output result into stdout and do not modify files')
             [CompletionResult]::new('--preview', 'preview', [CompletionResultType]::ParameterName, 'Output result into stdout and do not modify files')
-            [CompletionResult]::new('-F', 'F', [CompletionResultType]::ParameterName, 'Treat FIND and REPLACE_WITH args as literal strings')
+            [CompletionResult]::new('-F', 'F ', [CompletionResultType]::ParameterName, 'Treat FIND and REPLACE_WITH args as literal strings')
             [CompletionResult]::new('--fixed-strings', 'fixed-strings', [CompletionResultType]::ParameterName, 'Treat FIND and REPLACE_WITH args as literal strings')
             [CompletionResult]::new('-r', 'r', [CompletionResultType]::ParameterName, 'Recursively replace files')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
-            [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('-V', 'V ', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version')
             break
         }
