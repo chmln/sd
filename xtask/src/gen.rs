@@ -1,10 +1,13 @@
-include!("../../src/cli.rs");
+mod sd {
+    include!("../../src/cli.rs");
+}
+use sd::Options;
 
 use std::{fs, path::Path};
 
 use clap::{CommandFactory, ValueEnum};
 use clap_complete::{generate_to, Shell};
-use man::prelude::*;
+use roff::{bold, roman, Roff};
 
 pub fn gen() {
     let gen_dir = Path::new("gen");
@@ -24,70 +27,73 @@ fn gen_shell(base_dir: &Path) {
 
 fn gen_man(base_dir: &Path) {
     let man_path = base_dir.join("sd.1");
+    let cmd = Options::command();
+    let mut buffer: Vec<u8> = Vec::new();
 
-    let page = Manual::new("sd")
-        .flag(
-            Flag::new()
-                .short("-p")
-                .long("--preview")
-                .help("Emit the replacement to STDOUT"),
-        )
-        .flag(
-            Flag::new()
-                .short("-s")
-                .long("--string-mode")
-                .help("Treat expressions as non-regex strings."),
-        )
-        .flag(Flag::new().short("-f").long("--flags").help(
-            r#"Regex flags. May be combined (like `-f mc`).
+    let man = clap_mangen::Man::new(cmd);
+    man.render_title(&mut buffer)
+        .expect("failed to render title section");
+    man.render_name_section(&mut buffer)
+        .expect("failed to render name section");
+    man.render_synopsis_section(&mut buffer)
+        .expect("failed to render synopsis section");
+    man.render_description_section(&mut buffer)
+        .expect("failed to render description section");
+    man.render_options_section(&mut buffer)
+        .expect("failed to render options section");
 
-c - case-sensitive
-i - case-insensitive
-m - multi-line matching
-w - match full words only
-"#,
-        ))
-        .arg(Arg::new("find"))
-        .arg(Arg::new("replace_with"))
-        .arg(Arg::new("[FILES]"))
-        .example(
-            Example::new()
-                .text("String-literal mode")
-                .command(
-                    "echo 'lots((([]))) of special chars' | sd -s '((([])))' \
-                     ''",
-                )
-                .output("lots of special chars"),
-        )
-        .example(
-            Example::new()
-                .text("Regex use. Let's trim some trailing whitespace")
-                .command("echo 'lorem ipsum 23   ' | sd '\\s+$' ''")
-                .output("lorem ipsum 23"),
-        )
-        .example(
-            Example::new()
-                .text("Indexed capture groups")
-                .command(r#"echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'"#)
-                .output("cmd: cargo, channel: nightly, subcmd: watch")
-        )
-        .example(
-            Example::new()
-                .text("Named capture groups")
-                .command(r#"echo "123.45" | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'"#)
-                .output("123 dollars and 45 cents")
-        )
-        .example(
-            Example::new()
-                .text("Find & replace in file")
-                .command(r#"sd 'window.fetch' 'fetch' http.js"#)
-        )
-        .example(
-            Example::new()
-                .text("Find & replace from STDIN an emit to STDOUT")
-                .command(r#"sd 'window.fetch' 'fetch' < http.js"#)
-        )
-        .render();
+    let statuses = [
+        ("0", "Successful program execution."),
+        ("1", "Unsuccessful program execution."),
+        ("101", "The program panicked."),
+    ];
+    let mut sect = Roff::new();
+    sect.control("SH", ["EXIT STATUS"]);
+    for (code, reason) in statuses {
+        sect.control("IP", [code]).text([roman(reason)]);
+    }
+    sect.to_writer(&mut buffer)
+        .expect("failed to render exit status section");
 
-    std::fs::write(man_path, page).unwrap();
+    let examples = [
+        // (description, command, result), result can be empty
+        (
+            "String-literal mode",
+            "echo 'lots((([]))) of special chars' | sd -s '((([])))'",
+            "lots of special chars",
+        ),
+        (
+            "Regex use. Let's trim some trailing whitespace",
+            "echo 'lorem ipsum 23   ' | sd '\\s+$' ''",
+            "lorem ipsum 23",
+        ),
+        (
+            "Indexed capture groups",
+            r"echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'",
+            "123 dollars and 45 cents",
+        ),
+        (
+            "Find & replace in file",
+            r#"sd 'window.fetch' 'fetch' http.js"#,
+            "",
+        ),
+        (
+            "Find & replace from STDIN an emit to STDOUT",
+            r#"sd 'window.fetch' 'fetch' < http.js"#,
+            "",
+        ),
+    ];
+    let mut sect = Roff::new();
+    sect.control("SH", ["EXAMPLES"]);
+    for (desc, command, result) in examples {
+        sect.control("TP", [])
+            .text([roman(desc)])
+            .text([bold(format!("$ {}", command))])
+            .control("br", [])
+            .text([roman(result)]);
+    }
+    sect.to_writer(&mut buffer)
+        .expect("failed to render example section");
+
+    std::fs::write(man_path, buffer).expect("failed to write manpage");
 }
