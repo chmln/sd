@@ -1,63 +1,98 @@
-.TH SD 1
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH sd 1  "sd 0.7.6" 
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
 .SH NAME
 sd
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
 .SH SYNOPSIS
-\fBsd\fR [FLAGS] find replace_with [FILES]
-.SH FLAGS
+\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-r \fR] [\fB\-n \fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.SH DESCRIPTION
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.SH OPTIONS
 .TP
 \fB\-p\fR, \fB\-\-preview\fR
-Emit the replacement to STDOUT
-
+Output result into stdout and do not modify files
 .TP
-\fB\-s\fR, \fB\-\-string\-mode\fR
-Treat expressions as non\-regex strings.
-
+\fB\-F\fR, \fB\-\-fixed\-strings\fR
+Treat FIND and REPLACE_WITH args as literal strings
 .TP
-\fB\-f\fR, \fB\-\-flags\fR
+\fB\-r\fR
+Recursively replace files
+.TP
+\fB\-n\fR=\fIREPLACEMENTS\fR
+Limit the number of replacements
+.TP
+\fB\-f\fR, \fB\-\-flags\fR=\fIFLAGS\fR
 Regex flags. May be combined (like `\-f mc`).
 
 c \- case\-sensitive
+
+e \- disable multi\-line matching
+
 i \- case\-insensitive
+
 m \- multi\-line matching
+
+s \- make `.` match newlines
+
 w \- match full words only
-
-.SH EXIT STATUS
 .TP
-\fB0\fR
+\fB\-h\fR, \fB\-\-help\fR
+Print help (see a summary with \*(Aq\-h\*(Aq)
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.TP
+<\fIFIND\fR>
+The regexp or string (if \-s) to search for
+.TP
+<\fIREPLACE_WITH\fR>
+What to replace each match with. Unless in string mode, you may use captured values like $1, $2, etc
+.TP
+[\fIFILES\fR]
+The path to file(s). This is optional \- sd can also read from STDIN.
+
+Note: sd modifies files in\-place by default. See documentation for examples.
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.SH "EXIT STATUS"
+.IP 0
 Successful program execution.
-
-.TP
-\fB1\fR
+.IP 1
 Unsuccessful program execution.
-
-.TP
-\fB101\fR
+.IP 101
 The program panicked.
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
 .SH EXAMPLES
 .TP
 String\-literal mode
-\fB$ echo 'lots((([]))) of special chars' | sd \-s '((([])))' ''\fR
+\fB$ echo \*(Aqlots((([]))) of special chars\*(Aq | sd \-s \*(Aq((([])))\*(Aq\fR
 .br
 lots of special chars
 .TP
-Regex use. Let's trim some trailing whitespace
-\fB$ echo 'lorem ipsum 23   ' | sd '\s+$' ''\fR
+Regex use. Let\*(Aqs trim some trailing whitespace
+\fB$ echo \*(Aqlorem ipsum 23   \*(Aq | sd \*(Aq\\s+$\*(Aq \*(Aq\*(Aq\fR
 .br
 lorem ipsum 23
 .TP
 Indexed capture groups
-\fB$ echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'\fR
-.br
-cmd: cargo, channel: nightly, subcmd: watch
-.TP
-Named capture groups
-\fB$ echo "123.45" | sd '(?P<dollars>\d+)\.(?P<cents>\d+)' '$dollars dollars and $cents cents'\fR
+\fB$ echo \*(Aqcargo +nightly watch\*(Aq | sd \*(Aq(\\w+)\\s+\\+(\\w+)\\s+(\\w+)\*(Aq \*(Aqcmd: $1, channel: $2, subcmd: $3\*(Aq\fR
 .br
 123 dollars and 45 cents
 .TP
 Find & replace in file
-\fB$ sd 'window.fetch' 'fetch' http.js\fR
+\fB$ sd \*(Aqwindow.fetch\*(Aq \*(Aqfetch\*(Aq http.js\fR
+.br
+
 .TP
 Find & replace from STDIN an emit to STDOUT
-\fB$ sd 'window.fetch' 'fetch' < http.js\fR
+\fB$ sd \*(Aqwindow.fetch\*(Aq \*(Aqfetch\*(Aq < http.js\fR
+.br
 

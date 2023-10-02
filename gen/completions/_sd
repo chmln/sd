@@ -29,7 +29,7 @@ _sd() {
 '--version[Print version]' \
 ':find -- The regexp or string (if -s) to search for:' \
 ':replace_with -- What to replace each match with. Unless in string mode, you may use captured values like $1, $2, etc:' \
-'*::files -- The path to file(s). This is optional - sd can also read from STDIN. {n}{n}Note\: sd modifies files in-place by default. See documentation for examples:_files' \
+'*::files -- The path to file(s). This is optional - sd can also read from STDIN:_files' \
 && ret=0
 }
 

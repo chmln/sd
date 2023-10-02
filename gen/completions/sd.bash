@@ -47,4 +47,4 @@ _sd() {
     esac
 }
 
-complete -F _sd -o bashdefault -o default sd
+complete -F _sd -o nosort -o bashdefault -o default sd
