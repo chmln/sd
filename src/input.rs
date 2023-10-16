@@ -33,6 +33,24 @@ pub(crate) struct App {
 }
 
 impl App {
+    fn stdin_replace(&self, is_tty: bool) -> Result<()> {
+        let mut buffer = Vec::with_capacity(256);
+        let stdin = std::io::stdin();
+        let mut handle = stdin.lock();
+        handle.read_to_end(&mut buffer)?;
+
+        let stdout = std::io::stdout();
+        let mut handle = stdout.lock();
+
+        handle.write_all(&if is_tty {
+            self.replacer.replace_preview(&buffer)
+        } else {
+            self.replacer.replace(&buffer)
+        })?;
+
+        Ok(())
+    }
+
     pub(crate) fn new(source: Source, replacer: Replacer) -> Self {
         Self { source, replacer }
     }
@@ -40,23 +58,11 @@ impl App {
         let is_tty = std::io::stdout().is_terminal();
 
         match (&self.source, preview) {
-            (Source::Stdin, _) => {
-                let mut buffer = Vec::with_capacity(256);
-                let stdin = std::io::stdin();
-                let mut handle = stdin.lock();
-                handle.read_to_end(&mut buffer)?;
-
-                let stdout = std::io::stdout();
-                let mut handle = stdout.lock();
-
-                handle.write_all(&if is_tty {
-                    self.replacer.replace_preview(&buffer)
-                } else {
-                    self.replacer.replace(&buffer)
-                })?;
-
-                Ok(())
+            (Source::Stdin, true) => {
+                eprintln!("WARN: `--preview` flag is redundant");
+                self.stdin_replace(is_tty)
             }
+            (Source::Stdin, false) => self.stdin_replace(is_tty),
             (Source::Files(paths), false) => {
                 use rayon::prelude::*;
 
