@@ -88,7 +88,7 @@ Install through
 
 ## Quick Guide
 
-1. **String-literal mode**. By default, expressions are treated as regex. Use `-s` or `--string-mode` to disable regex.
+1. **String-literal mode**. By default, expressions are treated as regex. Use `-F` or `--fixed-strings` to disable regex.
 
    ```sh
    > echo 'lots((([]))) of special chars' | sd -s '((([])))' ''

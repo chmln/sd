@@ -54,7 +54,14 @@ w - match full words only
     */
     pub flags: Option<String>,
 
-    /// The regexp or string (if -s) to search for.
+    #[arg(long, value_name = "SEPARATOR")]
+    /// Set the path separator to use when printing file paths. The default is
+    /// your platform's path separator ('/' on Unix, '\' on Windows). This flag
+    /// is intended to override the default when the environment demands it. A
+    /// path separator is limited to a single byte.
+    pub path_separator: Option<char>,
+
+    /// The regexp or string (if using `-F`) to search for.
     pub find: String,
 
     /// What to replace each match with. Unless in string mode, you may
