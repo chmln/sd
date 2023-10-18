@@ -103,16 +103,28 @@ impl Replacer {
         &'a self,
         content: &'a [u8],
     ) -> std::borrow::Cow<'a, [u8]> {
+        let mut content = std::borrow::Cow::Borrowed(content);
         if self.is_literal {
-            self.regex.replacen(
-                content,
-                self.replacements,
-                regex::bytes::NoExpand(&self.replace_with),
-            )
+            let replace_withs = self.replace_withs.iter().map(|r| regex::bytes::NoExpand(r));
+            self.regexes.iter().zip(replace_withs).for_each(|(regex, replace_with)| {
+                content = regex.replacen(
+                    &content,
+                    self.max_replacements,
+                    replace_with,
+                );
+            });
         } else {
-            self.regex
-                .replacen(content, self.replacements, &*self.replace_with)
+            for (regex, replace_with) in
+                self.regexes.iter().zip(&self.replace_withs)
+            {
+                content = regex.replacen(
+                    &content,
+                    self.max_replacements,
+                    replace_with,
+                );
+            }
         }
+        content
     }
 
     pub(crate) fn replace_preview<'a>(
