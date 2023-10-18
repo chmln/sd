@@ -30,6 +30,7 @@ fn main() -> Result<()> {
             options.literal_mode,
             options.flags,
             options.replacements,
+            options.extra,
         )?,
     )
     .run(options.preview)?;

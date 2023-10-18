@@ -3,10 +3,10 @@ use regex::bytes::Regex;
 use std::{fs, fs::File, io::prelude::*, path::Path};
 
 pub(crate) struct Replacer {
-    regex: Regex,
-    replace_with: Vec<u8>,
-    is_literal: bool,
-    replacements: usize,
+    regexes: Vec<Regex>,
+    replace_withs: Vec<Vec<u8>>,
+    is_literal: bool, // -s
+    max_replacements: usize,
 }
 
 impl Replacer {
@@ -16,24 +16,31 @@ impl Replacer {
         is_literal: bool,
         flags: Option<String>,
         replacements: Option<usize>,
+        extra: Vec<String>,
     ) -> Result<Self> {
-        let (look_for, replace_with) = if is_literal {
-            (regex::escape(&look_for), replace_with.into_bytes())
-        } else {
-            (
-                look_for,
-                utils::unescape(&replace_with)
-                    .unwrap_or(replace_with)
-                    .into_bytes(),
-            )
-        };
+        fn create(
+            look_for: String,
+            replace_with: String,
+            is_literal: bool,
+            flags: Option<&str>,
+        ) -> Result<(Regex, Vec<u8>)> {
+            let (look_for, replace_with) = if is_literal {
+                (regex::escape(&look_for), replace_with.into_bytes())
+            } else {
+                (
+                    look_for,
+                    utils::unescape(&replace_with)
+                        .unwrap_or(replace_with)
+                        .into_bytes(),
+                )
+            };
 
-        let mut regex = regex::bytes::RegexBuilder::new(&look_for);
-        regex.multi_line(true);
+            let mut regex = regex::bytes::RegexBuilder::new(&look_for);
+            regex.multi_line(true);
 
-        if let Some(flags) = flags {
-            flags.chars().for_each(|c| {
-                #[rustfmt::skip]
+            if let Some(flags) = flags {
+                flags.chars().for_each(|c| {
+                    #[rustfmt::skip]
                 match c {
                     'c' => { regex.case_insensitive(false); },
                     'i' => { regex.case_insensitive(true); },
@@ -53,14 +60,32 @@ impl Replacer {
                     },
                     _ => {},
                 };
-            });
-        };
+                });
+            };
+            Ok((regex.build()?, replace_with))
+        }
+        assert_eq!(extra.len() % 2, 0);
+        let capacity = extra.len() / 2 + 1;
+        let mut regexes = Vec::with_capacity(capacity);
+        let mut replace_withs = Vec::with_capacity(capacity);
+        let first =
+            create(look_for, replace_with, is_literal, flags.as_deref())?;
+
+        regexes.push(first.0);
+        replace_withs.push(first.1);
+
+        for [look_for, replace_with] in extra.windows(2).into_iter() {
+            let (regex, replace_with) =
+                create(*look_for, *replace_with, is_literal, flags.as_deref())?;
+            regexes.push(regex);
+            replace_withs.push(replace_with);
+        }
 
         Ok(Self {
-            regex: regex.build()?,
-            replace_with,
+            regexes,
+            replace_withs,
             is_literal,
-            replacements: replacements.unwrap_or(0),
+            max_replacements: replacements.unwrap_or(0),
         })
     }
 

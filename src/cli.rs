@@ -73,6 +73,11 @@ w - match full words only
     /// Note: sd modifies files in-place by default. See documentation for
     /// examples.
     pub files: Vec<std::path::PathBuf>,
+
+
+    /// Extra find and replace pairs. 
+    #[arg(short, long, num_args(2))]
+    pub extra: Vec<String>,
 }
 
 #[cfg(test)]
