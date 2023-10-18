@@ -167,7 +167,7 @@ impl Replacer {
 
         let source = File::open(path)?;
         let meta = fs::metadata(path)?;
-        let mmap_source = unsafe { Mmap::map(&source)? };
+        let mmap_source = unsafe { Mmap::map(&source) }?;
         let replaced = self.replace(&mmap_source);
 
         let target = tempfile::NamedTempFile::new_in(
@@ -179,7 +179,7 @@ impl Replacer {
         file.set_permissions(meta.permissions())?;
 
         if !replaced.is_empty() {
-            let mut mmap_target = unsafe { MmapMut::map_mut(file)? };
+            let mut mmap_target = unsafe { MmapMut::map_mut(file) }?;
             mmap_target.deref_mut().write_all(&replaced)?;
             mmap_target.flush_async()?;
         }
