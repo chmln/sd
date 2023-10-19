@@ -84,7 +84,7 @@ Install through
 [`cargo`](https://doc.rust-lang.org/cargo/getting-started/installation.html) with
 `cargo install sd`, or through various package managers
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/sd-find-replace.svg)](https://repology.org/project/sd-find-replace/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/sd-find-replace.svg?exclude_unsupported=1)](https://repology.org/project/sd-find-replace/versions)
 
 ## Quick Guide
 
