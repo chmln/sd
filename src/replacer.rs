@@ -99,32 +99,30 @@ impl Replacer {
         Ok(())
     }
 
+    fn generic_replace<'a>(
+        &self,
+        content: &'a [u8],
+        replace: impl Iterator<Item = impl regex::bytes::Replacer>,
+    ) -> std::borrow::Cow<'a, [u8]> {
+        let mut content = std::borrow::Cow::Borrowed(content);
+        for (regex, replace_with) in self.regexes.into_iter().zip(replace) {
+            content =
+                regex.replacen(&content, self.max_replacements, replace_with);
+        }
+        content
+    }
+
     pub(crate) fn replace<'a>(
         &'a self,
         content: &'a [u8],
     ) -> std::borrow::Cow<'a, [u8]> {
-        let mut content = std::borrow::Cow::Borrowed(content);
         if self.is_literal {
-            let replace_withs = self.replace_withs.iter().map(|r| regex::bytes::NoExpand(r));
-            self.regexes.iter().zip(replace_withs).for_each(|(regex, replace_with)| {
-                content = regex.replacen(
-                    &content,
-                    self.max_replacements,
-                    replace_with,
-                );
-            });
+            let mut rep =
+                self.replace_withs.iter().map(|r| regex::bytes::NoExpand(r));
+            self.generic_replace(content, rep)
         } else {
-            for (regex, replace_with) in
-                self.regexes.iter().zip(&self.replace_withs)
-            {
-                content = regex.replacen(
-                    &content,
-                    self.max_replacements,
-                    replace_with,
-                );
-            }
+            self.generic_replace(content, self.replace_withs.into_iter())
         }
-        content
     }
 
     pub(crate) fn replace_preview<'a>(
