@@ -1,4 +1,5 @@
 [workspace]
+package.edition = "2021"
 package.version = "0.7.6"
 members = [
     ".",
@@ -8,7 +9,7 @@ members = [
 [package]
 name = "sd"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "An intuitive find & replace CLI"
 readme = "README.md"
