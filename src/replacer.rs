@@ -1,6 +1,6 @@
 use crate::{utils, Error, Result};
 use regex::bytes::Regex;
-use std::{fs, fs::File, io::prelude::*, path::Path};
+use std::{borrow::Cow, fs, fs::File, io::prelude::*, path::Path};
 
 pub(crate) struct Replacer {
     regexes: Vec<Regex>,
@@ -64,7 +64,6 @@ impl Replacer {
             };
             Ok((regex.build()?, replace_with))
         }
-        assert_eq!(extra.len() % 2, 0);
         let capacity = extra.len() / 2 + 1;
         let mut regexes = Vec::with_capacity(capacity);
         let mut replace_withs = Vec::with_capacity(capacity);
@@ -74,9 +73,12 @@ impl Replacer {
         regexes.push(first.0);
         replace_withs.push(first.1);
 
-        for [look_for, replace_with] in extra.windows(2).into_iter() {
+        let mut it = extra.into_iter();
+        while let Some(look_for) = it.next() {
+            let replace_with = it.next().expect("The extra pattern list doesn't have an even lenght");
+
             let (regex, replace_with) =
-                create(*look_for, *replace_with, is_literal, flags.as_deref())?;
+                create(look_for, replace_with, is_literal, flags.as_deref())?;
             regexes.push(regex);
             replace_withs.push(replace_with);
         }
@@ -90,7 +92,7 @@ impl Replacer {
     }
 
     pub(crate) fn has_matches(&self, content: &[u8]) -> bool {
-        self.regex.is_match(content)
+        self.regexes.iter().any(|r| r.is_match(content))
     }
 
     pub(crate) fn check_not_empty(mut file: File) -> Result<()> {
@@ -103,36 +105,41 @@ impl Replacer {
         &self,
         content: &'a [u8],
         replace: impl Iterator<Item = impl regex::bytes::Replacer>,
-    ) -> std::borrow::Cow<'a, [u8]> {
-        let mut content = std::borrow::Cow::Borrowed(content);
-        for (regex, replace_with) in self.regexes.into_iter().zip(replace) {
-            content =
-                regex.replacen(&content, self.max_replacements, replace_with);
+    ) -> Cow<'a, [u8]> {
+        let mut result = Cow::Borrowed(content);
+        for (regex, replace_with) in self.regexes.iter().zip(replace) {
+            result = Cow::Owned(
+                regex
+                    .replacen(&result, self.max_replacements, replace_with)
+                    .into_owned(),
+            );
         }
-        content
+        result
     }
 
-    pub(crate) fn replace<'a>(
-        &'a self,
-        content: &'a [u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
+    pub(crate) fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
         if self.is_literal {
-            let mut rep =
+            let rep =
                 self.replace_withs.iter().map(|r| regex::bytes::NoExpand(r));
             self.generic_replace(content, rep)
         } else {
-            self.generic_replace(content, self.replace_withs.into_iter())
+            self.generic_replace(content, self.replace_withs.iter())
         }
     }
 
     pub(crate) fn replace_preview<'a>(
         &'a self,
-        content: &[u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
+        content: &'a [u8],
+    ) -> Cow<'a, [u8]> {
+        if self.regexes.len() > 1 {
+            return self.replace(content);
+        }
+        let regex = &self.regexes[0];
+        let replace = &self.replace_withs[0];
         let mut v = Vec::<u8>::new();
-        let mut captures = self.regex.captures_iter(content);
+        let mut captures = regex.captures_iter(content);
 
-        self.regex.split(content).for_each(|sur_text| {
+        for sur_text in regex.split(content) {
             use regex::bytes::Replacer;
 
             v.extend(sur_text);
@@ -141,18 +148,18 @@ impl Replacer {
                     ansi_term::Color::Green.prefix().to_string().as_bytes(),
                 );
                 if self.is_literal {
-                    regex::bytes::NoExpand(&self.replace_with)
+                    regex::bytes::NoExpand(&replace)
                         .replace_append(&capture, &mut v);
                 } else {
-                    (&*self.replace_with).replace_append(&capture, &mut v);
+                    (&*replace).replace_append(&capture, &mut v);
                 }
                 v.extend_from_slice(
                     ansi_term::Color::Green.suffix().to_string().as_bytes(),
                 );
             }
-        });
+        }
 
-        return std::borrow::Cow::Owned(v);
+        return Cow::Owned(v);
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
@@ -208,6 +215,7 @@ mod tests {
             literal,
             flags.map(ToOwned::to_owned),
             None,
+            vec![],
         )
         .unwrap();
         assert_eq!(
