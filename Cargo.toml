@@ -1,10 +1,16 @@
 [workspace]
-package.edition = "2021"
-package.version = "0.7.6"
 members = [
     ".",
     "xtask",
 ]
+
+[workspace.dependencies.clap]
+version = "4.4.3"
+features = ["derive", "deprecated", "wrap_help"]
+
+[workspace.package]
+edition = "2021"
+version = "0.7.6"
 
 [package]
 name = "sd"
@@ -30,7 +36,7 @@ globwalk = "0.8.1"
 ignore = "0.4.20"
 ansi_term = "0.12.1"
 is-terminal = "0.4.9"
-clap = { version = "4.4.3", features = ["derive", "deprecated", "wrap_help"] }
+clap.workspace = true
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
