@@ -8,7 +8,7 @@
 1. [ ] Regenerate static assets
   - `$ cargo xtask gen`
 1. [ ] Update `rust-version` in `Cargo.toml`
-  - `$ cargo msrv --min 1.40 -- cargo check`
+  - `$ cargo msrv --min 1.60 -- cargo check`
 1. [ ] Bump `version` in `Cargo.toml`
 1. [ ] Update the `CHANGELOG.md`
 1. [ ] Merge changes through a PR to make sure that CI passes
