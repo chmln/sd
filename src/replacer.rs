@@ -75,7 +75,9 @@ impl Replacer {
 
         let mut it = extra.into_iter();
         while let Some(look_for) = it.next() {
-            let replace_with = it.next().expect("The extra pattern list doesn't have an even lenght");
+            let replace_with = it
+                .next()
+                .expect("The extra pattern list doesn't have an even lenght");
 
             let (regex, replace_with) =
                 create(look_for, replace_with, is_literal, flags.as_deref())?;
@@ -259,4 +261,25 @@ mod tests {
     fn full_word_replace() {
         replace("abc", "def", false, Some("w"), "abcd abc", "abcd def");
     }
+
+    #[test]
+    fn test_multipattern1() {
+        let replacer = Replacer::new(
+            "foo".to_owned(),
+            "bar".to_owned(),
+            false,
+            None,
+            None,
+            vec!["qux".into(), "quux".into(), "bing".into(), "bong".into()],
+        )
+        .unwrap();
+
+        assert_eq!(
+            std::str::from_utf8(
+                &replacer.replace("foo qux bing".as_bytes())
+            ),
+            Ok("bar quux bong")
+        );
+    }
 }
+
