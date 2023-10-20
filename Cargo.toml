@@ -8,7 +8,7 @@ members = [
 [package]
 name = "sd"
 version.workspace = true
-edition = "2018"
+edition = "2021"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "An intuitive find & replace CLI"
 readme = "README.md"
