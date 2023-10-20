@@ -24,6 +24,7 @@ license = "MIT"
 homepage = "https://github.com/chmln/sd"
 repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
+rust-version = "1.70.0"
 
 [dependencies]
 regex = "1.9.5"
