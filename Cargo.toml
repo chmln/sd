@@ -5,7 +5,7 @@ members = [
 ]
 
 [workspace.dependencies.clap]
-version = "4.4.3"
+version = "4.4.6"
 features = ["derive", "deprecated", "wrap_help"]
 
 [workspace.package]
@@ -27,12 +27,12 @@ categories = ["command-line-utilities", "text-processing", "development-tools"]
 rust-version = "1.70.0"
 
 [dependencies]
-regex = "1.9.5"
+regex = "1.10.2"
 rayon = "1.8.0"
 unescape = "0.1.0"
-memmap2 = "0.8.0"
+memmap2 = "0.9.0"
 tempfile = "3.8.0"
-thiserror = "1.0.48"
+thiserror = "1.0.50"
 globwalk = "0.8.1"
 ignore = "0.4.20"
 ansi_term = "0.12.1"
