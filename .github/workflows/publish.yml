@@ -55,29 +55,39 @@ jobs:
         fetch-depth: 1
 
     - name: Set the version
-      id: version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      shell: bash
+      if: env.SD_VERSION == ''
+      run: |
+        echo "SD_VERSION=$GITHUB_REF_NAME" >> $GITHUB_ENV
+        echo "version is: ${{ env.SD_VERSION }}"
 
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        target: ${{ matrix.target }}
+        targets: ${{ matrix.target }}
 
+    - name: Install Cross
+      if: ${{ matrix.use-cross == true }}
+      shell: bash
+      run: |
+        dir="$RUNNER_TEMP/cross-download"
+        mkdir "$dir"
+        echo "$dir" >> $GITHUB_PATH
+        cd "$dir"
+        curl -LO "https://github.com/cross-rs/cross/releases/download/v0.2.5/cross-x86_64-unknown-linux-musl.tar.gz"
+        tar xf cross-x86_64-unknown-linux-musl.tar.gz
+        echo "CARGO=cross" >> $GITHUB_ENV
+        echo "RUSTFLAGS='--cfg sd_cross_compile'"
+        echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.use-cross }}
-        command: build
-        args: --target ${{ matrix.target }} --release --locked
+      run: |
+        cargo build --release --locked
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/${{ matrix.target }}/release/sd
-        asset_name: sd-${{ steps.version.outputs.VERSION }}-${{ matrix.target }}
+        asset_name: sd-${{ env.SD_VERSION }}-${{ matrix.target }}
         tag: ${{ github.ref }}
