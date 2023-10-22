@@ -60,6 +60,12 @@ jobs:
       with:
         targets: ${{ matrix.target }}
 
+    - name: Setup native compilation
+      if: ${{ matrix.use-cross == false }}
+      shell: bash
+      run: |
+        echo "CARGO=cargo" >> $GITHUB_ENV
+
     - name: Install Cross
       if: ${{ matrix.use-cross == true }}
       shell: bash
@@ -71,10 +77,11 @@ jobs:
         curl -LO "https://github.com/cross-rs/cross/releases/download/v0.2.5/cross-x86_64-unknown-linux-musl.tar.gz"
         tar xf cross-x86_64-unknown-linux-musl.tar.gz
         echo "CARGO=cross" >> $GITHUB_ENV
-        echo "RUSTFLAGS='--cfg sd_cross_compile'"
-        echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
+        echo "RUSTFLAGS=--cfg sd_cross_compile" >> $GITHUB_ENV
         echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Test
+      shell: bash
       run: |
-        cargo test
+        $CARGO --version
+        $CARGO test --target ${{ matrix.target }}
