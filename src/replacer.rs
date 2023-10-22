@@ -2,9 +2,15 @@ use crate::{utils, Error, Result};
 use regex::bytes::Regex;
 use std::{borrow::Cow, fs, fs::File, io::prelude::*, path::Path};
 
+#[derive(Debug)]
+struct Pair {
+    regex: Regex,
+    rep: Vec<u8>,
+}
+
+#[derive(Debug)]
 pub(crate) struct Replacer {
-    regexes: Vec<Regex>,
-    replace_withs: Vec<Vec<u8>>,
+    pairs: Vec<Pair>,
     is_literal: bool, // -s
     max_replacements: usize,
 }
@@ -23,7 +29,7 @@ impl Replacer {
             replace_with: String,
             is_literal: bool,
             flags: Option<&str>,
-        ) -> Result<(Regex, Vec<u8>)> {
+        ) -> Result<Pair> {
             let (look_for, replace_with) = if is_literal {
                 (regex::escape(&look_for), replace_with.into_bytes())
             } else {
@@ -39,7 +45,7 @@ impl Replacer {
             regex.multi_line(true);
 
             if let Some(flags) = flags {
-                flags.chars().for_each(|c| {
+                for c in flags.chars() {
                     #[rustfmt::skip]
                 match c {
                     'c' => { regex.case_insensitive(false); },
@@ -60,18 +66,22 @@ impl Replacer {
                     },
                     _ => {},
                 };
-                });
+                }
             };
-            Ok((regex.build()?, replace_with))
+            Ok(Pair {
+                regex: regex.build()?,
+                rep: replace_with,
+            })
         }
-        let capacity = extra.len() / 2 + 1;
-        let mut regexes = Vec::with_capacity(capacity);
-        let mut replace_withs = Vec::with_capacity(capacity);
-        let first =
-            create(look_for, replace_with, is_literal, flags.as_deref())?;
 
-        regexes.push(first.0);
-        replace_withs.push(first.1);
+        let capacity = extra.len() / 2 + 1;
+        let mut pairs = Vec::with_capacity(capacity);
+        pairs.push(create(
+            look_for,
+            replace_with,
+            is_literal,
+            flags.as_deref(),
+        )?);
 
         let mut it = extra.into_iter();
         while let Some(look_for) = it.next() {
@@ -79,22 +89,23 @@ impl Replacer {
                 .next()
                 .expect("The extra pattern list doesn't have an even lenght");
 
-            let (regex, replace_with) =
-                create(look_for, replace_with, is_literal, flags.as_deref())?;
-            regexes.push(regex);
-            replace_withs.push(replace_with);
+            pairs.push(create(
+                look_for,
+                replace_with,
+                is_literal,
+                flags.as_deref(),
+            )?);
         }
 
         Ok(Self {
-            regexes,
-            replace_withs,
+            pairs,
             is_literal,
             max_replacements: replacements.unwrap_or(0),
         })
     }
 
     pub(crate) fn has_matches(&self, content: &[u8]) -> bool {
-        self.regexes.iter().any(|r| r.is_match(content))
+        self.pairs.iter().any(|r| r.regex.is_match(content))
     }
 
     pub(crate) fn check_not_empty(mut file: File) -> Result<()> {
@@ -103,65 +114,56 @@ impl Replacer {
         Ok(())
     }
 
-    fn generic_replace<'a>(
-        &self,
-        content: &'a [u8],
-        replace: impl Iterator<Item = impl regex::bytes::Replacer>,
-    ) -> Cow<'a, [u8]> {
+    pub(crate) fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
         let mut result = Cow::Borrowed(content);
-        for (regex, replace_with) in self.regexes.iter().zip(replace) {
-            result = Cow::Owned(
-                regex
-                    .replacen(&result, self.max_replacements, replace_with)
-                    .into_owned(),
-            );
+        for Pair { regex, rep } in self.pairs.iter() {
+            let res = if self.is_literal {
+                let rep = regex::bytes::NoExpand(rep.as_slice());
+                regex.replacen(&result, self.max_replacements, rep)
+            } else {
+                regex.replacen(&result, self.max_replacements, rep)
+            };
+
+            result = Cow::Owned(res.into_owned());
         }
         result
-    }
-
-    pub(crate) fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
-        if self.is_literal {
-            let rep =
-                self.replace_withs.iter().map(|r| regex::bytes::NoExpand(r));
-            self.generic_replace(content, rep)
-        } else {
-            self.generic_replace(content, self.replace_withs.iter())
-        }
     }
 
     pub(crate) fn replace_preview<'a>(
         &'a self,
         content: &'a [u8],
     ) -> Cow<'a, [u8]> {
-        if self.regexes.len() > 1 {
-            return self.replace(content);
-        }
-        let regex = &self.regexes[0];
-        let replace = &self.replace_withs[0];
-        let mut v = Vec::<u8>::new();
-        let mut captures = regex.captures_iter(content);
+        let mut content = Cow::Borrowed(content);
 
-        for sur_text in regex.split(content) {
-            use regex::bytes::Replacer;
+        for Pair { regex, rep } in self.pairs.iter() {
+            let rep = rep.as_slice();
 
-            v.extend(sur_text);
-            if let Some(capture) = captures.next() {
-                v.extend_from_slice(
-                    ansi_term::Color::Green.prefix().to_string().as_bytes(),
-                );
-                if self.is_literal {
-                    regex::bytes::NoExpand(&replace)
-                        .replace_append(&capture, &mut v);
-                } else {
-                    (&*replace).replace_append(&capture, &mut v);
+            let mut v = Vec::<u8>::new();
+            let mut captures = regex.captures_iter(&content);
+
+            for sur_text in regex.split(&content) {
+                use regex::bytes::Replacer;
+
+                v.extend(sur_text);
+                if let Some(capture) = captures.next() {
+                    v.extend_from_slice(
+                        ansi_term::Color::Green.prefix().to_string().as_bytes(),
+                    );
+                    if self.is_literal {
+                        regex::bytes::NoExpand(&rep)
+                            .replace_append(&capture, &mut v);
+                    } else {
+                        (&*rep).replace_append(&capture, &mut v);
+                    }
+                    v.extend_from_slice(
+                        ansi_term::Color::Green.suffix().to_string().as_bytes(),
+                    );
                 }
-                v.extend_from_slice(
-                    ansi_term::Color::Green.suffix().to_string().as_bytes(),
-                );
             }
+            content = Cow::Owned(v);
         }
 
-        return Cow::Owned(v);
+        content
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
@@ -263,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multipattern1() {
+    fn test_multipattern() {
         let replacer = Replacer::new(
             "foo".to_owned(),
             "bar".to_owned(),
@@ -275,11 +277,8 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            std::str::from_utf8(
-                &replacer.replace("foo qux bing".as_bytes())
-            ),
+            std::str::from_utf8(&replacer.replace("foo qux bing".as_bytes())),
             Ok("bar quux bong")
         );
     }
 }
-
