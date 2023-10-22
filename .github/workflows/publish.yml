@@ -55,29 +55,53 @@ jobs:
         fetch-depth: 1
 
     - name: Set the version
-      id: version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      shell: bash
+      if: env.SD_VERSION == ''
+      run: |
+        echo "SD_VERSION=$GITHUB_REF_NAME" >> $GITHUB_ENV
+        echo "version is: ${{ env.SD_VERSION }}"
 
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        target: ${{ matrix.target }}
+        targets: ${{ matrix.target }}
 
+    - name: Setup native compilation
+      if: ${{ matrix.use-cross == false }}
+      shell: bash
+      run: |
+        echo "CARGO=cargo" >> $GITHUB_ENV
+
+    - name: Setup cross compilation
+      if: ${{ matrix.use-cross == true }}
+      shell: bash
+      run: |
+        dir="$RUNNER_TEMP/cross-download"
+        mkdir "$dir"
+        echo "$dir" >> $GITHUB_PATH
+        cd "$dir"
+        curl -LO "https://github.com/cross-rs/cross/releases/download/v0.2.5/cross-x86_64-unknown-linux-musl.tar.gz"
+        tar xf cross-x86_64-unknown-linux-musl.tar.gz
+        echo "CARGO=cross" >> $GITHUB_ENV
+        echo "RUSTFLAGS=--cfg sd_cross_compile" >> $GITHUB_ENV
+        echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.use-cross }}
-        command: build
-        args: --target ${{ matrix.target }} --release --locked
+      shell: bash
+      run: |
+        $CARGO --version
+        $CARGO build --release --locked --target ${{ matrix.target }}
+        # Handle windows being an oddity
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          echo "BIN_NAME=sd.exe" >> $GITHUB_ENV
+        else
+          echo "BIN_NAME=sd" >> $GITHUB_ENV
+        fi
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/${{ matrix.target }}/release/sd
-        asset_name: sd-${{ steps.version.outputs.VERSION }}-${{ matrix.target }}
+        file: target/${{ matrix.target }}/release/${{ env.BIN_NAME }}
+        asset_name: sd-${{ env.SD_VERSION }}-${{ matrix.target }}
         tag: ${{ github.ref }}

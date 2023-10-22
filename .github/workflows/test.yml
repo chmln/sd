@@ -56,25 +56,32 @@ jobs:
         fetch-depth: 1
 
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        target: ${{ matrix.target }}
+        targets: ${{ matrix.target }}
 
-    - name: Create .cargo/config.toml
+    - name: Setup native compilation
+      if: ${{ matrix.use-cross == false }}
+      shell: bash
+      run: |
+        echo "CARGO=cargo" >> $GITHUB_ENV
+
+    - name: Install Cross
       if: ${{ matrix.use-cross == true }}
       shell: bash
       run: |
-           cat > .cargo/config.toml <<EOF
-           [target.${{ matrix.target }}]
-           rustflags = ["--cfg", "sd_cross_compile"]
-           EOF
+        dir="$RUNNER_TEMP/cross-download"
+        mkdir "$dir"
+        echo "$dir" >> $GITHUB_PATH
+        cd "$dir"
+        curl -LO "https://github.com/cross-rs/cross/releases/download/v0.2.5/cross-x86_64-unknown-linux-musl.tar.gz"
+        tar xf cross-x86_64-unknown-linux-musl.tar.gz
+        echo "CARGO=cross" >> $GITHUB_ENV
+        echo "RUSTFLAGS=--cfg sd_cross_compile" >> $GITHUB_ENV
+        echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.use-cross }}
-        command: test
-        args: --target ${{ matrix.target }}
+      shell: bash
+      run: |
+        $CARGO --version
+        $CARGO test --target ${{ matrix.target }}

@@ -1,14 +1,22 @@
 [workspace]
-package.version = "0.7.6"
 members = [
     ".",
     "xtask",
 ]
 
+[workspace.dependencies.clap]
+version = "4.4.6"
+features = ["derive", "deprecated", "wrap_help"]
+
+[workspace.package]
+edition = "2021"
+version = "0.7.6"
+
 [package]
 name = "sd"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
+
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "An intuitive find & replace CLI"
 readme = "README.md"
@@ -17,19 +25,20 @@ license = "MIT"
 homepage = "https://github.com/chmln/sd"
 repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
+rust-version = "1.70.0"
 
 [dependencies]
-regex = "1.9.5"
+regex = "1.10.2"
 rayon = "1.8.0"
 unescape = "0.1.0"
-memmap2 = "0.8.0"
+memmap2 = "0.9.0"
 tempfile = "3.8.0"
-thiserror = "1.0.48"
+thiserror = "1.0.50"
 globwalk = "0.8.1"
 ignore = "0.4.20"
 ansi_term = "0.12.1"
 is-terminal = "0.4.9"
-clap = { version = "4.4.3", features = ["derive", "deprecated", "wrap_help"] }
+clap.workspace = true
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
