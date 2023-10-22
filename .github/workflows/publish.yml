@@ -91,11 +91,17 @@ jobs:
       run: |
         $CARGO --version
         $CARGO build --release --locked --target ${{ matrix.target }}
+        # Handle windows being an oddity
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          echo "BIN_NAME=sd.exe" >> $GITHUB_ENV
+        else
+          echo "BIN_NAME=sd" >> $GITHUB_ENV
+        fi
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/${{ matrix.target }}/release/sd
+        file: target/${{ matrix.target }}/release/${{ env.BIN_NAME }}
         asset_name: sd-${{ env.SD_VERSION }}-${{ matrix.target }}
         tag: ${{ github.ref }}
