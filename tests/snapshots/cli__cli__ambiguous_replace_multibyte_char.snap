@@ -1,0 +1,9 @@
+---
+source: tests/cli.rs
+expression: plain_stderr
+---
+error: The numbered capture group `$1` in the replacement text is ambiguous.
+hint: Use curly braces to disambiguate it `${1}bad`.
+😈$1bad😇
+  ^^^^
+
