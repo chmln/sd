@@ -6,65 +6,95 @@ use ansi_term::{Color, Style};
 pub struct InvalidReplaceCapture {
     original_replace: String,
     invalid_ident: Span,
-    // TODO: switch this to just num_leading_digits. Span is overkill here
-    digits_prefix: Span,
+    num_leading_digits: usize,
 }
 
 impl Error for InvalidReplaceCapture {}
 
-// TODO: rip out the line handling stuff and just display one line. Less
-// confusing and less code
+// NOTE: This code is much more allocation heavy than it needs to be, but it's
+//       only displayed as a hard error to the user, so it's not a big deal
 impl fmt::Display for InvalidReplaceCapture {
-    // We save byte offsets for the spans, but in the unlikely event that the
-    // replacement string has newlines or weird carriage returns we walk back
-    // over the string to regain context
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Self {
-            original_replace,
-            invalid_ident,
-            digits_prefix,
-        } = self;
+        #[derive(Clone, Copy)]
+        enum SpecialChar {
+            Newline,
+            CarriageReturn,
+            Tab,
+        }
 
-        // TODO: dedupe style code
-        // Build up the error to show the user
-        let mut formatted = String::new();
-        let mut arrows_start = Span::start_at(0);
-        let special_char_style = Style::new().bold();
-        let error_style = Style::from(Color::Red).bold();
-        for (byte_index, c) in original_replace.char_indices() {
-            match c {
-                '\n' => formatted
-                    .push_str(&special_char_style.paint(r"\n").to_string()),
-                '\r' => formatted
-                    .push_str(&special_char_style.paint(r"\r").to_string()),
-                '\t' => formatted
-                    .push_str(&special_char_style.paint(r"\t").to_string()),
-                other => {
-                    if invalid_ident.contains(byte_index) {
-                        // TODO: don't repaint on every char here
-                        formatted.push_str(&format!(
-                            "{}",
-                            error_style.paint(String::from(other))
-                        ));
-                    } else {
-                        formatted.push(other);
-                    }
+        impl SpecialChar {
+            fn new(c: char) -> Option<Self> {
+                match c {
+                    '\n' => Some(Self::Newline),
+                    '\r' => Some(Self::CarriageReturn),
+                    '\t' => Some(Self::Tab),
+                    _ => None,
                 }
             }
 
-            if byte_index < invalid_ident.start {
-                // This assumes that characters have a base display width of 1.
-                // Not technically true, but hard to do right
-                let width = if ['\n', '\r', '\t'].contains(&c) {
-                    2
-                } else {
-                    1
-                };
-                arrows_start.start += width;
+            /// Renders as the character from the "Control Pictures" block
+            ///
+            /// https://en.wikipedia.org/wiki/Control_Pictures
+            fn render(self) -> char {
+                match self {
+                    Self::Newline => '␊',
+                    Self::CarriageReturn => '␍',
+                    Self::Tab => '␉',
+                }
             }
         }
 
-        // This relies on all ident chars being 1 byte
+        let Self {
+            original_replace,
+            invalid_ident,
+            num_leading_digits,
+        } = self;
+
+        // Build up the error to show the user
+        let mut formatted = String::new();
+        let mut arrows_start = Span::start_at(0);
+        let special = Style::new().bold();
+        let error = Style::from(Color::Red).bold();
+        for (byte_index, c) in original_replace.char_indices() {
+            let (prefix, suffix, text) = match SpecialChar::new(c) {
+                Some(c) => {
+                    (Some(special.prefix()), Some(special.suffix()), c.render())
+                }
+                None => {
+                    let (prefix, suffix) = if byte_index == invalid_ident.start
+                    {
+                        (Some(error.prefix()), None)
+                    } else if byte_index
+                        == invalid_ident.end.checked_sub(1).unwrap()
+                    {
+                        (None, Some(error.suffix()))
+                    } else {
+                        (None, None)
+                    };
+                    (prefix, suffix, c)
+                }
+            };
+
+            if let Some(prefix) = prefix {
+                formatted.push_str(&prefix.to_string());
+            }
+            formatted.push(text);
+            if let Some(suffix) = suffix {
+                formatted.push_str(&suffix.to_string());
+            }
+
+            if byte_index < invalid_ident.start {
+                // Assumes that characters have a base display width of 1. While
+                // that's not technically true, it's near impossible to do right
+                // since the specifics on text rendering is up to the user's
+                // terminal/font. This _does_ rely on variable-width characters
+                // like \n, \r, and \t getting converting to single character
+                // representations above
+                arrows_start.start += 1;
+            }
+        }
+
+        // This relies on all non-curly-braced capture chars being 1 byte
         let arrows_span = arrows_start.end_offset(invalid_ident.len());
         let mut arrows = " ".repeat(arrows_span.start);
         arrows.push_str(&format!(
@@ -73,8 +103,7 @@ impl fmt::Display for InvalidReplaceCapture {
         ));
 
         let ident = invalid_ident.slice(original_replace);
-        let number = digits_prefix.slice(ident);
-        let the_rest = &ident[digits_prefix.end..];
+        let (number, the_rest) = ident.split_at(*num_leading_digits);
         let disambiguous = format!("${{{number}}}{the_rest}");
         let error_message = format!(
             "The numbered capture group `{}` in the replacement text is ambiguous.",
@@ -103,7 +132,7 @@ pub fn validate_replace(s: &str) -> Result<(), InvalidReplaceCapture> {
                     return Err(InvalidReplaceCapture {
                         original_replace: s.to_owned(),
                         invalid_ident: ident.span,
-                        digits_prefix: Span::new(0, i),
+                        num_leading_digits: i,
                     });
                 }
             }
@@ -132,10 +161,6 @@ impl Span {
 
     fn slice(self, s: &str) -> &str {
         &s[self.start..self.end]
-    }
-
-    fn contains(self, elem: usize) -> bool {
-        self.start <= elem && self.end > elem
     }
 
     fn len(self) -> usize {
@@ -344,7 +369,6 @@ mod tests {
     }
 
     proptest! {
-        // TODO: force dollar signs to be more common
         // `regex-automata` doesn't expose a way to iterate over replacement
         // captures, but we can use our iterator to mimic interpolation, so that
         // we can pit the two against each other

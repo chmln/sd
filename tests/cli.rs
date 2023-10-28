@@ -152,8 +152,8 @@ mod cli {
         insta::assert_snapshot!(plain_stderr, @r###"
         error: The numbered capture group `$1` in the replacement text is ambiguous.
         hint: Use curly braces to disambiguate it `${1}bad`.
-        \r\n\t$1bad\r
-               ^^^^
+        ␍␊␉$1bad␍
+            ^^^^
         "###);
     }
 
@@ -190,8 +190,8 @@ mod cli {
         insta::assert_snapshot!(html_stderr, @r###"
         <b><span style='color:#a00'>error</span></b>: The numbered capture group `<b>$1</b>` in the replacement text is ambiguous.
         <b><span style='color:#00a'>hint</span></b>: Use curly braces to disambiguate it `<b>${1}bad</b>`.
-        <b>\t</b>$<b><span style='color:#a00'>1bad</span></b> after
-           <b>^^^^</b>
+        <b>␉</b>$<b><span style='color:#a00'>1bad</span></b> after
+          <b>^^^^</b>
         "###);
     }
 }
