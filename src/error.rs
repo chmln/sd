@@ -3,6 +3,8 @@ use std::{
     path::PathBuf,
 };
 
+use crate::replacer::InvalidReplaceCapture;
+
 #[derive(thiserror::Error)]
 pub enum Error {
     #[error("invalid regex {0}")]
@@ -15,6 +17,8 @@ pub enum Error {
     InvalidPath(PathBuf),
     #[error("failed processing files:\n{0}")]
     FailedProcessing(FailedJobs),
+    #[error("{0}")]
+    InvalidReplaceCapture(#[from] InvalidReplaceCapture),
 }
 
 pub struct FailedJobs(Vec<(PathBuf, Error)>);

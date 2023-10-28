@@ -43,6 +43,11 @@ clap.workspace = true
 assert_cmd = "2.0.12"
 anyhow = "1.0.75"
 clap_mangen = "0.2.14"
+proptest = "1.3.1"
+console = "0.15.7"
+insta = "1.34.0"
+ansi-to-html = "0.1.3"
+regex-automata = "0.4.3"
 
 [profile.release]
 opt-level = 3

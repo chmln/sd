@@ -102,4 +102,96 @@ mod cli {
 
         Ok(())
     }
+
+    fn bad_replace_helper_styled(replace: &str) -> String {
+        let err = sd()
+            .args(["find", replace])
+            .write_stdin("stdin")
+            .unwrap_err();
+        String::from_utf8(err.as_output().unwrap().stderr.clone()).unwrap()
+    }
+
+    fn bad_replace_helper_plain(replace: &str) -> String {
+        let stderr = bad_replace_helper_styled(replace);
+
+        // TODO: no easy way to toggle off styling yet. Add a `--color <when>`
+        // flag, and respect things like `$NO_COLOR`. `ansi_term` is
+        // unmaintained, so we should migrate off of it anyways
+        console::AnsiCodeIterator::new(&stderr)
+            .filter_map(|(s, is_ansi)| (!is_ansi).then_some(s))
+            .collect()
+    }
+
+    #[test]
+    fn fixed_strings_ambiguous_replace_is_fine() {
+        sd().args([
+            "--fixed-strings",
+            "foo",
+            "inner_before $1fine inner_after",
+        ])
+        .write_stdin("outer_before foo outer_after")
+        .assert()
+        .success()
+        .stdout("outer_before inner_before $1fine inner_after outer_after");
+    }
+
+    #[test]
+    fn ambiguous_replace_basic() {
+        let plain_stderr = bad_replace_helper_plain("before $1bad after");
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}bad`.
+        before $1bad after
+                ^^^^
+        "###);
+    }
+
+    #[test]
+    fn ambiguous_replace_variable_width() {
+        let plain_stderr = bad_replace_helper_plain("\r\n\t$1bad\r");
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}bad`.
+        ␍␊␉$1bad␍
+            ^^^^
+        "###);
+    }
+
+    #[test]
+    fn ambiguous_replace_multibyte_char() {
+        let plain_stderr = bad_replace_helper_plain("😈$1bad😇");
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}bad`.
+        😈$1bad😇
+          ^^^^
+        "###);
+    }
+
+    #[test]
+    fn ambiguous_replace_issue_44() {
+        let plain_stderr =
+            bad_replace_helper_plain("$1Call $2($5, GetFM20ReturnKey(), $6)");
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}Call`.
+        $1Call $2($5, GetFM20ReturnKey(), $6)
+         ^^^^^
+        "###);
+    }
+
+    // NOTE: styled terminal output is platform dependent, so convert to a
+    // common format, in this case HTML, to check
+    #[test]
+    fn ambiguous_replace_ensure_styling() {
+        let styled_stderr = bad_replace_helper_styled("\t$1bad after");
+        let html_stderr =
+            ansi_to_html::convert(&styled_stderr, true, true).unwrap();
+        insta::assert_snapshot!(html_stderr, @r###"
+        <b><span style='color:#a00'>error</span></b>: The numbered capture group `<b>$1</b>` in the replacement text is ambiguous.
+        <b><span style='color:#00a'>hint</span></b>: Use curly braces to disambiguate it `<b>${1}bad</b>`.
+        <b>␉</b>$<b><span style='color:#a00'>1bad</span></b> after
+          <b>^^^^</b>
+        "###);
+    }
 }
