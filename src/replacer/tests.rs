@@ -2,22 +2,21 @@ use super::*;
 
 use proptest::prelude::*;
 
-// TODO: add property test capture groups that use {}
 proptest! {
     #[test]
-    fn validate_doesnt_panic(s in r"(\PC*\$?){0, 5}") {
+    fn validate_doesnt_panic(s in r"(\PC*\$?){0,5}") {
         let _ = validate::validate_replace(&s);
     }
 
     // $ followed by a digit and a non-ident char or an ident char
     #[test]
-    fn validate_ok(s in r"([^\$]*(\$([0-9][^a-zA-Z_0-9]|a-zA-Z_))?){0,5}") {
+    fn validate_ok(s in r"([^\$]*(\$([0-9][^a-zA-Z_0-9\$]|a-zA-Z_))?){0,5}") {
         validate::validate_replace(&s).unwrap();
     }
 
     // Force at least one $ followed by a digit and an ident char
     #[test]
-    fn validate_err(s in r"([^\$]*?\$[0-9][a-zA-Z_])") {
+    fn validate_err(s in r"[^\$]*?\$[0-9][a-zA-Z_]\PC*") {
         validate::validate_replace(&s).unwrap_err();
     }
 }
