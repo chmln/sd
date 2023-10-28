@@ -138,26 +138,46 @@ mod cli {
     #[test]
     fn ambiguous_replace_basic() {
         let plain_stderr = bad_replace_helper_plain("before $1bad after");
-        insta::assert_snapshot!(plain_stderr);
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}bad`.
+        before $1bad after
+                ^^^^
+        "###);
     }
 
     #[test]
     fn ambiguous_replace_variable_width() {
         let plain_stderr = bad_replace_helper_plain("\r\n\t$1bad\r");
-        insta::assert_snapshot!(plain_stderr);
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}bad`.
+        \r\n\t$1bad\r
+               ^^^^
+        "###);
     }
 
     #[test]
     fn ambiguous_replace_multibyte_char() {
         let plain_stderr = bad_replace_helper_plain("😈$1bad😇");
-        insta::assert_snapshot!(plain_stderr);
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}bad`.
+        😈$1bad😇
+          ^^^^
+        "###);
     }
 
     #[test]
     fn ambiguous_replace_issue_44() {
         let plain_stderr =
             bad_replace_helper_plain("$1Call $2($5, GetFM20ReturnKey(), $6)");
-        insta::assert_snapshot!(plain_stderr);
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        hint: Use curly braces to disambiguate it `${1}Call`.
+        $1Call $2($5, GetFM20ReturnKey(), $6)
+         ^^^^^
+        "###);
     }
 
     // NOTE: styled terminal output is platform dependent, so convert to a
@@ -167,6 +187,11 @@ mod cli {
         let styled_stderr = bad_replace_helper_styled("\t$1bad after");
         let html_stderr =
             ansi_to_html::convert(&styled_stderr, true, true).unwrap();
-        insta::assert_snapshot!(html_stderr);
+        insta::assert_snapshot!(html_stderr, @r###"
+        <b><span style='color:#a00'>error</span></b>: The numbered capture group `<b>$1</b>` in the replacement text is ambiguous.
+        <b><span style='color:#00a'>hint</span></b>: Use curly braces to disambiguate it `<b>${1}bad</b>`.
+        <b>\t</b>$<b><span style='color:#a00'>1bad</span></b> after
+           <b>^^^^</b>
+        "###);
     }
 }
