@@ -726,6 +726,7 @@ dependencies = [
  "proptest",
  "rayon",
  "regex",
+ "regex-automata",
  "tempfile",
  "thiserror",
  "unescape",

@@ -199,7 +199,10 @@ impl<'rep> Iterator for ReplaceCaptureIter<'rep> {
             let open_span = Span::start_at(start + 1);
             let maybe_cap = match rep.first()? {
                 // Handle escaping of '$'.
-                b'$' => None,
+                b'$' => {
+                    self.0.next().unwrap();
+                    None
+                }
                 b'{' => find_cap_ref_braced(rep, open_span),
                 _ => find_cap_ref(rep, open_span),
             };
@@ -273,6 +276,15 @@ fn is_valid_cap_letter(b: u8) -> bool {
 mod tests {
     use super::*;
 
+    use proptest::prelude::*;
+
+    #[test]
+    fn literal_dollar_sign() {
+        let replace = "$$0";
+        let mut cap_iter = ReplaceCaptureIter::new(replace);
+        assert!(cap_iter.next().is_none());
+    }
+
     #[test]
     fn wacky_captures() {
         let replace =
@@ -292,6 +304,53 @@ mod tests {
         for (&expected, cap) in expecteds.iter().zip(cap_iter) {
             assert_eq!(expected, cap.name, "name didn't match");
             assert_eq!(expected, cap.span.slice(replace), "span didn't match");
+        }
+    }
+
+    const INTERPOLATED_CAPTURE: &str = "<interpolated>";
+
+    fn upstream_interpolate(s: &str) -> String {
+        let mut dst = String::new();
+        regex_automata::util::interpolate::string(
+            s,
+            |_, dst| dst.push_str(INTERPOLATED_CAPTURE),
+            |_| Some(0),
+            &mut dst,
+        );
+        dst
+    }
+
+    fn our_interpolate(s: &str) -> String {
+        let mut after_last_write = 0;
+        let mut dst = String::new();
+        for cap in ReplaceCaptureIter::new(s) {
+            // This only iterates over the capture groups, so copy any text
+            // before the capture
+            // -1 here to exclude the `$` that starts a capture
+            dst.push_str(
+                &s[after_last_write..cap.span.start.checked_sub(1).unwrap()],
+            );
+            // Interpolate our capture
+            dst.push_str(INTERPOLATED_CAPTURE);
+            after_last_write = cap.span.end;
+        }
+        if after_last_write < s.len() {
+            // And now any text that was after the last capture
+            dst.push_str(&s[after_last_write..]);
+        }
+
+        // Handle escaping literal `$`s
+        dst.replace("$$", "$")
+    }
+
+    proptest! {
+        // TODO: force dollar signs to be more common
+        // `regex-automata` doesn't expose a way to iterate over replacement
+        // captures, but we can use our iterator to mimic interpolation, so that
+        // we can pit the two against each other
+        #[test]
+        fn interpolation_matches_upstream(s in r"\PC*(\$\PC*){0,5}") {
+            assert_eq!(our_interpolate(&s), upstream_interpolate(&s));
         }
     }
 }
