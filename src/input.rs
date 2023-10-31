@@ -58,10 +58,7 @@ impl App {
         let is_tty = std::io::stdout().is_terminal();
 
         match (&self.source, preview) {
-            (Source::Stdin, true) => {
-                eprintln!("WARN: `--preview` flag is redundant");
-                self.stdin_replace(is_tty)
-            }
+            (Source::Stdin, true) => self.stdin_replace(is_tty),
             (Source::Stdin, false) => self.stdin_replace(is_tty),
             (Source::Files(paths), false) => {
                 use rayon::prelude::*;
