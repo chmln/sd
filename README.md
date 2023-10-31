@@ -158,24 +158,6 @@ Install through
    fd --type file --exec cp {} {}.bk \; --exec sd 'from "react"' 'from "preact"'
    ```
 
-### Edge cases
-sd will interpret every argument starting with `-` as a (potentially unknown) flag.
-The common convention of using `--` to signal the end of flags is respected:
-
-```bash
-$ echo "./hello foo" | sd "foo" "-w"
-error: Found argument '-w' which wasn't expected, or isn't valid in this context
-
-USAGE:
-    sd [OPTIONS] <find> <replace-with> [files]...
-
-For more information try --help
-$ echo "./hello foo" | sd "foo" -- "-w"
-./hello -w
-$ echo "./hello --foo" | sd -- "--foo" "-w"
-./hello -w
-```
-
 ### Escaping special characters
 To escape the `$` character, use `$$`:
 

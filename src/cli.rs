@@ -55,10 +55,12 @@ w - match full words only
     pub flags: Option<String>,
 
     /// The regexp or string (if using `-F`) to search for.
+    #[arg(allow_hyphen_values = true)]
     pub find: String,
 
     /// What to replace each match with. Unless in string mode, you may
     /// use captured values like $1, $2, etc.
+    #[arg(allow_hyphen_values = true)]
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
