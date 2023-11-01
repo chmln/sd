@@ -16,7 +16,8 @@ use clap::Parser;
 )]
 pub struct Options {
     #[arg(short, long)]
-    /// Output result into stdout and do not modify files.
+    /// Display changes in a human reviewable format (the specifics of the
+    /// format are likely to change in the future).
     pub preview: bool,
 
     #[arg(
