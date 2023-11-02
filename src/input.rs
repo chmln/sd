@@ -10,23 +10,6 @@ pub(crate) enum Source {
     Files(Vec<PathBuf>),
 }
 
-impl Source {
-    pub(crate) fn recursive() -> Result<Self> {
-        Ok(Self::Files(
-            ignore::WalkBuilder::new(".")
-                .hidden(false)
-                .filter_entry(|e| e.file_name() != ".git")
-                .build()
-                .filter_map(|d| d.ok())
-                .filter_map(|d| match d.file_type() {
-                    Some(t) if t.is_file() => Some(d.into_path()),
-                    _ => None,
-                })
-                .collect(),
-        ))
-    }
-}
-
 pub(crate) struct App {
     replacer: Replacer,
     source: Source,
