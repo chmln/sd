@@ -111,7 +111,7 @@ release artifacts on the releases page.
     - #256 More CI tweaks (@CosmicHorrorDev)
     - #257 Fix publish action (@CosmicHorrorDev)
 
-## (Missing history listed in here from v0.6.3 - v0.7.6)
+## (History listed in here is missing from v0.6.3 - v0.7.6)
 
 ## [0.6.2]
 
