@@ -8,7 +8,7 @@ sd
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH SYNOPSIS
-\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-r \fR] [\fB\-n \fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
+\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n \fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH DESCRIPTION
@@ -17,13 +17,10 @@ sd
 .SH OPTIONS
 .TP
 \fB\-p\fR, \fB\-\-preview\fR
-Output result into stdout and do not modify files
+Display changes in a human reviewable format (the specifics of the format are likely to change in the future)
 .TP
 \fB\-F\fR, \fB\-\-fixed\-strings\fR
 Treat FIND and REPLACE_WITH args as literal strings
-.TP
-\fB\-r\fR
-Recursively replace files
 .TP
 \fB\-n\fR=\fIREPLACEMENTS\fR
 Limit the number of replacements
@@ -50,7 +47,7 @@ Print help (see a summary with \*(Aq\-h\*(Aq)
 Print version
 .TP
 <\fIFIND\fR>
-The regexp or string (if \-s) to search for
+The regexp or string (if using `\-F`) to search for
 .TP
 <\fIREPLACE_WITH\fR>
 What to replace each match with. Unless in string mode, you may use captured values like $1, $2, etc
