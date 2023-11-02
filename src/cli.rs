@@ -29,10 +29,6 @@ pub struct Options {
     /// Treat FIND and REPLACE_WITH args as literal strings
     pub literal_mode: bool,
 
-    #[arg(short)]
-    /// Recursively replace files
-    pub recursive: bool,
-
     #[arg(short = 'n')]
     /// Limit the number of replacements
     pub replacements: Option<usize>,

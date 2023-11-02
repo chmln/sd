@@ -24,9 +24,7 @@ fn main() {
 fn try_main() -> Result<()> {
     let options = cli::Options::parse();
 
-    let source = if options.recursive {
-        Source::recursive()?
-    } else if !options.files.is_empty() {
+    let source = if !options.files.is_empty() {
         Source::Files(options.files)
     } else {
         Source::Stdin
