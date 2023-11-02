@@ -1,7 +1,4 @@
-use std::{
-    fmt::{self, Write},
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
 use crate::replacer::InvalidReplaceCapture;
 
@@ -15,28 +12,8 @@ pub enum Error {
     TempfilePersist(#[from] tempfile::PersistError),
     #[error("file doesn't have parent path: {0}")]
     InvalidPath(PathBuf),
-    #[error("failed processing files:\n{0}")]
-    FailedProcessing(FailedJobs),
     #[error("{0}")]
     InvalidReplaceCapture(#[from] InvalidReplaceCapture),
-}
-
-pub struct FailedJobs(Vec<(PathBuf, Error)>);
-
-impl From<Vec<(PathBuf, Error)>> for FailedJobs {
-    fn from(vec: Vec<(PathBuf, Error)>) -> Self {
-        Self(vec)
-    }
-}
-
-impl fmt::Display for FailedJobs {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("\tFailedJobs(\n")?;
-        for (path, err) in &self.0 {
-            f.write_str(&format!("\t{:?}: {}\n", path, err))?;
-        }
-        f.write_char(')')
-    }
 }
 
 // pretty-print the error

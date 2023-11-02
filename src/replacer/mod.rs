@@ -1,6 +1,6 @@
-use std::{borrow::Cow, fs, fs::File, io::prelude::*, path::Path};
+use std::borrow::Cow;
 
-use crate::{utils, Error, Result};
+use crate::{utils, Result};
 
 use regex::bytes::Regex;
 
@@ -74,16 +74,6 @@ impl Replacer {
         })
     }
 
-    pub(crate) fn has_matches(&self, content: &[u8]) -> bool {
-        self.regex.is_match(content)
-    }
-
-    pub(crate) fn check_not_empty(mut file: File) -> Result<()> {
-        let mut buf: [u8; 1] = Default::default();
-        file.read_exact(&mut buf)?;
-        Ok(())
-    }
-
     pub(crate) fn replace<'a>(
         &'a self,
         content: &'a [u8],
@@ -147,66 +137,5 @@ impl Replacer {
         }
         new.extend_from_slice(&haystack[last_match..]);
         Cow::Owned(new)
-    }
-
-    pub(crate) fn replace_preview<'a>(
-        &self,
-        content: &'a [u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
-        let regex = &self.regex;
-        let limit = self.replacements;
-        // TODO: refine this condition more
-        let use_color = true;
-        if self.is_literal {
-            Self::replacen(
-                regex,
-                limit,
-                content,
-                use_color,
-                regex::bytes::NoExpand(&self.replace_with),
-            )
-        } else {
-            Self::replacen(
-                regex,
-                limit,
-                content,
-                use_color,
-                &*self.replace_with,
-            )
-        }
-    }
-
-    pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {
-        use memmap2::{Mmap, MmapMut};
-        use std::ops::DerefMut;
-
-        if Self::check_not_empty(File::open(path)?).is_err() {
-            return Ok(());
-        }
-
-        let source = File::open(path)?;
-        let meta = fs::metadata(path)?;
-        let mmap_source = unsafe { Mmap::map(&source)? };
-        let replaced = self.replace(&mmap_source);
-
-        let target = tempfile::NamedTempFile::new_in(
-            path.parent()
-                .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
-        )?;
-        let file = target.as_file();
-        file.set_len(replaced.len() as u64)?;
-        file.set_permissions(meta.permissions())?;
-
-        if !replaced.is_empty() {
-            let mut mmap_target = unsafe { MmapMut::map_mut(file)? };
-            mmap_target.deref_mut().write_all(&replaced)?;
-            mmap_target.flush_async()?;
-        }
-
-        drop(mmap_source);
-        drop(source);
-
-        target.persist(fs::canonicalize(path)?)?;
-        Ok(())
     }
 }

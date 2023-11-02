@@ -1,10 +1,15 @@
-use std::{fs::File, io::prelude::*, path::PathBuf};
+use std::{
+	fs::{File, self},
+	io::{Write, stdin, stdout, Read},
+	path::PathBuf,
+	ops::DerefMut,
+};
 
 use crate::{Error, Replacer, Result};
 
-use is_terminal::IsTerminal;
+use memmap2::{Mmap, MmapMut, MmapOptions};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum Source {
     Stdin,
     Files(Vec<PathBuf>),
@@ -16,83 +21,80 @@ pub(crate) struct App {
 }
 
 impl App {
-    fn stdin_replace(&self, is_tty: bool) -> Result<()> {
-        let mut buffer = Vec::with_capacity(256);
-        let stdin = std::io::stdin();
-        let mut handle = stdin.lock();
-        handle.read_to_end(&mut buffer)?;
-
-        let stdout = std::io::stdout();
-        let mut handle = stdout.lock();
-
-        handle.write_all(&if is_tty {
-            self.replacer.replace_preview(&buffer)
-        } else {
-            self.replacer.replace(&buffer)
-        })?;
-
-        Ok(())
-    }
-
     pub(crate) fn new(source: Source, replacer: Replacer) -> Self {
         Self { source, replacer }
     }
+
     pub(crate) fn run(&self, preview: bool) -> Result<()> {
-        let is_tty = std::io::stdout().is_terminal();
-
-        match (&self.source, preview) {
-            (Source::Stdin, true) => self.stdin_replace(is_tty),
-            (Source::Stdin, false) => self.stdin_replace(is_tty),
-            (Source::Files(paths), false) => {
-                use rayon::prelude::*;
-
-                let failed_jobs: Vec<_> = paths
-                    .par_iter()
-                    .filter_map(|p| {
-                        if let Err(e) = self.replacer.replace_file(p) {
-                            Some((p.to_owned(), e))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-
-                if failed_jobs.is_empty() {
-                    Ok(())
-                } else {
-                    let failed_jobs =
-                        crate::error::FailedJobs::from(failed_jobs);
-                    Err(Error::FailedProcessing(failed_jobs))
+        let sources: Vec<(PathBuf, Mmap)> = match &self.source {
+            Source::Stdin => {
+				let mut handle = stdin().lock();
+				let mut buf = Vec::new();
+				handle.read_to_end(&mut buf)?;
+				let mut mmap = MmapOptions::new()
+					.len(buf.len())
+					.map_anon()?;
+				mmap.copy_from_slice(&buf);
+				let mmap = mmap.make_read_only()?;
+				vec![(PathBuf::from("STDIN"), mmap)]
+			},
+            Source::Files(paths) => {
+				let mut refs = Vec::new();
+                for path in paths {
+                    if !path.exists() {
+                        return Err(Error::InvalidPath(path.clone()));
+                    }
+					let mmap = unsafe { Mmap::map(&File::open(path)?)? };
+                    refs.push((path.clone(), mmap));
                 }
+                refs
+            },
+        };
+        let needs_separator = sources.len() > 1;
+
+        let replaced: Vec<_> = {
+            use rayon::prelude::*;
+            sources.par_iter()
+                .map(|(path, mmap)| {
+					let replaced = self.replacer.replace(mmap); 
+					(path, mmap, replaced)
+				})
+                .collect()
+        };
+
+        if preview || self.source == Source::Stdin {
+            let mut handle = stdout().lock();
+
+            for (path, _, replaced) in replaced {
+                if needs_separator {
+                    writeln!(handle, "----- FILE {} -----", path.display())?;
+                }
+                handle.write_all(replaced.as_ref())?;
             }
-            (Source::Files(paths), true) => {
-                let stdout = std::io::stdout();
-                let mut handle = stdout.lock();
-                let print_path = paths.len() > 1;
+        } else {
+            for (path, _, replaced) in replaced {
+                let source = File::open(path)?;
+                let meta = fs::metadata(path)?;
+                drop(source);
 
-                paths.iter().try_for_each(|path| {
-                    if Replacer::check_not_empty(File::open(path)?).is_err() {
-                        return Ok(());
-                    }
-                    let file =
-                        unsafe { memmap2::Mmap::map(&File::open(path)?)? };
-                    if self.replacer.has_matches(&file) {
-                        if print_path {
-                            writeln!(
-                                handle,
-                                "----- FILE {} -----",
-                                path.display()
-                            )?;
-                        }
+                let target = tempfile::NamedTempFile::new_in(
+                    path.parent()
+                        .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
+                )?;
+                let file = target.as_file();
+                file.set_len(replaced.len() as u64)?;
+                file.set_permissions(meta.permissions())?;
 
-                        handle
-                            .write_all(&self.replacer.replace_preview(&file))?;
-                        writeln!(handle)?;
-                    }
-
-                    Ok(())
-                })
+                if !replaced.is_empty() {
+                    let mut mmap_target = unsafe { MmapMut::map_mut(file)? };
+                    mmap_target.deref_mut().write_all(&replaced)?;
+                    mmap_target.flush_async()?;
+                }
+                
+                target.persist(fs::canonicalize(path)?)?;
             }
         }
+
+        Ok(())
     }
 }
