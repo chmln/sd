@@ -110,7 +110,6 @@ impl Replacer {
         }
     }
 
-    // TODO: make this a free function that gets passed all the args
     /// A modified form of [`regex::bytes::Regex::replacen`] that supports
     /// coloring replacements
     pub(crate) fn replacen<'haystack, R: regex::bytes::Replacer>(
