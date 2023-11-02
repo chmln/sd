@@ -104,7 +104,7 @@ jobs:
         staging="sd-${{ env.SD_VERSION }}-${{ matrix.target }}"
         mkdir -p "$staging"
 
-        cp -r {README.md,LICENSE,gen/*} "$staging"
+        cp -r {README.md,LICENSE,CHANGELOG.md,gen/*} "$staging"
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           cp "target/${{ matrix.target }}/release/sd.exe" "$staging/"
           7z a "$staging.zip" "$staging"
