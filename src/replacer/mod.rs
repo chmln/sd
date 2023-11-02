@@ -23,7 +23,7 @@ impl Replacer {
         replace_with: String,
         is_literal: bool,
         flags: Option<String>,
-        replacements: Option<usize>,
+        replacements: usize,
     ) -> Result<Self> {
         let (look_for, replace_with) = if is_literal {
             (regex::escape(&look_for), replace_with.into_bytes())
@@ -70,7 +70,7 @@ impl Replacer {
             regex: regex.build()?,
             replace_with,
             is_literal,
-            replacements: replacements.unwrap_or(0),
+            replacements,
         })
     }
 

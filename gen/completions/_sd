@@ -15,7 +15,8 @@ _sd() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
-'-n+[Limit the number of replacements]:REPLACEMENTS: ' \
+'-n+[Limit the number of replacements that can occur per file. 0 indicates unlimited replacements]:LIMIT: ' \
+'--max-replacements=[Limit the number of replacements that can occur per file. 0 indicates unlimited replacements]:LIMIT: ' \
 '-f+[Regex flags. May be combined (like \`-f mc\`).]:FLAGS: ' \
 '--flags=[Regex flags. May be combined (like \`-f mc\`).]:FLAGS: ' \
 '-p[Display changes in a human reviewable format (the specifics of the format are likely to change in the future)]' \
