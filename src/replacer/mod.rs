@@ -1,4 +1,4 @@
-use std::{fs, fs::File, io::prelude::*, path::Path};
+use std::{borrow::Cow, fs, fs::File, io::prelude::*, path::Path};
 
 use crate::{utils, Error, Result};
 
@@ -88,46 +88,117 @@ impl Replacer {
         &'a self,
         content: &'a [u8],
     ) -> std::borrow::Cow<'a, [u8]> {
+        let regex = &self.regex;
+        let limit = self.replacements;
+        let use_color = false;
         if self.is_literal {
-            self.regex.replacen(
+            Self::replacen(
+                regex,
+                limit,
                 content,
-                self.replacements,
+                use_color,
                 regex::bytes::NoExpand(&self.replace_with),
             )
         } else {
-            self.regex
-                .replacen(content, self.replacements, &*self.replace_with)
+            Self::replacen(
+                regex,
+                limit,
+                content,
+                use_color,
+                &*self.replace_with,
+            )
         }
     }
 
-    pub(crate) fn replace_preview<'a>(
-        &'a self,
-        content: &[u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
-        let mut v = Vec::<u8>::new();
-        let mut captures = self.regex.captures_iter(content);
-
-        self.regex.split(content).for_each(|sur_text| {
-            use regex::bytes::Replacer;
-
-            v.extend(sur_text);
-            if let Some(capture) = captures.next() {
-                v.extend_from_slice(
+    // TODO: make this a free function that gets passed all the args
+    /// A modified form of [`regex::bytes::Regex::replacen`] that supports
+    /// coloring replacements
+    pub(crate) fn replacen<'haystack, R: regex::bytes::Replacer>(
+        regex: &regex::bytes::Regex,
+        limit: usize,
+        haystack: &'haystack [u8],
+        use_color: bool,
+        mut rep: R,
+    ) -> Cow<'haystack, [u8]> {
+        let mut it = regex.captures_iter(haystack).enumerate().peekable();
+        if it.peek().is_none() {
+            return Cow::Borrowed(haystack);
+        }
+        let mut new = Vec::with_capacity(haystack.len());
+        let mut last_match = 0;
+        for (i, cap) in it {
+            // unwrap on 0 is OK because captures only reports matches
+            let m = cap.get(0).unwrap();
+            new.extend_from_slice(&haystack[last_match..m.start()]);
+            if use_color {
+                new.extend_from_slice(
                     ansi_term::Color::Green.prefix().to_string().as_bytes(),
                 );
-                if self.is_literal {
-                    regex::bytes::NoExpand(&self.replace_with)
-                        .replace_append(&capture, &mut v);
-                } else {
-                    (&*self.replace_with).replace_append(&capture, &mut v);
-                }
-                v.extend_from_slice(
+            }
+            rep.replace_append(&cap, &mut new);
+            if use_color {
+                new.extend_from_slice(
                     ansi_term::Color::Green.suffix().to_string().as_bytes(),
                 );
             }
-        });
+            last_match = m.end();
+            if limit > 0 && i >= limit - 1 {
+                break;
+            }
+        }
+        new.extend_from_slice(&haystack[last_match..]);
+        Cow::Owned(new)
+    }
 
-        return std::borrow::Cow::Owned(v);
+    pub(crate) fn replace_preview<'a>(
+        &self,
+        content: &'a [u8],
+    ) -> std::borrow::Cow<'a, [u8]> {
+        let regex = &self.regex;
+        let limit = self.replacements;
+        // TODO: refine this condition more
+        let use_color = true;
+        if self.is_literal {
+            Self::replacen(
+                regex,
+                limit,
+                content,
+                use_color,
+                regex::bytes::NoExpand(&self.replace_with),
+            )
+        } else {
+            Self::replacen(
+                regex,
+                limit,
+                content,
+                use_color,
+                &*self.replace_with,
+            )
+        }
+        // let mut v = Vec::<u8>::new();
+        // let mut captures = self.regex.captures_iter(content);
+
+        // self.regex.split(content).for_each(|sur_text| {
+        //     use regex::bytes::Replacer;
+
+        //     v.extend(sur_text);
+        //     if let Some(capture) = captures.next() {
+        //         v.extend_from_slice(
+        //             ansi_term::Color::Green.prefix().to_string().as_bytes(),
+        //         );
+        //         if self.is_literal {
+        //             regex::bytes::NoExpand(&self.replace_with)
+        //                 .replace_append(&capture, &mut v);
+        //         } else {
+        //             (&*self.replace_with).replace_append(&capture, &mut v);
+        //         }
+        //         v.extend_from_slice(
+        //             ansi_term::Color::Green.suffix().to_string().as_bytes(),
+        //         );
+        //     }
+        // });
+
+        // return std::borrow::Cow::Owned(v);
     }
 
     pub(crate) fn replace_file(&self, path: &Path) -> Result<()> {

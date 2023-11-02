@@ -226,7 +226,7 @@ mod cli {
         .assert()
         .success()
         .stdout(format!(
-            "{}\nfoo\nfoo",
+            "{}\nfoo\nfoo\n",
             ansi_term::Color::Green.paint("bar")
         ));
 
