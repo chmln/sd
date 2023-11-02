@@ -10,6 +10,14 @@ A quick note to any packages. The generated shell completions and man page are
 now in the `gen` directory of the repo. They're also included in the pre-built
 release artifacts on the releases page.
 
+### Improvements
+
+- #115 Do not replace symlink with output file (@SimplyDanny)
+  - Fixes an issue where a symlink would be replaced with a regular file
+- #124 Fix tests (@Linus789)
+  - Removed displaying the file path when passing the `--preview` flag and fixed
+    how text coloring was handled in tests
+
 ### Breaking
 
 - #192 Rename `--string-mode` to `--fixed-strings` (@CosmicHorrorDev)
@@ -27,6 +35,8 @@ release artifacts on the releases page.
 
 ### Docs
 
+- #93 Add note about in-place file modification to --help output (@jchook)
+- #148 Doc: nitpick `--` has no special meaning to shells (@hexagonrecursion)
 - #181 Fix man page -f flag help text (@ulope)
   - Fixed copy-pasted text in the man page's `-f` flag's help text
 - #186 Improve error message for failed replacements (@CosmicHorrorDev)
@@ -43,23 +53,29 @@ release artifacts on the releases page.
     automatically, and fixes some broken rendering of the existing manpage
 - #243 Exclude unsupported packages from the repology badge (@CosmicHorrorDev)
 
-### Releases
+### Pre-built Releases
 
+- (11295fb) Add ARM target (@chmln)
+  - Added the `arm-unknown-linux-gnueabihf` target to CI and releases
+- #114 Adding `aarch64-apple-darwin` target (@yahkbar)
+- #143  Fix paths to release binary in "publish" action (@skrattaren)
 - #179 Build Adjustments (@yahkbar)
   - `strip`ed release binaries and added the `aarch64-ubuntu-linux-musl` target
 - #204 Adding `armv7-unknown-linux-gnueabihf` target (@yahkbar)
-  - Adds the `armv7-unknown-linux-gnueabihf` target to the list of targets to
+  - Added the `armv7-unknown-linux-gnueabihf` target to the list of targets to
     build in CI and for each release
 - #205 Resolving broken `aarch64-apple-darwin` tests (@yahkbar)
   - Switched `aarch64-apple-darwin` to only try building the executable without
     running the tests since there seems to be no easy way to test for ARM Apple
     targets
 - #206 Adding Windows builds back (@yahkbar)
-  - Adds the `x86_64-pc-windows-gnu` and `x86_64-windows-musl` targets back to
+  - Added the `x86_64-pc-windows-gnu` and `x86_64-windows-musl` targets back to
     the list of targets to build in CI and for each release
 
 ### Internal
 
+- #118 Fix master (@SimplyDanny)
+  - Fixes several cross-compilation issues that effected different targets in CI
 - #182 `cargo update` (@CosmicHorrorDev)
   - Bumps dependencies to their latest compatible versions
 - #183 Switch `memmap` -> `memmap2` (@CosmicHorrorDev)
