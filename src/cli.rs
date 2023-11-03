@@ -29,9 +29,15 @@ pub struct Options {
     /// Treat FIND and REPLACE_WITH args as literal strings
     pub literal_mode: bool,
 
-    #[arg(short = 'n')]
-    /// Limit the number of replacements
-    pub replacements: Option<usize>,
+    #[arg(
+        short = 'n',
+        long = "max-replacements",
+        value_name = "LIMIT",
+        default_value_t
+    )]
+    /// Limit the number of replacements that can occur per file. 0 indicates
+    /// unlimited replacements.
+    pub replacements: usize,
 
     #[arg(short, long, verbatim_doc_comment)]
     #[rustfmt::skip]

@@ -8,7 +8,7 @@ sd
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH SYNOPSIS
-\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n \fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
+\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH DESCRIPTION
@@ -22,8 +22,8 @@ Display changes in a human reviewable format (the specifics of the format are li
 \fB\-F\fR, \fB\-\-fixed\-strings\fR
 Treat FIND and REPLACE_WITH args as literal strings
 .TP
-\fB\-n\fR=\fIREPLACEMENTS\fR
-Limit the number of replacements
+\fB\-n\fR, \fB\-\-max\-replacements\fR=\fILIMIT\fR [default: 0]
+Limit the number of replacements that can occur per file. 0 indicates unlimited replacements
 .TP
 \fB\-f\fR, \fB\-\-flags\fR=\fIFLAGS\fR
 Regex flags. May be combined (like `\-f mc`).

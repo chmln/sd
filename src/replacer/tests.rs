@@ -29,12 +29,13 @@ fn replace(
     src: &'static str,
     target: &'static str,
 ) {
+    const UNLIMITED_REPLACEMENTS: usize = 0;
     let replacer = Replacer::new(
         look_for.into(),
         replace_with.into(),
         literal,
         flags.map(ToOwned::to_owned),
-        None,
+        UNLIMITED_REPLACEMENTS,
     )
     .unwrap();
     assert_eq!(

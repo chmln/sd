@@ -18,7 +18,8 @@ set edit:completion:arg-completer[sd] = {|@words|
     }
     var completions = [
         &'sd'= {
-            cand -n 'Limit the number of replacements'
+            cand -n 'Limit the number of replacements that can occur per file. 0 indicates unlimited replacements'
+            cand --max-replacements 'Limit the number of replacements that can occur per file. 0 indicates unlimited replacements'
             cand -f 'Regex flags. May be combined (like `-f mc`).'
             cand --flags 'Regex flags. May be combined (like `-f mc`).'
             cand -p 'Display changes in a human reviewable format (the specifics of the format are likely to change in the future)'

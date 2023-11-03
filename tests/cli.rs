@@ -194,4 +194,60 @@ mod cli {
           <b>^^^^</b>
         "###);
     }
+
+    #[test]
+    fn limit_replacements_file() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"foo\nfoo\nfoo")?;
+        let path = file.into_temp_path();
+
+        sd().args(["-n", "1", "foo", "bar", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path, "bar\nfoo\nfoo");
+
+        Ok(())
+    }
+
+    #[test]
+    fn limit_replacements_file_preview() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"foo\nfoo\nfoo")?;
+        let path = file.into_temp_path();
+
+        sd().args([
+            "--preview",
+            "-n",
+            "1",
+            "foo",
+            "bar",
+            path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(format!(
+            "{}\nfoo\nfoo\n",
+            ansi_term::Color::Green.paint("bar")
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn limit_replacements_stdin() {
+        sd().args(["-n", "1", "foo", "bar"])
+            .write_stdin("foo\nfoo\nfoo")
+            .assert()
+            .success()
+            .stdout("bar\nfoo\nfoo");
+    }
+
+    #[test]
+    fn limit_replacements_stdin_preview() {
+        sd().args(["--preview", "-n", "1", "foo", "bar"])
+            .write_stdin("foo\nfoo\nfoo")
+            .assert()
+            .success()
+            .stdout("bar\nfoo\nfoo");
+    }
 }

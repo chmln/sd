@@ -21,7 +21,8 @@ Register-ArgumentCompleter -Native -CommandName 'sd' -ScriptBlock {
 
     $completions = @(switch ($command) {
         'sd' {
-            [CompletionResult]::new('-n', 'n', [CompletionResultType]::ParameterName, 'Limit the number of replacements')
+            [CompletionResult]::new('-n', 'n', [CompletionResultType]::ParameterName, 'Limit the number of replacements that can occur per file. 0 indicates unlimited replacements')
+            [CompletionResult]::new('--max-replacements', 'max-replacements', [CompletionResultType]::ParameterName, 'Limit the number of replacements that can occur per file. 0 indicates unlimited replacements')
             [CompletionResult]::new('-f', 'f', [CompletionResultType]::ParameterName, 'Regex flags. May be combined (like `-f mc`).')
             [CompletionResult]::new('--flags', 'flags', [CompletionResultType]::ParameterName, 'Regex flags. May be combined (like `-f mc`).')
             [CompletionResult]::new('-p', 'p', [CompletionResultType]::ParameterName, 'Display changes in a human reviewable format (the specifics of the format are likely to change in the future)')
