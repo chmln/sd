@@ -131,13 +131,13 @@ impl Replacer {
             new.extend_from_slice(&haystack[last_match..m.start()]);
             if use_color {
                 new.extend_from_slice(
-                    ansi_term::Color::Green.prefix().to_string().as_bytes(),
+                    ansi_term::Color::Blue.prefix().to_string().as_bytes(),
                 );
             }
             rep.replace_append(&cap, &mut new);
             if use_color {
                 new.extend_from_slice(
-                    ansi_term::Color::Green.suffix().to_string().as_bytes(),
+                    ansi_term::Color::Blue.suffix().to_string().as_bytes(),
                 );
             }
             last_match = m.end();

@@ -83,8 +83,8 @@ mod cli {
             .success()
             .stdout(format!(
                 "{}{}def\n",
-                ansi_term::Color::Green.prefix(),
-                ansi_term::Color::Green.suffix()
+                ansi_term::Color::Blue.prefix(),
+                ansi_term::Color::Blue.suffix()
             ));
 
         assert_file(file.path(), "abc123def");
@@ -227,7 +227,7 @@ mod cli {
         .success()
         .stdout(format!(
             "{}\nfoo\nfoo\n",
-            ansi_term::Color::Green.paint("bar")
+            ansi_term::Color::Blue.paint("bar")
         ));
 
         Ok(())
