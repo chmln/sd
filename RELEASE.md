@@ -8,6 +8,7 @@
 1. [ ] Update `rust-version` in `Cargo.toml`
     - `$ cargo msrv --min 1.60 -- cargo check`
 1. [ ] Bump `version` in `Cargo.toml`
+1. [ ] Run `cargo check` to propogate the change to `Cargo.lock`
 1. [ ] Update the `CHANGELOG.md`
 1. [ ] Merge changes through a PR to make sure that CI passes
 1. [ ] Publish on [crates.io](crates.io)
