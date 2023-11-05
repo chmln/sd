@@ -3,8 +3,6 @@
 1. [ ] Create a new _"Release v{VERSION}"_ issue with this checklist
     - `$ cat RELEASE.md | sd '\{VERSION\}' '{NEW_VERSION}' | xclip -sel clip`
     - Create the issue in GitHub
-1. [ ] Ensure that all entries in the man page are up to date
-    - Manually verify with the entries in `xtask/src/gen.rs`
 1. [ ] Regenerate static assets
     - `$ cargo xtask gen`
 1. [ ] Update `rust-version` in `Cargo.toml`
