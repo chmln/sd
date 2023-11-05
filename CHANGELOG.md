@@ -110,6 +110,10 @@ release artifacts on the releases page.
     - #253 Improve publishing CI job (@CosmicHorrorDev)
     - #256 More CI tweaks (@CosmicHorrorDev)
     - #257 Fix publish action (@CosmicHorrorDev)
+- #267 Rework the replacements flag (@CosmicHorrorDev)
+- #269 Make modified text blue instead of green (@CosmicHorrorDev)
+- #272 Fix release checklist indentation (@CosmicHorrorDev)
+- #272 Remove outdated release checklist step (@CosmicHorrorDev)
 
 ## (History listed in here is missing from v0.6.3 - v0.7.6)
 
