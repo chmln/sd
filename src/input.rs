@@ -1,8 +1,8 @@
 use std::{
-	fs::{File, self},
-	io::{Write, stdin, stdout, Read},
-	path::PathBuf,
-	ops::DerefMut,
+    fs::{self, File},
+    io::{stdin, stdout, Read, Write},
+    ops::DerefMut,
+    path::PathBuf,
 };
 
 use crate::{Error, Replacer, Result};
@@ -28,37 +28,36 @@ impl App {
     pub(crate) fn run(&self, preview: bool) -> Result<()> {
         let sources: Vec<(PathBuf, Mmap)> = match &self.source {
             Source::Stdin => {
-				let mut handle = stdin().lock();
-				let mut buf = Vec::new();
-				handle.read_to_end(&mut buf)?;
-				let mut mmap = MmapOptions::new()
-					.len(buf.len())
-					.map_anon()?;
-				mmap.copy_from_slice(&buf);
-				let mmap = mmap.make_read_only()?;
-				vec![(PathBuf::from("STDIN"), mmap)]
-			},
+                let mut handle = stdin().lock();
+                let mut buf = Vec::new();
+                handle.read_to_end(&mut buf)?;
+                let mut mmap = MmapOptions::new().len(buf.len()).map_anon()?;
+                mmap.copy_from_slice(&buf);
+                let mmap = mmap.make_read_only()?;
+                vec![(PathBuf::from("STDIN"), mmap)]
+            }
             Source::Files(paths) => {
-				let mut refs = Vec::new();
+                let mut refs = Vec::new();
                 for path in paths {
                     if !path.exists() {
                         return Err(Error::InvalidPath(path.clone()));
                     }
-					let mmap = unsafe { Mmap::map(&File::open(path)?)? };
+                    let mmap = unsafe { Mmap::map(&File::open(path)?)? };
                     refs.push((path.clone(), mmap));
                 }
                 refs
-            },
+            }
         };
         let needs_separator = sources.len() > 1;
 
         let replaced: Vec<_> = {
             use rayon::prelude::*;
-            sources.par_iter()
+            sources
+                .par_iter()
                 .map(|(path, mmap)| {
-					let replaced = self.replacer.replace(mmap); 
-					(path, mmap, replaced)
-				})
+                    let replaced = self.replacer.replace(mmap);
+                    (path, mmap, replaced)
+                })
                 .collect()
         };
 
@@ -78,8 +77,9 @@ impl App {
                 drop(source);
 
                 let target = tempfile::NamedTempFile::new_in(
-                    path.parent()
-                        .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
+                    path.parent().ok_or_else(|| {
+                        Error::InvalidPath(path.to_path_buf())
+                    })?,
                 )?;
                 let file = target.as_file();
                 file.set_len(replaced.len() as u64)?;
@@ -90,7 +90,7 @@ impl App {
                     mmap_target.deref_mut().write_all(&replaced)?;
                     mmap_target.flush_async()?;
                 }
-                
+
                 target.persist(fs::canonicalize(path)?)?;
             }
         }
