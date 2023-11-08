@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## (unreleased) [1.0.0] - TODO
+## [1.0.0] - 2023-11-07
 
 A quick note to any packages. The generated shell completions and man page are
 now in the `gen` directory of the repo. They're also included in the pre-built
@@ -112,8 +112,10 @@ release artifacts on the releases page.
     - #257 Fix publish action (@CosmicHorrorDev)
 - #267 Rework the replacements flag (@CosmicHorrorDev)
 - #269 Make modified text blue instead of green (@CosmicHorrorDev)
-- #272 Fix release checklist indentation (@CosmicHorrorDev)
+- #271 Fix release checklist indentation (@CosmicHorrorDev)
 - #272 Remove outdated release checklist step (@CosmicHorrorDev)
+- #274 Prepare 1.0.0-beta.0 release (@CosmicHorrorDev)
+- #275 Update `sd` version in lockfile (@CosmicHorrorDev)
 
 ## (History listed in here is missing from v0.6.3 - v0.7.6)
 
