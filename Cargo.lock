@@ -647,7 +647,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sd"
-version = "1.0.0-beta.0"
+version = "1.0.0"
 dependencies = [
  "ansi-to-html",
  "ansi_term",
@@ -961,7 +961,7 @@ checksum = "ed94fce61571a4006852b7389a063ab983c02eb1bb37b47f8272ce92d06d9538"
 
 [[package]]
 name = "xtask"
-version = "1.0.0-beta.0"
+version = "1.0.0"
 dependencies = [
  "clap",
  "clap_complete",
