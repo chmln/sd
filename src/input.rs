@@ -24,12 +24,12 @@ impl Source {
         vec![Self::Stdin]
     }
 
-	fn display(&self) -> String {
-		match self {
-			Self::Stdin => "STDIN".to_string(),
-			Self::File(path) => format!("FILE {}", path.display()),
-		}
-	}
+    fn display(&self) -> String {
+        match self {
+            Self::Stdin => "STDIN".to_string(),
+            Self::File(path) => format!("FILE {}", path.display()),
+        }
+    }
 }
 
 pub(crate) struct App {
@@ -47,9 +47,9 @@ impl App {
             .iter()
             .map(|source| (source, match source {
                 Source::File(path) => if path.exists() {
-					make_mmap(path)
-				} else {
-					Err(Error::InvalidPath(path.clone()))
+                    make_mmap(path)
+                } else {
+                    Err(Error::InvalidPath(path.clone()))
                 },
                 Source::Stdin => make_mmap_stdin()
             }))
@@ -116,7 +116,7 @@ fn make_mmap_stdin() -> Result<Mmap> {
 }
 
 fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
-	let path = fs::canonicalize(path)?;
+    let path = fs::canonicalize(path)?;
 
     let temp = tempfile::NamedTempFile::new_in(
         path.parent()
@@ -125,9 +125,9 @@ fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
 
     let file = temp.as_file();
     file.set_len(data.len() as u64)?;
-	if let Ok(metadata) = fs::metadata(&path) {
-	    file.set_permissions(metadata.permissions()).ok();
-	}
+    if let Ok(metadata) = fs::metadata(&path) {
+        file.set_permissions(metadata.permissions()).ok();
+    }
 
     if !data.is_empty() {
         let mut mmap_temp = unsafe { MmapMut::map_mut(file)? };

@@ -109,7 +109,7 @@ mod cli {
 
     fn bad_replace_helper_plain(replace: &str) -> String {
         let stderr = bad_replace_helper_styled(replace);
-		stderr
+        stderr
     }
 
     #[test]
