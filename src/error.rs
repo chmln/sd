@@ -10,7 +10,7 @@ pub enum Error {
     File(#[from] std::io::Error),
     #[error("failed to move file: {0}")]
     TempfilePersist(#[from] tempfile::PersistError),
-    #[error("file doesn't have parent path: {0}")]
+    #[error("invalid path: {0}")]
     InvalidPath(PathBuf),
     #[error("{0}")]
     InvalidReplaceCapture(#[from] InvalidReplaceCapture),
