@@ -74,10 +74,7 @@ impl Replacer {
         })
     }
 
-    pub(crate) fn replace<'a>(
-        &'a self,
-        content: &'a [u8],
-    ) -> std::borrow::Cow<'a, [u8]> {
+    pub(crate) fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
         let regex = &self.regex;
         let limit = self.replacements;
         let use_color = false;
