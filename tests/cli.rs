@@ -128,7 +128,7 @@ mod cli {
     fn ambiguous_replace_basic() {
         let plain_stderr = bad_replace_helper_plain("before $1bad after");
         insta::assert_snapshot!(plain_stderr, @r###"
-        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        Error: The numbered capture group `$1` in the replacement text is ambiguous.
         hint: Use curly braces to disambiguate it `${1}bad`.
         before $1bad after
                 ^^^^
@@ -139,7 +139,7 @@ mod cli {
     fn ambiguous_replace_variable_width() {
         let plain_stderr = bad_replace_helper_plain("\r\n\t$1bad\r");
         insta::assert_snapshot!(plain_stderr, @r###"
-        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        Error: The numbered capture group `$1` in the replacement text is ambiguous.
         hint: Use curly braces to disambiguate it `${1}bad`.
         ␍␊␉$1bad␍
             ^^^^
@@ -150,7 +150,7 @@ mod cli {
     fn ambiguous_replace_multibyte_char() {
         let plain_stderr = bad_replace_helper_plain("😈$1bad😇");
         insta::assert_snapshot!(plain_stderr, @r###"
-        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        Error: The numbered capture group `$1` in the replacement text is ambiguous.
         hint: Use curly braces to disambiguate it `${1}bad`.
         😈$1bad😇
           ^^^^
@@ -162,7 +162,7 @@ mod cli {
         let plain_stderr =
             bad_replace_helper_plain("$1Call $2($5, GetFM20ReturnKey(), $6)");
         insta::assert_snapshot!(plain_stderr, @r###"
-        error: The numbered capture group `$1` in the replacement text is ambiguous.
+        Error: The numbered capture group `$1` in the replacement text is ambiguous.
         hint: Use curly braces to disambiguate it `${1}Call`.
         $1Call $2($5, GetFM20ReturnKey(), $6)
          ^^^^^
