@@ -103,7 +103,7 @@ impl Replacer {
         regex: &regex::bytes::Regex,
         limit: usize,
         haystack: &'haystack [u8],
-        use_color: bool,
+        _use_color: bool,
         mut rep: R,
     ) -> Cow<'haystack, [u8]> {
         let mut it = regex.captures_iter(haystack).enumerate().peekable();
@@ -116,17 +116,7 @@ impl Replacer {
             // unwrap on 0 is OK because captures only reports matches
             let m = cap.get(0).unwrap();
             new.extend_from_slice(&haystack[last_match..m.start()]);
-            if use_color {
-                new.extend_from_slice(
-                    ansi_term::Color::Blue.prefix().to_string().as_bytes(),
-                );
-            }
             rep.replace_append(&cap, &mut new);
-            if use_color {
-                new.extend_from_slice(
-                    ansi_term::Color::Blue.suffix().to_string().as_bytes(),
-                );
-            }
             last_match = m.end();
             if limit > 0 && i >= limit - 1 {
                 break;
