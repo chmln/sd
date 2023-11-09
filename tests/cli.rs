@@ -13,14 +13,12 @@ mod cli {
         assert_eq!(content, std::fs::read_to_string(path).unwrap());
     }
 
+    #[cfg(target_family = "unix")]
     fn create_soft_link<P: AsRef<std::path::Path>>(
         src: &P,
         dst: &P,
     ) -> Result<()> {
-        #[cfg(target_family = "unix")]
         std::os::unix::fs::symlink(src, dst)?;
-        #[cfg(target_family = "windows")]
-        std::os::windows::fs::symlink_file(src, dst)?;
 
         Ok(())
     }
@@ -53,6 +51,7 @@ mod cli {
         Ok(())
     }
 
+    #[cfg(target_family = "unix")]
     #[test]
     fn in_place_following_symlink() -> Result<()> {
         let dir = tempfile::tempdir()?;
