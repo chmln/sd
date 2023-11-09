@@ -11,7 +11,7 @@ use std::{
     io::{stdout, Write},
     ops::DerefMut,
 };
-use memmap2::{Mmap, MmapMut};
+use memmap2::MmapMut;
 use clap::Parser;
 
 pub(crate) use self::input::Source;
@@ -36,65 +36,72 @@ fn main() -> Result<()> {
         Source::from_stdin()
     };
 
-    let sources: Vec<(&Source, Result<Mmap>)> = sources
-        .iter()
-        .map(|source| (source, match source {
+    let mut errors = Vec::new();
+    
+    let mut mmaps = Vec::new();
+    for source in sources.iter() {
+        let maybe_mmap = match source {
             Source::File(path) => if path.exists() {
-                make_mmap(path)
+                make_mmap(&path)
             } else {
                 Err(Error::InvalidPath(path.clone()))
             },
             Source::Stdin => make_mmap_stdin()
-        }))
-        .collect();
+        };
+
+        match maybe_mmap {
+            Ok(mmap) => mmaps.push(Some(mmap)),
+            Err(e) => {
+                mmaps.push(None);
+                errors.push((source, e));
+            },
+        };
+    }
+
     let needs_separator = sources.len() > 1;
 
     let replaced: Vec<_> = {
         use rayon::prelude::*;
-        sources
-            .par_iter()
-            .map(|(source, maybe_mmap)| (source, maybe_mmap.as_ref().map(|mmap| replacer.replace(mmap))))
+        mmaps.par_iter()
+            .map(|maybe_mmap| (maybe_mmap.as_ref().map(|mmap| replacer.replace(&mmap))))
             .collect()
     };
 
-    let mut errors = Vec::new();
-    let mut has_error = !errors.is_empty();
-
-    if options.preview || sources.get(0).map(|s| s.0) == Some(&Source::Stdin) {
+    if options.preview || sources.first() == Some(&Source::Stdin) {
         let mut handle = stdout().lock();
 
-        for (source, replaced) in replaced.iter().filter(|(_, r)| r.is_ok()) {
+        for (source, replaced) in sources.iter().zip(replaced).filter(|(_, r)| r.is_some()) {
             if needs_separator {
                 writeln!(handle, "----- {} -----", source.display())?;
             }
             handle.write_all(replaced.as_ref().unwrap())?;
         }
     } else {
-        for (source, replaced) in replaced.iter().filter(|(_, r)| r.is_ok()) {
+        // Windows requires closing mmap before writing:
+        // > The requested operation cannot be performed on a file with a user-mapped section open
+        #[cfg(target_family = "windows")]
+        let replaced: Vec<Option<Vec<u8>>> = replaced.into_iter().map(|r| r.map(|r| r.to_vec())).collect();
+        #[cfg(target_family = "windows")]
+        drop(mmaps);
+
+        for (source, replaced) in sources.iter().zip(replaced).filter(|(_, r)| r.is_some()) {
             let path = match source {
                 Source::File(path) => path,
-                Source::Stdin => {
-                    unreachable!("stdin should only go previous branch")
-                }
+                _ => unreachable!("stdin should go previous branch"),
             };
-
-            if let Err(e) = write_with_temp(path, replaced.as_ref().unwrap()) {
+            if let Err(e) = write_with_temp(path, &replaced.unwrap()) {
                 errors.push((source, e));
             }
         }
     }
 
-    for (source, error) in replaced.iter().filter(|(_, r)| r.is_err()) {
-        eprintln!("error: {}: {:?}", source.display(), error);
-        has_error = true;
-    }
-    for (source, error) in errors {
-        eprintln!("error: {}: {:?}", source.display(), error);
-    }
-
-    if has_error {
+    if !errors.is_empty() {
+        for (source, error) in errors {
+            eprintln!("error: {}: {:?}", source.display(), error);
+        }
         process::exit(1);
     }
+
     Ok(())
 }
 
