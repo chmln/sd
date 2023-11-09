@@ -24,14 +24,14 @@ fn main() {
 fn try_main() -> Result<()> {
     let options = cli::Options::parse();
 
-    let source = if !options.files.is_empty() {
-        Source::Files(options.files)
+    let sources = if !options.files.is_empty() {
+        Source::from_paths(options.files)
     } else {
-        Source::Stdin
+        Source::from_stdin()
     };
 
     App::new(
-        source,
+        sources,
         Replacer::new(
             options.find,
             options.replace_with,
