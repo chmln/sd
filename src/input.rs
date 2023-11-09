@@ -61,7 +61,9 @@ impl App {
                 .collect()
         };
 
-        if preview || self.source == Source::Stdin {
+        let mut errors = Vec::new();
+
+        if preview || self.sources.get(0) == Some(&Source::Stdin) {
             let mut handle = stdout().lock();
 
             for (path, _, replaced) in replaced {
@@ -97,4 +99,43 @@ impl App {
 
         Ok(())
     }
+}
+
+fn make_mmap(path: &PathBuf) -> Result<Mmap> {
+    Ok(unsafe { Mmap::map(&File::open(path)?)? })
+}
+
+fn make_mmap_stdin() -> Result<Mmap> {
+    let mut handle = stdin().lock();
+    let mut buf = Vec::new();
+    handle.read_to_end(&mut buf)?;
+    let mut mmap = MmapOptions::new().len(buf.len()).map_anon()?;
+    mmap.copy_from_slice(&buf);
+    let mmap = mmap.make_read_only()?;
+    Ok(mmap)
+}
+
+fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
+	let path = fs::canonicalize(path)?;
+
+    let temp = tempfile::NamedTempFile::new_in(
+        path.parent()
+            .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
+    )?;
+
+    let file = temp.as_file();
+    file.set_len(data.len() as u64)?;
+	if let Ok(metadata) = fs::metadata(&path) {
+	    file.set_permissions(metadata.permissions()).ok();
+	}
+
+    if !data.is_empty() {
+        let mut mmap_temp = unsafe { MmapMut::map_mut(file)? };
+        mmap_temp.deref_mut().write_all(data)?;
+        mmap_temp.flush_async()?;
+    }
+
+    temp.persist(&path)?;
+
+    Ok(())
 }
