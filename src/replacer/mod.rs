@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{utils, Result};
+use crate::Result;
 
 use regex::bytes::Regex;
 
@@ -32,7 +32,7 @@ impl Replacer {
 
             (
                 look_for,
-                utils::unescape(&replace_with)
+                unescape::unescape(&replace_with)
                     .unwrap_or(replace_with)
                     .into_bytes(),
             )
