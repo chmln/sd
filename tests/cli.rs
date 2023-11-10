@@ -13,11 +13,14 @@ mod cli {
         assert_eq!(content, std::fs::read_to_string(path).unwrap());
     }
 
-    #[cfg(target_family = "unix")]
+    // This should really be cfg_attr(target_family = "windows"), but wasi impl
+    // is nightly for now, and other impls are not part of std
+    #[cfg_attr(not(target_family = "unix"), ignore = "Windows symlinks are privileged")]
     fn create_soft_link<P: AsRef<std::path::Path>>(
         src: &P,
         dst: &P,
     ) -> Result<()> {
+        #[cfg(target_family = "unix")]
         std::os::unix::fs::symlink(src, dst)?;
 
         Ok(())
@@ -51,7 +54,7 @@ mod cli {
         Ok(())
     }
 
-    #[cfg(target_family = "unix")]
+    #[cfg_attr(target_family = "windows", ignore = "Windows symlinks are privileged")]
     #[test]
     fn in_place_following_symlink() -> Result<()> {
         let dir = tempfile::tempdir()?;
