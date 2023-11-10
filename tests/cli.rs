@@ -174,7 +174,8 @@ mod cli {
 
     // NOTE: styled terminal output is platform dependent, so convert to a
     // common format, in this case HTML, to check
-    //#[test]
+    #[ignore = "TODO: wait for proper colorization"]
+    #[test]
     fn ambiguous_replace_ensure_styling() {
         let styled_stderr = bad_replace_helper_styled("\t$1bad after");
         let html_stderr =
