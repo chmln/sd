@@ -91,7 +91,7 @@ Install through
 1. **String-literal mode**. By default, expressions are treated as regex. Use `-F` or `--fixed-strings` to disable regex.
 
    ```sh
-   > echo 'lots((([]))) of special chars' | sd -s '((([])))' ''
+   > echo 'lots((([]))) of special chars' | sd -F '((([])))' ''
    lots of special chars
    ```
 
