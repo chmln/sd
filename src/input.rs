@@ -26,8 +26,11 @@ impl Source {
     }
 }
 
-pub(crate) fn make_mmap(path: &PathBuf) -> Result<Mmap> {
-    Ok(unsafe { Mmap::map(&File::open(path)?)? })
+// TODO: memmap2 docs state that users should implement proper
+// procedures to avoid problems the `unsafe` keyword indicate.
+// This would be in a later PR.
+pub(crate) unsafe fn make_mmap(path: &PathBuf) -> Result<Mmap> {
+    Ok(Mmap::map(&File::open(path)?)?)
 }
 
 pub(crate) fn make_mmap_stdin() -> Result<Mmap> {

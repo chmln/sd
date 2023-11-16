@@ -42,7 +42,7 @@ fn main() -> Result<()> {
     for source in sources.iter() {
         let maybe_mmap = match source {
             Source::File(path) => if path.exists() {
-                make_mmap(&path)
+                unsafe { make_mmap(&path) }
             } else {
                 Err(Error::InvalidPath(path.clone()))
             },
