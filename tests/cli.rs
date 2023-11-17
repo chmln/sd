@@ -15,7 +15,10 @@ mod cli {
 
     // This should really be cfg_attr(target_family = "windows"), but wasi impl
     // is nightly for now, and other impls are not part of std
-    #[cfg_attr(not(target_family = "unix"), ignore = "Windows symlinks are privileged")]
+    #[cfg_attr(
+        not(target_family = "unix"),
+        ignore = "Windows symlinks are privileged"
+    )]
     fn create_soft_link<P: AsRef<std::path::Path>>(
         src: &P,
         dst: &P,
@@ -54,7 +57,10 @@ mod cli {
         Ok(())
     }
 
-    #[cfg_attr(target_family = "windows", ignore = "Windows symlinks are privileged")]
+    #[cfg_attr(
+        target_family = "windows",
+        ignore = "Windows symlinks are privileged"
+    )]
     #[test]
     fn in_place_following_symlink() -> Result<()> {
         let dir = tempfile::tempdir()?;

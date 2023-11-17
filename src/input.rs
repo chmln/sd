@@ -1,5 +1,9 @@
-use std::{path::PathBuf, fs::File, io::{stdin, Read}};
 use memmap2::{Mmap, MmapOptions};
+use std::{
+    fs::File,
+    io::{stdin, Read},
+    path::PathBuf,
+};
 
 use crate::error::Result;
 

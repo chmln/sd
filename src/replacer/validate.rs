@@ -54,7 +54,11 @@ impl fmt::Display for InvalidReplaceCapture {
         for (byte_index, c) in original_replace.char_indices() {
             let (prefix, suffix, text) = match SpecialChar::new(c) {
                 Some(c) => {
-                    (Some("" /* special prefix */), Some("" /* special suffix */), c.render())
+                    (
+                        Some("" /* special prefix */),
+                        Some("" /* special suffix */),
+                        c.render(),
+                    )
                 }
                 None => {
                     let (prefix, suffix) = if byte_index == invalid_ident.start
@@ -93,10 +97,7 @@ impl fmt::Display for InvalidReplaceCapture {
         // This relies on all non-curly-braced capture chars being 1 byte
         let arrows_span = arrows_start.end_offset(invalid_ident.len());
         let mut arrows = " ".repeat(arrows_span.start);
-        arrows.push_str(&format!(
-            "{}",
-            "^".repeat(arrows_span.len())
-        ));
+        arrows.push_str(&format!("{}", "^".repeat(arrows_span.len())));
 
         let ident = invalid_ident.slice(original_replace);
         let (number, the_rest) = ident.split_at(*num_leading_digits);
@@ -107,8 +108,7 @@ impl fmt::Display for InvalidReplaceCapture {
         );
         let hint_message = format!(
             "{}: Use curly braces to disambiguate it `{}`.",
-            "hint",
-            disambiguous
+            "hint", disambiguous
         );
 
         writeln!(f, "{}", error_message)?;
