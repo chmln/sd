@@ -19,7 +19,14 @@ pub(crate) use self::input::Source;
 use self::input::{make_mmap, make_mmap_stdin};
 use self::replacer::Replacer;
 
-fn main() -> Result<()> {
+fn main() {
+    if let Err(e) = try_main() {
+        eprintln!("error: {e}");
+        process::exit(1);
+    }
+}
+
+fn try_main() -> Result<()> {
     let options = cli::Options::parse();
 
     let replacer = Replacer::new(
