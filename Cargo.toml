@@ -33,8 +33,6 @@ unescape = "0.1.0"
 memmap2 = "0.9.0"
 tempfile = "3.8.0"
 thiserror = "1.0.50"
-ansi_term = "0.12.1"
-is-terminal = "0.4.9"
 clap.workspace = true
 
 [dev-dependencies]

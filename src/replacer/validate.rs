@@ -1,7 +1,5 @@
 use std::{error::Error, fmt, str::CharIndices};
 
-use ansi_term::{Color, Style};
-
 #[derive(Debug)]
 pub struct InvalidReplaceCapture {
     original_replace: String,
@@ -53,21 +51,23 @@ impl fmt::Display for InvalidReplaceCapture {
         // Build up the error to show the user
         let mut formatted = String::new();
         let mut arrows_start = Span::start_at(0);
-        let special = Style::new().bold();
-        let error = Style::from(Color::Red).bold();
         for (byte_index, c) in original_replace.char_indices() {
             let (prefix, suffix, text) = match SpecialChar::new(c) {
                 Some(c) => {
-                    (Some(special.prefix()), Some(special.suffix()), c.render())
+                    (
+                        Some("" /* special prefix */),
+                        Some("" /* special suffix */),
+                        c.render(),
+                    )
                 }
                 None => {
                     let (prefix, suffix) = if byte_index == invalid_ident.start
                     {
-                        (Some(error.prefix()), None)
+                        (Some("" /* error prefix */), None)
                     } else if byte_index
                         == invalid_ident.end.checked_sub(1).unwrap()
                     {
-                        (None, Some(error.suffix()))
+                        (None, Some("" /* error suffix */))
                     } else {
                         (None, None)
                     };
@@ -97,22 +97,18 @@ impl fmt::Display for InvalidReplaceCapture {
         // This relies on all non-curly-braced capture chars being 1 byte
         let arrows_span = arrows_start.end_offset(invalid_ident.len());
         let mut arrows = " ".repeat(arrows_span.start);
-        arrows.push_str(&format!(
-            "{}",
-            Style::new().bold().paint("^".repeat(arrows_span.len()))
-        ));
+        arrows.push_str(&format!("{}", "^".repeat(arrows_span.len())));
 
         let ident = invalid_ident.slice(original_replace);
         let (number, the_rest) = ident.split_at(*num_leading_digits);
         let disambiguous = format!("${{{number}}}{the_rest}");
         let error_message = format!(
             "The numbered capture group `{}` in the replacement text is ambiguous.",
-            Style::new().bold().paint(format!("${}", number).to_string())
+            format!("${}", number).to_string()
         );
         let hint_message = format!(
             "{}: Use curly braces to disambiguate it `{}`.",
-            Style::from(Color::Blue).bold().paint("hint"),
-            Style::new().bold().paint(disambiguous)
+            "hint", disambiguous
         );
 
         writeln!(f, "{}", error_message)?;
