@@ -3,7 +3,7 @@
 mod cli {
     use anyhow::Result;
     use assert_cmd::Command;
-    use std::io::prelude::*;
+    use std::{fs, io::prelude::*, path::Path};
 
     fn sd() -> Command {
         Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Error invoking sd")
@@ -245,5 +245,159 @@ mod cli {
             .assert()
             .success()
             .stdout("bar\nfoo\nfoo");
+    }
+
+    const UNTOUCHED_CONTENTS: &str = "untouched";
+
+    fn assert_fails_correctly(
+        command: &mut Command,
+        valid: &Path,
+        test_home: &Path,
+        snap_name: &str,
+    ) {
+        let failed_command = command.assert().failure().code(1);
+
+        assert_eq!(fs::read_to_string(&valid).unwrap(), UNTOUCHED_CONTENTS);
+
+        let stderr_orig =
+            std::str::from_utf8(&failed_command.get_output().stderr).unwrap();
+        // Normalize unstable path bits
+        let stderr_norm = stderr_orig
+            .replace(test_home.to_str().unwrap(), "<test_home>")
+            .replace('\\', "/");
+        insta::assert_snapshot!(snap_name, stderr_norm);
+    }
+
+    #[test]
+    fn correctly_fails_on_missing_file() -> Result<()> {
+        let test_dir = tempfile::Builder::new().prefix("sd-test-").tempdir()?;
+        let test_home = test_dir.path();
+
+        let valid = test_home.join("valid");
+        fs::write(&valid, UNTOUCHED_CONTENTS)?;
+        let missing = test_home.join("missing");
+
+        assert_fails_correctly(
+            sd().args([".*", ""]).arg(&valid).arg(&missing),
+            &valid,
+            test_home,
+            "correctly_fails_on_missing_file",
+        );
+
+        Ok(())
+    }
+
+    #[cfg_attr(not(target_family = "unix"), ignore = "only runs on unix")]
+    #[test]
+    fn correctly_fails_on_unreadable_file() -> Result<()> {
+        #[cfg(not(target_family = "unix"))]
+        {
+            unreachable!("This test should be ignored");
+        }
+        #[cfg(target_family = "unix")]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+
+            let test_dir =
+                tempfile::Builder::new().prefix("sd-test-").tempdir()?;
+            let test_home = test_dir.path();
+
+            let valid = test_home.join("valid");
+            fs::write(&valid, UNTOUCHED_CONTENTS)?;
+            let write_only = {
+                let path = test_home.join("write_only");
+                let mut write_only_file = std::fs::OpenOptions::new()
+                    .mode(0o333)
+                    .create(true)
+                    .write(true)
+                    .open(&path)?;
+                write!(write_only_file, "unreadable")?;
+                path
+            };
+
+            assert_fails_correctly(
+                sd().args([".*", ""]).arg(&valid).arg(&write_only),
+                &valid,
+                test_home,
+                "correctly_fails_on_unreadable_file",
+            );
+
+            Ok(())
+        }
+    }
+
+    // Failing to create a temporary file in the same directory as the input is
+    // one of the failure cases that is past the "point of no return" (after we
+    // already start making replacements). This means that any files that could
+    // be modified are, and we report any failure cases
+    #[cfg_attr(not(target_family = "unix"), ignore = "only runs on unix")]
+    #[test]
+    fn reports_errors_on_atomic_file_swap_creation_failure() -> Result<()> {
+        #[cfg(not(target_family = "unix"))]
+        {
+            unreachable!("This test should be ignored");
+        }
+        #[cfg(target_family = "unix")]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            const FIND_REPLACE: [&str; 2] = ["able", "ed"];
+            const ORIG_TEXT: &str = "modifiable";
+            const MODIFIED_TEXT: &str = "modified";
+
+            let test_dir =
+                tempfile::Builder::new().prefix("sd-test-").tempdir()?;
+            let test_home = test_dir.path();
+
+            let writable_dir = test_home.join("writable");
+            fs::create_dir(&writable_dir)?;
+            let writable_dir_file = writable_dir.join("foo");
+            fs::write(&writable_dir_file, ORIG_TEXT)?;
+
+            let unwritable_dir = test_home.join("unwritable");
+            fs::create_dir(&unwritable_dir)?;
+            let unwritable_dir_file1 = unwritable_dir.join("bar");
+            fs::write(&unwritable_dir_file1, ORIG_TEXT)?;
+            let unwritable_dir_file2 = unwritable_dir.join("baz");
+            fs::write(&unwritable_dir_file2, ORIG_TEXT)?;
+            let mut perms = fs::metadata(&unwritable_dir)?.permissions();
+            perms.set_mode(0o555);
+            fs::set_permissions(&unwritable_dir, perms)?;
+
+            let failed_command = sd()
+                .args(FIND_REPLACE)
+                .arg(&writable_dir_file)
+                .arg(&unwritable_dir_file1)
+                .arg(&unwritable_dir_file2)
+                .assert()
+                .failure()
+                .code(1);
+
+            // Confirm that we modified the one file that we were able to
+            assert_eq!(fs::read_to_string(&writable_dir_file)?, MODIFIED_TEXT);
+            assert_eq!(fs::read_to_string(&unwritable_dir_file1)?, ORIG_TEXT);
+            assert_eq!(fs::read_to_string(&unwritable_dir_file2)?, ORIG_TEXT);
+
+            let stderr_orig =
+                std::str::from_utf8(&failed_command.get_output().stderr)
+                    .unwrap();
+            // Normalize unstable path bits
+            let stderr_partial_norm = stderr_orig
+                .replace(test_home.to_str().unwrap(), "<test_home>")
+                .replace('\\', "/");
+            let tmp_file_rep = regex::Regex::new(r"\.tmp\w+")?;
+            let stderr_norm =
+                tmp_file_rep.replace_all(&stderr_partial_norm, "<tmp_file>");
+            insta::assert_snapshot!(stderr_norm);
+
+            // Make the unwritable dir writable again, so it can be cleaned up
+            // when dropping the temp dir
+            let mut perms = fs::metadata(&unwritable_dir)?.permissions();
+            perms.set_mode(0o777);
+            fs::set_permissions(&unwritable_dir, perms)?;
+            test_dir.close()?;
+
+            Ok(())
+        }
     }
 }
