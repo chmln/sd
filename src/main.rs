@@ -67,7 +67,7 @@ fn main() -> Result<()> {
         mmaps
             .par_iter()
             .map(|maybe_mmap| {
-                (maybe_mmap.as_ref().map(|mmap| replacer.replace(&mmap)))
+                maybe_mmap.as_ref().map(|mmap| replacer.replace(&mmap))
             })
             .collect()
     };
