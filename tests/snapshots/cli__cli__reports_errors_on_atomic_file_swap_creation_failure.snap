@@ -1,0 +1,9 @@
+---
+source: tests/cli.rs
+expression: stderr_norm
+---
+error: Failed processing some inputs
+    <test_home>/unwritable/bar: Permission denied (os error 13) at path "<test_home>/unwritable/<tmp_file>"
+    <test_home>/unwritable/baz: Permission denied (os error 13) at path "<test_home>/unwritable/<tmp_file>"
+
+
