@@ -347,7 +347,7 @@ mod cli {
 
             let test_dir =
                 tempfile::Builder::new().prefix("sd-test-").tempdir()?;
-            let test_home = test_dir.path();
+            let test_home = test_dir.path().canonicalize()?;
 
             let writable_dir = test_home.join("writable");
             fs::create_dir(&writable_dir)?;
