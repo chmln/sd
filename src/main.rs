@@ -94,7 +94,7 @@ fn try_main() -> Result<()> {
                 Source::File(path) => Some(path.as_path()),
             };
             // TODO: custom context radius
-            writeln!(handle, "{}", create_udiff(mmap, replaced, 3, path)?)?;
+            write!(handle, "{}", create_udiff(mmap, replaced, 3, path)?)?;
         }
     } else {
         // Windows requires closing mmap before writing:
