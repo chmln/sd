@@ -57,6 +57,10 @@ w - match full words only
     */
     pub flags: Option<String>,
 
+    #[arg(short = 'l', long = "line-buffered", default_value_t = false)]
+    /// Buffered mode. Doesn't support multiline matching
+    pub line_buffered: bool,
+
     /// The regexp or string (if using `-F`) to search for.
     pub find: String,
 

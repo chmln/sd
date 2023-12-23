@@ -8,7 +8,7 @@ use clap::Parser;
 use memmap2::MmapMut;
 use std::{
     fs,
-    io::{stdout, Write},
+    io::{stdout, BufRead, Write},
     ops::DerefMut,
     path::PathBuf,
     process,
@@ -42,6 +42,34 @@ fn try_main() -> Result<()> {
     } else {
         Source::from_stdin()
     };
+
+    if options.line_buffered && sources == Source::from_stdin() {
+        let stdin = std::io::stdin();
+        let stdout = std::io::stdout();
+        let mut handle = stdout.lock();
+
+        let mut buffer = String::new();
+
+        loop {
+            let mut read_handle = stdin.lock();
+            let bytes_read = read_handle.read_line(&mut buffer)?;
+
+            // .lock()
+            // .read_line(&mut buffer)
+            // .expect("Error reading from standard input");
+            if bytes_read == 0 {
+                break;
+            }
+            let replaced = replacer.replace(buffer.as_bytes());
+            handle
+                .write_all(replaced.as_ref())
+                .expect("Error writing to standard output");
+            handle.flush().expect("Error flushing output");
+            buffer.clear();
+        }
+
+        return Ok(());
+    }
 
     let mut mmaps = Vec::new();
     for source in sources.iter() {
