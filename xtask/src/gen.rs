@@ -70,7 +70,7 @@ fn gen_man(base_dir: &Path) {
         (
             "Indexed capture groups",
             r"echo 'cargo +nightly watch' | sd '(\w+)\s+\+(\w+)\s+(\w+)' 'cmd: $1, channel: $2, subcmd: $3'",
-            "123 dollars and 45 cents",
+            "cmd: cargo, channel: nightly, subcmd: watch",
         ),
         (
             "Find & replace in file",
