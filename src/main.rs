@@ -91,10 +91,10 @@ fn try_main() -> Result<()> {
         for (source, replaced) in sources.iter().zip(replaced) {
             match source {
                 Source::File(path) => {
-                    let result = if !options.no_swap {
+                    let result = if !options.in_place {
                         write_with_temp(path, &replaced)
                     } else {
-                        write_without_temp(path, &replaced)
+                        write_in_place(path, &replaced)
                     };
                     if let Err(e) = result {
                         failed_jobs.push((path.to_owned(), e));
@@ -136,7 +136,7 @@ fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
     Ok(())
 }
 
-fn write_without_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
+fn write_in_place(path: &PathBuf, data: &[u8]) -> Result<()> {
     let path = fs::canonicalize(path)?;
 
     let mut source = fs::OpenOptions::new().write(true).open(path)?;

@@ -65,8 +65,8 @@ w - match full words only
     pub replace_with: String,
 
     #[arg(long)]
-    /// Overwrite file instead of creating tmp file and swaping atomically
-    pub no_swap: bool,
+    /// Overwrite file in place instead of creating tmp file and swapping atomically
+    pub in_place: bool,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
     ///

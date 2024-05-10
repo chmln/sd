@@ -39,7 +39,7 @@ mod cli {
         let mut cmd = sd();
         cmd.args(["abc\\d+", "", path.to_str().unwrap()]);
         if no_swap {
-            cmd.arg("--no-swap");
+            cmd.arg("--in-place");
         }
         cmd.assert().success();
         assert_file(&path, "def");
@@ -58,7 +58,7 @@ mod cli {
         let mut cmd = sd();
         cmd.args(["a\\dc", "", path.to_str().unwrap()]);
         if no_swap {
-            cmd.arg("--no-swap");
+            cmd.arg("--in-place");
         }
         cmd.assert().success();
         assert_file(&path, "");
@@ -85,7 +85,7 @@ mod cli {
         let mut cmd = sd();
         cmd.args(["abc\\d+", "", link.to_str().unwrap()]);
         if no_swap {
-            cmd.arg("--no-swap");
+            cmd.arg("--in-place");
         }
         cmd.assert().success();
 
@@ -103,7 +103,7 @@ mod cli {
         let mut cmd = sd();
         cmd.args(["-p", "abc\\d+", "", file.path().to_str().unwrap()]);
         if no_swap {
-            cmd.arg("--no-swap");
+            cmd.arg("--in-place");
         }
         cmd.assert().success().stdout("def");
 
@@ -117,7 +117,7 @@ mod cli {
         let mut cmd = sd();
         cmd.args(["abc\\d+", ""]);
         if no_swap {
-            cmd.arg("--no-swap");
+            cmd.arg("--in-place");
         }
         cmd.write_stdin("abc123def")
             .assert()
