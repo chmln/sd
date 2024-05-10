@@ -2,6 +2,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(
+    name = "sd",
     author,
     version,
     about,
@@ -15,7 +16,8 @@ use clap::Parser;
 )]
 pub struct Options {
     #[arg(short, long)]
-    /// Output result into stdout and do not modify files.
+    /// Display changes in a human reviewable format (the specifics of the
+    /// format are likely to change in the future).
     pub preview: bool,
 
     #[arg(
@@ -27,28 +29,35 @@ pub struct Options {
     /// Treat FIND and REPLACE_WITH args as literal strings
     pub literal_mode: bool,
 
-    #[arg(short)]
-    /// Recursively replace files
-    pub recursive: bool,
-
-    #[arg(short = 'n')]
-    /// Limit the number of replacements
-    pub replacements: Option<usize>,
+    #[arg(
+        short = 'n',
+        long = "max-replacements",
+        value_name = "LIMIT",
+        default_value_t
+    )]
+    /// Limit the number of replacements that can occur per file. 0 indicates
+    /// unlimited replacements.
+    pub replacements: usize,
 
     #[arg(short, long, verbatim_doc_comment)]
     #[rustfmt::skip]
     /** Regex flags. May be combined (like `-f mc`).
 
 c - case-sensitive
+
 e - disable multi-line matching
+
 i - case-insensitive
+
 m - multi-line matching
+
 s - make `.` match newlines
+
 w - match full words only
     */
     pub flags: Option<String>,
 
-    /// The regexp or string (if -s) to search for.
+    /// The regexp or string (if using `-F`) to search for.
     pub find: String,
 
     /// What to replace each match with. Unless in string mode, you may
@@ -60,7 +69,8 @@ w - match full words only
     pub no_swap: bool,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
-    ///{n}{n}Note: sd modifies files in-place by default. See documentation for
+    ///
+    /// Note: sd modifies files in-place by default. See documentation for
     /// examples.
     pub files: Vec<std::path::PathBuf>,
 }

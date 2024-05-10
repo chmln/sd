@@ -25,6 +25,10 @@ jobs:
             use-cross: true
 
           - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            use-cross: false
+
+          - os: windows-latest
             target: x86_64-pc-windows-msvc
             use-cross: false
 
@@ -36,40 +40,85 @@ jobs:
             target: aarch64-apple-darwin
             use-cross: false
 
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            use-cross: true
+
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            use-cross: true
+
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 1
 
     - name: Set the version
-      id: version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      shell: bash
+      if: env.SD_VERSION == ''
+      run: |
+        echo "SD_VERSION=$GITHUB_REF_NAME" >> $GITHUB_ENV
+        echo "version is: ${{ env.SD_VERSION }}"
 
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        target: ${{ matrix.target }}
+        targets: ${{ matrix.target }}
 
+    - name: Setup native compilation
+      if: ${{ matrix.use-cross == false }}
+      shell: bash
+      run: |
+        echo "CARGO=cargo" >> $GITHUB_ENV
+
+    - name: Setup cross compilation
+      if: ${{ matrix.use-cross == true }}
+      shell: bash
+      run: |
+        dir="$RUNNER_TEMP/cross-download"
+        mkdir "$dir"
+        echo "$dir" >> $GITHUB_PATH
+        cd "$dir"
+        curl -LO "https://github.com/cross-rs/cross/releases/download/v0.2.5/cross-x86_64-unknown-linux-musl.tar.gz"
+        tar xf cross-x86_64-unknown-linux-musl.tar.gz
+        echo "CARGO=cross" >> $GITHUB_ENV
+        echo "RUSTFLAGS=--cfg sd_cross_compile" >> $GITHUB_ENV
+        echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.use-cross }}
-        command: build
-        args: --target ${{ matrix.target }} --release --locked
+      shell: bash
+      run: |
+        $CARGO --version
+        $CARGO build --release --locked --target ${{ matrix.target }}
+        # Handle windows being an oddity
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          echo "BIN_NAME=sd.exe" >> $GITHUB_ENV
+        else
+          echo "BIN_NAME=sd" >> $GITHUB_ENV
+        fi
 
-    - name: Strip binary
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-      run: strip target/${{ matrix.target }}/release/sd
+    - name: Setup archive
+      shell: bash
+      run: |
+        staging="sd-${{ env.SD_VERSION }}-${{ matrix.target }}"
+        mkdir -p "$staging"
+
+        cp -r {README.md,LICENSE,CHANGELOG.md,gen/*} "$staging"
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          cp "target/${{ matrix.target }}/release/sd.exe" "$staging/"
+          7z a "$staging.zip" "$staging"
+          echo "ASSET=$staging.zip" >> $GITHUB_ENV
+        else
+          cp "target/${{ matrix.target }}/release/sd" "$staging/"
+          tar czf "$staging.tar.gz" "$staging"
+          echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+        fi
 
     - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v1-release
+      uses: svenstaro/upload-release-action@2.7.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/${{ matrix.target }}/release/sd
-        asset_name: sd-${{ steps.version.outputs.VERSION }}-${{ matrix.target }}
+        file: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
         tag: ${{ github.ref }}

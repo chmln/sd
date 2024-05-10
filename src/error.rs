@@ -1,7 +1,6 @@
-use std::{
-    fmt::{self, Write},
-    path::PathBuf,
-};
+use std::{fmt, path::PathBuf};
+
+use crate::replacer::InvalidReplaceCapture;
 
 #[derive(thiserror::Error)]
 pub enum Error {
@@ -11,35 +10,38 @@ pub enum Error {
     File(#[from] std::io::Error),
     #[error("failed to move file: {0}")]
     TempfilePersist(#[from] tempfile::PersistError),
-    #[error("file doesn't have parent path: {0}")]
+    #[error("invalid path: {0}")]
     InvalidPath(PathBuf),
-    #[error("failed processing files:\n{0}")]
-    FailedProcessing(FailedJobs),
-}
-
-pub struct FailedJobs(Vec<(PathBuf, Error)>);
-
-impl From<Vec<(PathBuf, Error)>> for FailedJobs {
-    fn from(vec: Vec<(PathBuf, Error)>) -> Self {
-        Self(vec)
-    }
-}
-
-impl fmt::Display for FailedJobs {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("\tFailedJobs(\n")?;
-        for (path, err) in &self.0 {
-            f.write_str(&format!("\t{:?}: {}\n", path, err))?;
-        }
-        f.write_char(')')
-    }
+    #[error("{0}")]
+    InvalidReplaceCapture(#[from] InvalidReplaceCapture),
+    #[error("{0}")]
+    FailedJobs(FailedJobs),
 }
 
 // pretty-print the error
-impl std::fmt::Debug for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
     }
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+pub struct FailedJobs(pub Vec<(PathBuf, Error)>);
+
+impl fmt::Display for FailedJobs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Failed processing some inputs\n")?;
+        for (source, error) in &self.0 {
+            writeln!(f, "    {}: {}", source.display(), error)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl fmt::Debug for FailedJobs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}

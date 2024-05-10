@@ -1,0 +1,11 @@
+[package]
+name = "xtask"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+clap.workspace = true
+clap_complete = "4.4.3"
+clap_mangen = "0.2.14"
+roff = "0.2.1"

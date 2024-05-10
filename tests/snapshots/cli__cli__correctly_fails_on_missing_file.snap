@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+expression: stderr_norm
+---
+error: invalid path: <test_home>/missing
+
