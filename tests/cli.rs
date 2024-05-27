@@ -3,6 +3,7 @@
 mod cli {
     use anyhow::Result;
     use assert_cmd::Command;
+    use rstest::rstest;
     use std::{fs, io::prelude::*, path::Path};
 
     fn sd() -> Command {
@@ -29,29 +30,37 @@ mod cli {
         Ok(())
     }
 
-    #[test]
-    fn in_place() -> Result<()> {
+    #[rstest]
+    fn in_place(#[values(false, true)] no_swap: bool) -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
         file.write_all(b"abc123def")?;
         let path = file.into_temp_path();
 
-        sd().args(["abc\\d+", "", path.to_str().unwrap()])
-            .assert()
-            .success();
+        let mut cmd = sd();
+        cmd.args(["abc\\d+", "", path.to_str().unwrap()]);
+        if no_swap {
+            cmd.arg("--in-place");
+        }
+        cmd.assert().success();
         assert_file(&path, "def");
 
         Ok(())
     }
 
-    #[test]
-    fn in_place_with_empty_result_file() -> Result<()> {
+    #[rstest]
+    fn in_place_with_empty_result_file(
+        #[values(false, true)] no_swap: bool,
+    ) -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
         file.write_all(b"a7c")?;
         let path = file.into_temp_path();
 
-        sd().args(["a\\dc", "", path.to_str().unwrap()])
-            .assert()
-            .success();
+        let mut cmd = sd();
+        cmd.args(["a\\dc", "", path.to_str().unwrap()]);
+        if no_swap {
+            cmd.arg("--in-place");
+        }
+        cmd.assert().success();
         assert_file(&path, "");
 
         Ok(())
@@ -61,8 +70,10 @@ mod cli {
         target_family = "windows",
         ignore = "Windows symlinks are privileged"
     )]
-    #[test]
-    fn in_place_following_symlink() -> Result<()> {
+    #[rstest]
+    fn in_place_following_symlink(
+        #[values(false, true)] no_swap: bool,
+    ) -> Result<()> {
         let dir = tempfile::tempdir()?;
         let path = dir.path();
         let file = path.join("file");
@@ -71,9 +82,12 @@ mod cli {
         create_soft_link(&file, &link)?;
         std::fs::write(&file, "abc123def")?;
 
-        sd().args(["abc\\d+", "", link.to_str().unwrap()])
-            .assert()
-            .success();
+        let mut cmd = sd();
+        cmd.args(["abc\\d+", "", link.to_str().unwrap()]);
+        if no_swap {
+            cmd.arg("--in-place");
+        }
+        cmd.assert().success();
 
         assert_file(&file, "def");
         assert!(std::fs::symlink_metadata(link)?.file_type().is_symlink());
@@ -81,25 +95,31 @@ mod cli {
         Ok(())
     }
 
-    #[test]
-    fn replace_into_stdout() -> Result<()> {
+    #[rstest]
+    fn replace_into_stdout(#[values(false, true)] no_swap: bool) -> Result<()> {
         let mut file = tempfile::NamedTempFile::new()?;
         file.write_all(b"abc123def")?;
 
-        sd().args(["-p", "abc\\d+", "", file.path().to_str().unwrap()])
-            .assert()
-            .success()
-            .stdout("def");
+        let mut cmd = sd();
+        cmd.args(["-p", "abc\\d+", "", file.path().to_str().unwrap()]);
+        if no_swap {
+            cmd.arg("--in-place");
+        }
+        cmd.assert().success().stdout("def");
 
         assert_file(file.path(), "abc123def");
 
         Ok(())
     }
 
-    #[test]
-    fn stdin() -> Result<()> {
-        sd().args(["abc\\d+", ""])
-            .write_stdin("abc123def")
+    #[rstest]
+    fn stdin(#[values(false, true)] no_swap: bool) -> Result<()> {
+        let mut cmd = sd();
+        cmd.args(["abc\\d+", ""]);
+        if no_swap {
+            cmd.arg("--in-place");
+        }
+        cmd.write_stdin("abc123def")
             .assert()
             .success()
             .stdout("def");
