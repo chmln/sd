@@ -1,8 +1,10 @@
+#![feature(try_blocks)]
 mod cli;
 mod error;
 mod input;
 
 pub(crate) mod replacer;
+mod unescape;
 
 use clap::Parser;
 use memmap2::MmapMut;

@@ -9,7 +9,7 @@ version = "4.4.6"
 features = ["derive", "deprecated", "wrap_help"]
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 version = "1.0.0"
 
 [package]
@@ -24,12 +24,11 @@ license = "MIT"
 homepage = "https://github.com/chmln/sd"
 repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
-rust-version = "1.70.0"
+rust-version = "1.86.0"
 
 [dependencies]
 regex = "1.10.2"
 rayon = "1.8.0"
-unescape = "0.1.0"
 memmap2 = "0.9.0"
 tempfile = "3.8.0"
 thiserror = "1.0.50"

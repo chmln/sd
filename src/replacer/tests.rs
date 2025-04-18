@@ -41,10 +41,11 @@ impl Replace {
             UNLIMITED_REPLACEMENTS,
         )
         .unwrap();
-        assert_eq!(
-            std::str::from_utf8(&replacer.replace(self.src.as_bytes())),
-            Ok(self.expected)
-        );
+
+        let binding = replacer.replace(self.src.as_bytes());
+        let actual = std::str::from_utf8(&binding).unwrap();
+
+        assert_eq!(self.expected, actual);
     }
 }
 
@@ -140,6 +141,28 @@ fn full_word_replace() {
         flags: Some("w"),
         src: "abcd abc",
         expected: "abcd def",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn escaping_unnecessarily() {
+    // https://github.com/chmln/sd/issues/313
+    Replace {
+        look_for: "abc",
+        replace_with: r#"\n{"#,
+        src: "abc",
+        expected: "\n{",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: "abc",
+        replace_with: r#"\n\{"#,
+        src: "abc",
+        expected: "\n\\{",
         ..Default::default()
     }
     .test();

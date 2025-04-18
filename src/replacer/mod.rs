@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::Result;
+use crate::{unescape, Result};
 
 use regex::bytes::Regex;
 
@@ -30,12 +30,7 @@ impl Replacer {
         } else {
             validate_replace(&replace_with)?;
 
-            (
-                look_for,
-                unescape::unescape(&replace_with)
-                    .unwrap_or(replace_with)
-                    .into_bytes(),
-            )
+            (look_for, unescape::unescape(&replace_with).into_bytes())
         };
 
         let mut regex = regex::bytes::RegexBuilder::new(&look_for);

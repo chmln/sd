@@ -1,0 +1,25 @@
+---
+source: src/unescape.rs
+expression: out
+---
+empty: `` -> ``
+single backslash: `\` -> `\`
+two backslashes: `\\` -> `\`
+newline: `\n` -> `
+`
+tab: `\t` -> `	`
+carriage return: `\r` -> ``
+escaped double quote: `\"` -> `"`
+escaped single quote: `\'` -> `'`
+escaped backslash: `\\` -> `\`
+unicode escape: `\u0042` -> `B`
+hex escape: `\x41` -> `A`
+invalid hex escape: `\xG` -> `\xG`
+invalid unicode escape: `\u00Z1` -> `\u00Z1`
+mixed valid and invalid escapes: `a\t\xG\n` -> `a	\xG
+`
+non-escape characters: `ab` -> `ab`
+incomplete escape sequence: `\u004` -> `\u004`
+single characters: `a` -> `a`
+issue #313: `\t{` -> `	{`
+issue #313: `\t\{` -> `	\{`
