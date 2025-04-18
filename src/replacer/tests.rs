@@ -1,5 +1,4 @@
 use super::*;
-
 use proptest::prelude::*;
 
 proptest! {
@@ -21,61 +20,127 @@ proptest! {
     }
 }
 
-fn replace(
-    look_for: impl Into<String>,
-    replace_with: impl Into<String>,
+#[derive(Default)]
+struct Replace {
+    look_for: &'static str,
+    replace_with: &'static str,
     literal: bool,
     flags: Option<&'static str>,
     src: &'static str,
-    target: &'static str,
-) {
-    const UNLIMITED_REPLACEMENTS: usize = 0;
-    let replacer = Replacer::new(
-        look_for.into(),
-        replace_with.into(),
-        literal,
-        flags.map(ToOwned::to_owned),
-        UNLIMITED_REPLACEMENTS,
-    )
-    .unwrap();
-    assert_eq!(
-        std::str::from_utf8(&replacer.replace(src.as_bytes())),
-        Ok(target)
-    );
+    expected: &'static str,
+}
+
+impl Replace {
+    fn test(&self) {
+        const UNLIMITED_REPLACEMENTS: usize = 0;
+        let replacer = Replacer::new(
+            self.look_for.into(),
+            self.replace_with.into(),
+            self.literal,
+            self.flags.map(ToOwned::to_owned),
+            UNLIMITED_REPLACEMENTS,
+        )
+        .unwrap();
+        assert_eq!(
+            std::str::from_utf8(&replacer.replace(self.src.as_bytes())),
+            Ok(self.expected)
+        );
+    }
 }
 
 #[test]
 fn default_global() {
-    replace("a", "b", false, None, "aaa", "bbb");
+    Replace {
+        look_for: "a",
+        replace_with: "b",
+        src: "aaa",
+        expected: "bbb",
+        ..Default::default()
+    }
+    .test();
 }
 
 #[test]
 fn escaped_char_preservation() {
-    replace("a", "b", false, None, "a\\n", "b\\n");
+    Replace {
+        look_for: "a",
+        replace_with: "b",
+        src: r#"a\n"#,
+        expected: r#"b\n"#,
+        ..Default::default()
+    }
+    .test();
 }
 
 #[test]
 fn case_sensitive_default() {
-    replace("abc", "x", false, None, "abcABC", "xABC");
-    replace("abc", "x", true, None, "abcABC", "xABC");
+    Replace {
+        look_for: "abc",
+        replace_with: "x",
+        src: "abcABC",
+        expected: "xABC",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: "abc",
+        replace_with: "x",
+        literal: true,
+        src: "abcABC",
+        expected: "xABC",
+        ..Default::default()
+    }
+    .test();
 }
 
 #[test]
 fn sanity_check_literal_replacements() {
-    replace("((special[]))", "x", true, None, "((special[]))y", "xy");
+    Replace {
+        look_for: "((special[]))",
+        replace_with: "x",
+        literal: true,
+        src: "((special[]))y",
+        expected: "xy",
+        ..Default::default()
+    }
+    .test();
 }
 
 #[test]
 fn unescape_regex_replacements() {
-    replace("test", r"\n", false, None, "testtest", "\n\n");
+    Replace {
+        look_for: "test",
+        replace_with: r"\n",
+        src: "testtest",
+        expected: "\n\n",
+        ..Default::default()
+    }
+    .test();
 }
 
 #[test]
 fn no_unescape_literal_replacements() {
-    replace("test", r"\n", true, None, "testtest", r"\n\n");
+    Replace {
+        look_for: "test",
+        replace_with: r"\n",
+        literal: true,
+        src: "testtest",
+        expected: r"\n\n",
+        ..Default::default()
+    }
+    .test();
 }
 
 #[test]
 fn full_word_replace() {
-    replace("abc", "def", false, Some("w"), "abcd abc", "abcd def");
+    Replace {
+        look_for: "abc",
+        replace_with: "def",
+        flags: Some("w"),
+        src: "abcd abc",
+        expected: "abcd def",
+        ..Default::default()
+    }
+    .test();
 }
