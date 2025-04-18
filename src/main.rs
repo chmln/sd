@@ -3,17 +3,21 @@ mod error;
 mod input;
 mod output;
 
-pub(crate) mod replacer;
+pub mod replacer;
 mod unescape;
 
 use clap::Parser;
 use std::{
     io::{Write, stdout},
+    fs,
+    io::{Write, stdout},
+    ops::DerefMut,
+    path::PathBuf,
     process,
 };
 
-pub(crate) use self::error::{Error, FailedJobs, Result};
-pub(crate) use self::input::Source;
+pub use self::error::{Error, FailedJobs, Result};
+pub use self::input::Source;
 use self::input::{make_mmap, make_mmap_stdin};
 use self::replacer::Replacer;
 

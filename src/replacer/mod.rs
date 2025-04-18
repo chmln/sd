@@ -10,7 +10,7 @@ mod validate;
 
 pub use validate::{validate_replace, InvalidReplaceCapture};
 
-pub(crate) struct Replacer {
+pub struct Replacer {
     regex: Regex,
     replace_with: Vec<u8>,
     is_literal: bool,
@@ -18,7 +18,7 @@ pub(crate) struct Replacer {
 }
 
 impl Replacer {
-    pub(crate) fn new(
+    pub fn new(
         look_for: String,
         replace_with: String,
         is_literal: bool,
@@ -69,7 +69,7 @@ impl Replacer {
         })
     }
 
-    pub(crate) fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
+    pub fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
         let regex = &self.regex;
         let limit = self.replacements;
         let use_color = false;
@@ -94,7 +94,7 @@ impl Replacer {
 
     /// A modified form of [`regex::bytes::Regex::replacen`] that supports
     /// coloring replacements
-    pub(crate) fn replacen<'haystack, R: regex::bytes::Replacer>(
+    pub fn replacen<'haystack, R: regex::bytes::Replacer>(
         regex: &regex::bytes::Regex,
         limit: usize,
         haystack: &'haystack [u8],
