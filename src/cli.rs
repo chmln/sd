@@ -20,6 +20,11 @@ pub struct Options {
     /// format are likely to change in the future).
     pub preview: bool,
 
+    #[arg(short, long)]
+    /// Show changes as a unified diff. You may want to use a rich
+    /// color pager to colorize it.
+    pub diff: bool,
+
     #[arg(
         short = 'F',
         long = "fixed-strings",

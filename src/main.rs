@@ -3,6 +3,7 @@ mod cli;
 mod error;
 mod input;
 
+pub(crate) mod diff;
 pub(crate) mod replacer;
 mod unescape;
 
@@ -71,7 +72,9 @@ fn try_main() -> Result<()> {
             .collect()
     };
 
-    if options.preview || sources.first() == Some(&Source::Stdin) {
+    if options.preview
+        || sources.first() == Some(&Source::Stdin) && !options.diff
+    {
         let mut handle = stdout().lock();
 
         for (source, replaced) in sources.iter().zip(replaced) {
@@ -79,6 +82,21 @@ fn try_main() -> Result<()> {
                 writeln!(handle, "----- {} -----", source.display())?;
             }
             handle.write_all(&replaced)?;
+        }
+    } else if options.diff {
+        use crate::diff::create_udiff;
+
+        let mut handle = stdout().lock();
+
+        for ((source, mmap), replaced) in
+            sources.iter().zip(&mmaps).zip(replaced)
+        {
+            let path = match source {
+                Source::Stdin => None,
+                Source::File(path) => Some(path.as_path()),
+            };
+            // TODO: custom context radius
+            write!(handle, "{}", create_udiff(mmap, replaced, 3, path)?)?;
         }
     } else {
         // Windows requires closing mmap before writing:

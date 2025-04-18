@@ -33,6 +33,7 @@ memmap2 = "0.9.0"
 tempfile = "3.8.0"
 thiserror = "1.0.50"
 clap.workspace = true
+similar = { version = "2.3.0", features = ["inline", "bytes"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
