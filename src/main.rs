@@ -2,6 +2,7 @@
 mod cli;
 mod error;
 mod input;
+mod filters;
 
 pub(crate) mod replacer;
 mod unescape;
