@@ -93,7 +93,12 @@ fn try_main() -> Result<()> {
         for (source, replaced) in sources.iter().zip(replaced) {
             match source {
                 Source::File(path) => {
-                    if let Err(e) = write_with_temp(path, &replaced) {
+                    let result = if !options.in_place {
+                        write_with_temp(path, &replaced)
+                    } else {
+                        write_in_place(path, &replaced)
+                    };
+                    if let Err(e) = result {
                         failed_jobs.push((path.to_owned(), e));
                     }
                 }
@@ -129,6 +134,16 @@ fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
     }
 
     temp.persist(&path)?;
+
+    Ok(())
+}
+
+fn write_in_place(path: &PathBuf, data: &[u8]) -> Result<()> {
+    let path = fs::canonicalize(path)?;
+
+    let mut source = fs::OpenOptions::new().write(true).open(path)?;
+    source.write_all(&data)?;
+    source.set_len(data.len() as u64)?;
 
     Ok(())
 }
