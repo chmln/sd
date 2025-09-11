@@ -1,5 +1,4 @@
 #[cfg(test)]
-#[cfg(not(sd_cross_compile))] // Cross-compilation does not allow to spawn threads but `command.assert()` would do.
 mod cli {
     use anyhow::Result;
     use assert_cmd::{Command, cargo_bin};
