@@ -1,5 +1,5 @@
 mod sd {
-    include!("../../src/cli.rs");
+    include!("../../sd-cli/src/cli.rs");
 }
 use sd::Options;
 

@@ -607,12 +607,6 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 name = "sd"
 version = "1.0.0"
 dependencies = [
- "ansi-to-html",
- "anyhow",
- "assert_cmd",
- "clap",
- "clap_mangen",
- "console",
  "insta",
  "memmap2",
  "proptest",
@@ -621,6 +615,22 @@ dependencies = [
  "regex-automata",
  "tempfile",
  "thiserror",
+]
+
+[[package]]
+name = "sd-cli"
+version = "1.0.0"
+dependencies = [
+ "ansi-to-html",
+ "anyhow",
+ "assert_cmd",
+ "clap",
+ "clap_mangen",
+ "console",
+ "insta",
+ "regex",
+ "sd",
+ "tempfile",
 ]
 
 [[package]]

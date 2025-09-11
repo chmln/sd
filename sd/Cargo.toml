@@ -1,0 +1,25 @@
+[package]
+name = "sd"
+version.workspace = true
+edition.workspace = true
+authors = ["Gregory <gregory.mkv@gmail.com>", "Orión <oriongonza42@pm.me>"]
+description = "Core library for the sd find & replace tool"
+readme = "../README.md"
+keywords = ["sed", "find", "replace", "regex"]
+license = "MIT"
+homepage = "https://github.com/chmln/sd"
+repository = "https://github.com/chmln/sd.git"
+categories = ["command-line-utilities", "text-processing", "development-tools"]
+rust-version = "1.86.0"
+
+[dependencies]
+regex = "1.10.2"
+rayon = "1.8.0"
+memmap2 = "0.9.0"
+thiserror = "1.0.50"
+tempfile.workspace = true
+
+[dev-dependencies]
+proptest = "1.3.1"
+regex-automata = "0.4.3"
+insta = "1.34.0"

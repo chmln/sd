@@ -1,24 +1,24 @@
 [workspace]
+resolver = "3"
 members = [
-    ".",
+    "sd",
+    "sd-cli",
     "xtask",
 ]
 
-[workspace.dependencies.clap]
-version = "4.4.6"
-features = ["derive", "deprecated", "wrap_help"]
+[workspace.dependencies]
+tempfile = "3.8.0"
+clap = {version =  "4.4.6", features = ["derive", "wrap_help"]}
+
+
 
 [workspace.package]
 edition = "2024"
 version = "1.0.0"
-
-[package]
-name = "sd"
-version.workspace = true
-edition.workspace = true
-authors = ["Gregory <gregory.mkv@gmail.com>"]
+name = "sd-cli"
+authors = ["Gregory <gregory.mkv@gmail.com>", "Orión <oriongonza42@pm.me>"]
 description = "An intuitive find & replace CLI"
-readme = "README.md"
+readme = "../README.md"
 keywords = ["sed", "find", "replace", "regex"]
 license = "MIT"
 homepage = "https://github.com/chmln/sd"
@@ -26,23 +26,6 @@ repository = "https://github.com/chmln/sd.git"
 categories = ["command-line-utilities", "text-processing", "development-tools"]
 rust-version = "1.86.0"
 
-[dependencies]
-regex = "1.10.2"
-rayon = "1.8.0"
-memmap2 = "0.9.0"
-tempfile = "3.8.0"
-thiserror = "1.0.50"
-clap.workspace = true
-
-[dev-dependencies]
-assert_cmd = "2.1.1"
-anyhow = "1.0.75"
-clap_mangen = "0.2.14"
-proptest = "1.3.1"
-console = "0.15.7"
-insta = "1.34.0"
-ansi-to-html = "0.1.3"
-regex-automata = "0.4.3"
 
 [profile.release]
 opt-level = 3

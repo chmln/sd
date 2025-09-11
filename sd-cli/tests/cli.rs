@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod cli {
     use anyhow::Result;
-    use assert_cmd::{Command, cargo_bin};
+    use assert_cmd::Command;
     use std::{fs, io::prelude::*, path::Path};
 
     fn sd() -> Command {
-        Command::new(cargo_bin!(env!("CARGO_PKG_NAME")))
+        Command::cargo_bin("sd").expect("Error invoking sd")
     }
 
     fn assert_file(path: &std::path::Path, content: &str) {
@@ -295,6 +295,7 @@ mod cli {
             let path = test_home.join("write_only");
             let mut write_only_file = std::fs::OpenOptions::new()
                 .mode(0o333)
+                .create(true)
                 .truncate(true)
                 .write(true)
                 .open(&path)?;
