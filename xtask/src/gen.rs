@@ -59,7 +59,7 @@ fn gen_man(base_dir: &Path) {
         // (description, command, result), result can be empty
         (
             "String-literal mode",
-            "echo 'lots((([]))) of special chars' | sd -F '((([])))'",
+            "echo 'lots((([]))) of special chars' | sd -F '((([])))' ''",
             "lots of special chars",
         ),
         (
