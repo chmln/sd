@@ -7,6 +7,7 @@ use clap::Parser;
     version,
     about,
     max_term_width = 100,
+    styles = clap_cargo::style::CLAP_STYLING,
     help_template = "\
 {before-help}{name} v{version}
 {about-with-newline}
