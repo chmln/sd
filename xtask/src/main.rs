@@ -5,7 +5,7 @@ use std::{
 
 use clap::{Parser, Subcommand};
 
-mod gen;
+mod generate;
 
 #[derive(Parser)]
 struct Cli {
@@ -25,7 +25,7 @@ fn main() {
     env::set_current_dir(project_root()).unwrap();
 
     match command {
-        Commands::Gen => gen::gen(),
+        Commands::Gen => generate::generate(),
     }
 }
 
