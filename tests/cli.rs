@@ -2,11 +2,11 @@
 #[cfg(not(sd_cross_compile))] // Cross-compilation does not allow to spawn threads but `command.assert()` would do.
 mod cli {
     use anyhow::Result;
-    use assert_cmd::Command;
+    use assert_cmd::{Command, cargo_bin};
     use std::{fs, io::prelude::*, path::Path};
 
     fn sd() -> Command {
-        Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Error invoking sd")
+        Command::new(cargo_bin!(env!("CARGO_PKG_NAME")))
     }
 
     fn assert_file(path: &std::path::Path, content: &str) {
