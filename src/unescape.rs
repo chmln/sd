@@ -46,7 +46,7 @@ pub fn unescape(input: &str) -> String {
 /// This is for sequences such as `\x08` or `\u1234`
 fn escape_n_chars(chars: &mut Chars<'_>, length: usize) -> Option<char> {
     let s = chars.as_str().get(0..length)?;
-    let u = u32::from_str_radix(&s, 16).ok()?;
+    let u = u32::from_str_radix(s, 16).ok()?;
     let ch = char::from_u32(u)?;
     _ = chars.nth(length);
     Some(ch)

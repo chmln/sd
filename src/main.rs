@@ -45,7 +45,7 @@ fn try_main() -> Result<()> {
         .iter()
         .map(|source| {
             Ok(match source {
-                Source::File(path) => make_mmap(&path)?,
+                Source::File(path) => make_mmap(path)?,
                 Source::Stdin => make_mmap_stdin()?,
             })
         })
@@ -55,7 +55,7 @@ fn try_main() -> Result<()> {
         use rayon::prelude::*;
         mmaps
             .par_iter()
-            .map(|mmap| replacer.replace(&mmap))
+            .map(|mmap| replacer.replace(mmap))
             .collect()
     };
 

@@ -76,11 +76,11 @@ impl fmt::Display for InvalidReplaceCapture {
             };
 
             if let Some(prefix) = prefix {
-                formatted.push_str(&prefix.to_string());
+                formatted.push_str(prefix);
             }
             formatted.push(text);
             if let Some(suffix) = suffix {
-                formatted.push_str(&suffix.to_string());
+                formatted.push_str(suffix);
             }
 
             if byte_index < invalid_ident.start {
@@ -97,14 +97,13 @@ impl fmt::Display for InvalidReplaceCapture {
         // This relies on all non-curly-braced capture chars being 1 byte
         let arrows_span = arrows_start.end_offset(invalid_ident.len());
         let mut arrows = " ".repeat(arrows_span.start);
-        arrows.push_str(&format!("{}", "^".repeat(arrows_span.len())));
+        arrows.push_str(&"^".repeat(arrows_span.len()));
 
         let ident = invalid_ident.slice(original_replace);
         let (number, the_rest) = ident.split_at(*num_leading_digits);
         let disambiguous = format!("${{{number}}}{the_rest}");
         let error_message = format!(
-            "The numbered capture group `{}` in the replacement text is ambiguous.",
-            format!("${}", number).to_string()
+            "The numbered capture group `${number}` in the replacement text is ambiguous.",
         );
         let hint_message = format!(
             "{}: Use curly braces to disambiguate it `{}`.",
@@ -252,7 +251,7 @@ fn find_cap_ref(rep: &[u8], open_span: SpanOpen) -> Option<Capture<'_>> {
     }
 
     let mut cap_end = 0;
-    while rep.get(cap_end).copied().map_or(false, is_valid_cap_letter) {
+    while rep.get(cap_end).copied().is_some_and(is_valid_cap_letter) {
         cap_end += 1;
     }
     if cap_end == 0 {
@@ -274,10 +273,10 @@ fn find_cap_ref_braced(rep: &[u8], open_span: SpanOpen) -> Option<Capture<'_>> {
     assert_eq!(b'{', rep[0]);
     let mut cap_end = 1;
 
-    while rep.get(cap_end).map_or(false, |&b| b != b'}') {
+    while rep.get(cap_end).is_some_and(|&b| b != b'}') {
         cap_end += 1;
     }
-    if !rep.get(cap_end).map_or(false, |&b| b == b'}') {
+    if rep.get(cap_end).is_none_or(|&b| b != b'}') {
         return None;
     }
 
