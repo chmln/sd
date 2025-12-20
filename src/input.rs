@@ -1,11 +1,11 @@
 use memmap2::{Mmap, MmapOptions};
 use std::{
     fs::File,
-    io::{stdin, Read},
+    io::{Read, stdin},
     path::PathBuf,
 };
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum Source {
@@ -14,8 +14,17 @@ pub(crate) enum Source {
 }
 
 impl Source {
-    pub(crate) fn from_paths(paths: Vec<PathBuf>) -> Vec<Self> {
-        paths.into_iter().map(Self::File).collect()
+    pub(crate) fn from_paths(paths: Vec<PathBuf>) -> Result<Vec<Self>> {
+        paths
+            .into_iter()
+            .map(|path| {
+                if path.exists() {
+                    Ok(Source::File(path))
+                } else {
+                    Err(Error::InvalidPath(path.clone()))
+                }
+            })
+            .collect()
     }
 
     pub(crate) fn from_stdin() -> Vec<Self> {
@@ -33,8 +42,8 @@ impl Source {
 // TODO: memmap2 docs state that users should implement proper
 // procedures to avoid problems the `unsafe` keyword indicate.
 // This would be in a later PR.
-pub(crate) unsafe fn make_mmap(path: &PathBuf) -> Result<Mmap> {
-    Ok(Mmap::map(&File::open(path)?)?)
+pub(crate) fn make_mmap(path: &PathBuf) -> Result<Mmap> {
+    Ok(unsafe { Mmap::map(&File::open(path)?)? })
 }
 
 pub(crate) fn make_mmap_stdin() -> Result<Mmap> {
