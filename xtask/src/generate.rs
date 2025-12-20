@@ -6,10 +6,10 @@ use sd::Options;
 use std::{fs, path::Path};
 
 use clap::{CommandFactory, ValueEnum};
-use clap_complete::{generate_to, Shell};
-use roff::{bold, roman, Roff};
+use clap_complete::{Shell, generate_to};
+use roff::{Roff, bold, roman};
 
-pub fn gen() {
+pub fn generate() {
     let gen_dir = Path::new("gen");
     gen_shell(gen_dir);
     gen_man(gen_dir);
