@@ -33,5 +33,5 @@ fn try_main() -> Result<()> {
     };
 
     let mut handle = stdout().lock();
-    process_sources(&replacer, &sources, options.preview, options.line_by_line, &mut handle)
+    process_sources(&replacer, &sources, options.preview, !options.across, &mut handle)
 }

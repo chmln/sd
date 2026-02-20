@@ -23,8 +23,10 @@ Simpler syntax for replacing all occurrences:
   - sed: `sed s/before/after/g`
 
 Replace newlines with commas:
-  - sd: `sd '\n' ','`
+  - sd: `sd -A '\n' ','`
   - sed: `sed ':a;N;$!ba;s/\n/,/g'`
+
+  Note: this requires `-A` (across mode) since `\n` is a cross-line pattern.
 
 Extracting stuff out of strings containing slashes:
   - sd: `echo "sample with /path/" | sd '.*(/.*/)' '$1'`
@@ -174,6 +176,21 @@ $ echo "./hello foo" | sd "foo" -- "-w"
 ./hello -w
 $ echo "./hello --foo" | sd -- "--foo" "-w"
 ./hello -w
+```
+
+### Processing modes
+
+By default, sd processes input **line by line**. This means:
+- Low memory usage (only one line in memory at a time)
+- Streaming output for stdin (results appear before EOF)
+- `^` and `$` match the start/end of each line without phantom matches
+- `\s+$` trims trailing whitespace without eating newlines
+
+If you need patterns to match **across line boundaries** (e.g. replacing `\n` or matching multi-line patterns), use the `-A` / `--across` flag:
+
+```sh
+> echo -e "hello\nworld" | sd -A '\n' ','
+hello,world
 ```
 
 ### Escaping special characters

@@ -194,7 +194,7 @@ mod cli {
         file.write_all(b"foo\nfoo\nfoo")?;
         let path = file.into_temp_path();
 
-        sd().args(["-n", "1", "foo", "bar", path.to_str().unwrap()])
+        sd().args(["-A", "-n", "1", "foo", "bar", path.to_str().unwrap()])
             .assert()
             .success();
         assert_file(&path, "bar\nfoo\nfoo");
@@ -209,6 +209,7 @@ mod cli {
         let path = file.into_temp_path();
 
         sd().args([
+            "-A",
             "--preview",
             "-n",
             "1",
@@ -225,7 +226,7 @@ mod cli {
 
     #[test]
     fn limit_replacements_stdin() {
-        sd().args(["-n", "1", "foo", "bar"])
+        sd().args(["-A", "-n", "1", "foo", "bar"])
             .write_stdin("foo\nfoo\nfoo")
             .assert()
             .success()
@@ -234,7 +235,7 @@ mod cli {
 
     #[test]
     fn limit_replacements_stdin_preview() {
-        sd().args(["--preview", "-n", "1", "foo", "bar"])
+        sd().args(["-A", "--preview", "-n", "1", "foo", "bar"])
             .write_stdin("foo\nfoo\nfoo")
             .assert()
             .success()
@@ -315,7 +316,7 @@ mod cli {
 
     #[test]
     fn line_by_line_stdin() -> Result<()> {
-        sd().args(["-L", "foo", "bar"])
+        sd().args(["foo", "bar"])
             .write_stdin("foo\nbaz\nfoo\n")
             .assert()
             .success()
@@ -330,7 +331,7 @@ mod cli {
         file.write_all(b"foo\nbaz\nfoo\n")?;
         let path = file.into_temp_path();
 
-        sd().args(["-L", "foo", "bar", path.to_str().unwrap()])
+        sd().args(["foo", "bar", path.to_str().unwrap()])
             .assert()
             .success();
         assert_file(&path, "bar\nbaz\nbar\n");
@@ -340,7 +341,7 @@ mod cli {
 
     #[test]
     fn line_by_line_preserves_no_trailing_newline() -> Result<()> {
-        sd().args(["-L", "abc", "xyz"])
+        sd().args(["abc", "xyz"])
             .write_stdin("abc")
             .assert()
             .success()
@@ -351,7 +352,7 @@ mod cli {
 
     #[test]
     fn line_by_line_caret_no_phantom() -> Result<()> {
-        sd().args(["-L", "^", "p-"])
+        sd().args(["^", "p-"])
             .write_stdin("1\n2\n3\n")
             .assert()
             .success()
@@ -362,7 +363,7 @@ mod cli {
 
     #[test]
     fn line_by_line_whitespace_trim() -> Result<()> {
-        sd().args(["-L", r"\s+$", ""])
+        sd().args([r"\s+$", ""])
             .write_stdin("a \nb \n")
             .assert()
             .success()

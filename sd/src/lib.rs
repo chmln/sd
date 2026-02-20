@@ -112,13 +112,25 @@ fn process_sources_line_by_line(
             process_reader_line_by_line(replacer, reader, output_writer)?;
         }
     } else {
-        let mut failed_jobs = Vec::new();
+        // Pre-validate all files before modifying any, matching the
+        // mmap-based path which naturally validates by opening all files
+        // upfront.
         for source in sources {
             match source {
                 Source::File(path) => {
                     if !path.exists() {
                         return Err(Error::InvalidPath(path.to_owned()));
                     }
+                    std::fs::File::open(path)?;
+                }
+                _ => unreachable!("stdin should go previous branch"),
+            }
+        }
+
+        let mut failed_jobs = Vec::new();
+        for source in sources {
+            match source {
+                Source::File(path) => {
                     if let Err(e) = write_file_line_by_line(replacer, path) {
                         failed_jobs.push((path.to_owned(), e));
                     }

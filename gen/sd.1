@@ -8,7 +8,7 @@ sd
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH SYNOPSIS
-\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-L\fR|\fB\-\-line\-by\-line\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
+\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-A\fR|\fB\-\-across\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH DESCRIPTION
@@ -40,8 +40,8 @@ s \- make `.` match newlines
 
 w \- match full words only
 .TP
-\fB\-L\fR, \fB\-\-line\-by\-line\fR
-Process input line by line instead of reading the entire input at once. This reduces memory usage and enables streaming for stdin, but prevents patterns from matching across line boundaries
+\fB\-A\fR, \fB\-\-across\fR
+Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Print help (see a summary with \*(Aq\-h\*(Aq)

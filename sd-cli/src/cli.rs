@@ -57,11 +57,11 @@ w - match full words only
     */
     pub flags: Option<String>,
 
-    #[arg(short = 'L', long = "line-by-line")]
-    /// Process input line by line instead of reading the entire input at once.
-    /// This reduces memory usage and enables streaming for stdin, but prevents
-    /// patterns from matching across line boundaries.
-    pub line_by_line: bool,
+    #[arg(short = 'A', long = "across")]
+    /// Process each input as a whole rather than line by line. This allows
+    /// patterns to match across line boundaries but uses more memory and
+    /// prevents streaming.
+    pub across: bool,
 
     /// The regexp or string (if using `-F`) to search for.
     pub find: String,
