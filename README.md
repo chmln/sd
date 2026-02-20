@@ -80,6 +80,27 @@ hyperfine --warmup 3 --export-markdown out.md \
 
 Result: ~11.93 times faster
 
+**Line-by-line vs across mode** (1M lines, ~36MB file):
+
+| Command | Mean [ms] | Relative |
+|:---|---:|---:|
+| `sd -A 'foo' 'qux'` (across) | 125.6 ± 14.3 | 1.00 |
+| `sed s/foo/qux/g` | 316.4 ± 30.0 | 2.52 |
+| `sd 'foo' 'qux'` (line-by-line, default) | 357.0 ± 15.0 | 2.84 |
+
+| Command | Mean [ms] | Relative |
+|:---|---:|---:|
+| `sd -A '(\w+) world' '$1 earth'` (across) | 254.0 ± 11.2 | 1.00 |
+| `sd '(\w+) world' '$1 earth'` (line-by-line, default) | 566.7 ± 16.7 | 2.23 |
+| `sed -E 's/(\w+) world/\1 earth/g'` | 4432.7 ± 173.2 | 17.45 |
+
+Line-by-line mode is ~2-3x slower than across mode but still faster than sed for regex replacements. The tradeoff is dramatically lower memory usage:
+
+| Mode | Peak RSS |
+|:---|---:|
+| `sd -A` (across) | 74 MB |
+| `sd` (line-by-line, default) | 3 MB |
+
 ## Installation
 
 Install through
