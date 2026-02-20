@@ -57,6 +57,12 @@ w - match full words only
     */
     pub flags: Option<String>,
 
+    #[arg(short = 'L', long = "line-by-line")]
+    /// Process input line by line instead of reading the entire input at once.
+    /// This reduces memory usage and enables streaming for stdin, but prevents
+    /// patterns from matching across line boundaries.
+    pub line_by_line: bool,
+
     /// The regexp or string (if using `-F`) to search for.
     pub find: String,
 

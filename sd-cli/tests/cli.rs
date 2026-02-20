@@ -313,6 +313,64 @@ mod cli {
         Ok(())
     }
 
+    #[test]
+    fn line_by_line_stdin() -> Result<()> {
+        sd().args(["-L", "foo", "bar"])
+            .write_stdin("foo\nbaz\nfoo\n")
+            .assert()
+            .success()
+            .stdout("bar\nbaz\nbar\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn line_by_line_in_place() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"foo\nbaz\nfoo\n")?;
+        let path = file.into_temp_path();
+
+        sd().args(["-L", "foo", "bar", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path, "bar\nbaz\nbar\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn line_by_line_preserves_no_trailing_newline() -> Result<()> {
+        sd().args(["-L", "abc", "xyz"])
+            .write_stdin("abc")
+            .assert()
+            .success()
+            .stdout("xyz");
+
+        Ok(())
+    }
+
+    #[test]
+    fn line_by_line_caret_no_phantom() -> Result<()> {
+        sd().args(["-L", "^", "p-"])
+            .write_stdin("1\n2\n3\n")
+            .assert()
+            .success()
+            .stdout("p-1\np-2\np-3\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn line_by_line_whitespace_trim() -> Result<()> {
+        sd().args(["-L", r"\s+$", ""])
+            .write_stdin("a \nb \n")
+            .assert()
+            .success()
+            .stdout("a\nb\n");
+
+        Ok(())
+    }
+
     // Failing to create a temporary file in the same directory as the input is
     // one of the failure cases that is past the "point of no return" (after we
     // already start making replacements). This means that any files that could

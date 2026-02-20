@@ -1,7 +1,7 @@
 use memmap2::{Mmap, MmapOptions};
 use std::{
     fs::File,
-    io::{Read, stdin},
+    io::{BufRead, BufReader, Read, stdin},
     path::PathBuf,
 };
 
@@ -44,6 +44,19 @@ impl Source {
 // This would be in a later PR.
 pub fn make_mmap(path: &PathBuf) -> Result<Mmap> {
     Ok(unsafe { Mmap::map(&File::open(path)?)? })
+}
+
+pub fn open_source(source: &Source) -> Result<Box<dyn BufRead + '_>> {
+    match source {
+        Source::File(path) => {
+            let file = File::open(path)?;
+            Ok(Box::new(BufReader::new(file)))
+        }
+        Source::Stdin => {
+            let stdin = stdin().lock();
+            Ok(Box::new(BufReader::new(stdin)))
+        }
+    }
 }
 
 pub fn make_mmap_stdin() -> Result<Mmap> {
