@@ -15,7 +15,6 @@ clap = {version =  "4.4.6", features = ["derive", "wrap_help"]}
 [workspace.package]
 edition = "2024"
 version = "1.0.0"
-name = "sd-cli"
 authors = ["Gregory <gregory.mkv@gmail.com>", "Orión <oriongonza42@pm.me>"]
 description = "An intuitive find & replace CLI"
 readme = "../README.md"

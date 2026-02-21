@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod cli {
     use anyhow::Result;
-    use assert_cmd::Command;
+    use assert_cmd::{Command, cargo_bin};
     use std::{fs, io::prelude::*, path::Path};
 
     fn sd() -> Command {
-        Command::cargo_bin("sd").expect("Error invoking sd")
+        Command::new(cargo_bin!("sd"))
     }
 
     fn assert_file(path: &std::path::Path, content: &str) {

@@ -114,7 +114,6 @@ impl fmt::Display for InvalidReplaceCapture {
         let arrows_span = arrows_start.end_offset(invalid_ident.len());
         let mut arrows = " ".repeat(arrows_span.start);
         arrows.push_str(&"^".repeat(arrows_span.len()));
-        arrows.push_str(&"^".repeat(arrows_span.len()));
         write!(f, "{}", arrows)
     }
 }

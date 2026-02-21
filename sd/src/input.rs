@@ -1,4 +1,3 @@
-use memmap2::{Mmap, MmapOptions};
 use std::{
     fs::File,
     io::{BufRead, BufReader, Read, stdin},
@@ -39,13 +38,6 @@ impl Source {
     }
 }
 
-// TODO: memmap2 docs state that users should implement proper
-// procedures to avoid problems the `unsafe` keyword indicate.
-// This would be in a later PR.
-pub fn make_mmap(path: &PathBuf) -> Result<Mmap> {
-    Ok(unsafe { Mmap::map(&File::open(path)?)? })
-}
-
 pub fn open_source(source: &Source) -> Result<Box<dyn BufRead + '_>> {
     match source {
         Source::File(path) => {
@@ -59,12 +51,9 @@ pub fn open_source(source: &Source) -> Result<Box<dyn BufRead + '_>> {
     }
 }
 
-pub fn make_mmap_stdin() -> Result<Mmap> {
-    let mut handle = stdin().lock();
+pub fn read_source(source: &Source) -> Result<Vec<u8>> {
+    let mut handle = open_source(source)?;
     let mut buf = Vec::new();
     handle.read_to_end(&mut buf)?;
-    let mut mmap = MmapOptions::new().len(buf.len()).map_anon()?;
-    mmap.copy_from_slice(&buf);
-    let mmap = mmap.make_read_only()?;
-    Ok(mmap)
+    Ok(buf)
 }

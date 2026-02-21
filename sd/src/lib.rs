@@ -1,20 +1,16 @@
-#![feature(try_blocks)]
-
 mod error;
 mod input;
 pub mod replacer;
 mod unescape;
 
-use memmap2::MmapMut;
 use std::{
     fs,
-    io::{BufRead, BufWriter, Write},
-    ops::DerefMut,
+    io::{BufRead, BufWriter, Read, Write},
     path::PathBuf,
 };
 
 pub use self::error::{Error, FailedJobs, Result};
-pub use self::input::{Source, make_mmap, make_mmap_stdin, open_source};
+pub use self::input::{Source, open_source, read_source};
 pub use self::replacer::Replacer;
 
 /// Core processing function that handles file replacement
@@ -34,29 +30,29 @@ pub fn process_sources(
         );
     }
 
-    let mut mmaps = Vec::new();
+    let mut inputs = Vec::new();
     for source in sources.iter() {
-        let mmap = match source {
+        let input = match source {
             Source::File(path) => {
                 if path.exists() {
-                    unsafe { make_mmap(path)? }
+                    read_source(source)?
                 } else {
                     return Err(Error::InvalidPath(path.to_owned()));
                 }
             }
-            Source::Stdin => make_mmap_stdin()?,
+            Source::Stdin => read_source(source)?,
         };
 
-        mmaps.push(mmap);
+        inputs.push(input);
     }
 
     let needs_separator = sources.len() > 1;
 
     let replaced: Vec<_> = {
         use rayon::prelude::*;
-        mmaps
+        inputs
             .par_iter()
-            .map(|mmap| replacer.replace(mmap))
+            .map(|input| replacer.replace(input))
             .collect()
     };
 
@@ -68,14 +64,6 @@ pub fn process_sources(
             output_writer.write_all(&replaced)?;
         }
     } else {
-        // Windows requires closing mmap before writing:
-        // > The requested operation cannot be performed on a file with a user-mapped section open
-        #[cfg(target_family = "windows")]
-        let replaced: Vec<Vec<u8>> =
-            replaced.into_iter().map(|r| r.to_vec()).collect();
-        #[cfg(target_family = "windows")]
-        drop(mmaps);
-
         let mut failed_jobs = Vec::new();
         for (source, replaced) in sources.iter().zip(replaced) {
             match source {
@@ -113,8 +101,7 @@ fn process_sources_line_by_line(
         }
     } else {
         // Pre-validate all files before modifying any, matching the
-        // mmap-based path which naturally validates by opening all files
-        // upfront.
+        // whole-file processing path which opens all inputs upfront.
         for source in sources {
             match source {
                 Source::File(path) => {
@@ -151,26 +138,41 @@ fn process_reader_line_by_line(
     mut reader: Box<dyn BufRead + '_>,
     writer: &mut dyn Write,
 ) -> Result<()> {
-    let mut buf = Vec::new();
+    const CHUNK_SIZE: usize = 8192;
+
+    let mut chunk = vec![0u8; CHUNK_SIZE];
+    let mut line = Vec::with_capacity(256);
+
     loop {
-        buf.clear();
-        let bytes_read = reader.read_until(b'\n', &mut buf)?;
-        if bytes_read == 0 {
+        let n = reader.read(&mut chunk)?;
+        if n == 0 {
+            // Finish any remaining line
+            if !line.is_empty() {
+                let replaced = replacer.replace(&line);
+                writer.write_all(&replaced)?;
+            }
             break;
         }
 
-        let had_newline = buf.last() == Some(&b'\n');
-        if had_newline {
-            buf.pop();
+        let mut start = 0;
+        for (i, &byte) in chunk[..n].iter().enumerate() {
+            if byte == b'\n' {
+                // Found a complete line
+                line.extend_from_slice(&chunk[start..i]);
+                let replaced = replacer.replace(&line);
+                writer.write_all(&replaced)?;
+                writer.write_all(b"\n")?;
+                line.clear();
+                start = i + 1;
+            }
         }
 
-        let replaced = replacer.replace(&buf);
-        writer.write_all(&replaced)?;
-
-        if had_newline {
-            writer.write_all(b"\n")?;
+        // Keep partial line for next chunk
+        if start < n {
+            line.extend_from_slice(&chunk[start..n]);
         }
     }
+
     Ok(())
 }
 
@@ -184,9 +186,7 @@ fn write_file_line_by_line(replacer: &Replacer, path: &PathBuf) -> Result<()> {
     )?;
 
     if let Ok(metadata) = fs::metadata(&canonical) {
-        temp.as_file()
-            .set_permissions(metadata.permissions())
-            .ok();
+        temp.as_file().set_permissions(metadata.permissions()).ok();
     }
 
     {
@@ -205,7 +205,7 @@ fn write_file_line_by_line(replacer: &Replacer, path: &PathBuf) -> Result<()> {
 fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
     let path = fs::canonicalize(path)?;
 
-    let temp = tempfile::NamedTempFile::new_in(
+    let mut temp = tempfile::NamedTempFile::new_in(
         path.parent()
             .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
     )?;
@@ -217,9 +217,8 @@ fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
     }
 
     if !data.is_empty() {
-        let mut mmap_temp = unsafe { MmapMut::map_mut(file)? };
-        mmap_temp.deref_mut().write_all(data)?;
-        mmap_temp.flush_async()?;
+        temp.as_file_mut().write_all(data)?;
+        temp.as_file_mut().flush()?;
     }
 
     temp.persist(&path)?;
@@ -237,16 +236,17 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.txt");
         std::fs::write(&file_path, "abc123def").unwrap();
-        
-        let replacer = Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
+
+        let replacer =
+            Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
         let sources = vec![Source::File(file_path)];
         let mut output = Vec::new();
-        
+
         process_sources(&replacer, &sources, true, false, &mut output)?;
-        
+
         let result = String::from_utf8(output).unwrap();
         assert_eq!(result, "xyz123def");
-        
+
         Ok(())
     }
 
@@ -255,29 +255,32 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.txt");
         std::fs::write(&file_path, "abc123def").unwrap();
-        
-        let replacer = Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
+
+        let replacer =
+            Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
         let sources = vec![Source::File(file_path.clone())];
         let mut output = Vec::new();
-        
+
         process_sources(&replacer, &sources, false, false, &mut output)?;
-        
+
         let result = std::fs::read_to_string(&file_path).unwrap();
         assert_eq!(result, "xyz123def");
-        
+
         Ok(())
     }
 
     #[test]
     fn test_process_sources_nonexistent_file() {
-        let replacer = Replacer::new("abc".into(), "def".into(), false, None, 0).unwrap();
+        let replacer =
+            Replacer::new("abc".into(), "def".into(), false, None, 0).unwrap();
         let nonexistent = PathBuf::from("/nonexistent/file.txt");
         let sources = vec![Source::File(nonexistent.clone())];
         let mut output = Vec::new();
-        
-        let result = process_sources(&replacer, &sources, false, false, &mut output);
+
+        let result =
+            process_sources(&replacer, &sources, false, false, &mut output);
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
             Error::InvalidPath(path) => assert_eq!(path, nonexistent),
             _ => panic!("Expected InvalidPath error"),
@@ -305,7 +308,8 @@ mod tests {
         let file_path = temp_dir.path().join("test.txt");
         std::fs::write(&file_path, "abc123\ndef456\n").unwrap();
 
-        let replacer = Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
+        let replacer =
+            Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
         let sources = vec![Source::File(file_path)];
         let mut output = Vec::new();
 
@@ -323,7 +327,8 @@ mod tests {
         let file_path = temp_dir.path().join("test.txt");
         std::fs::write(&file_path, "abc123\ndef456\n").unwrap();
 
-        let replacer = Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
+        let replacer =
+            Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
         let sources = vec![Source::File(file_path.clone())];
         let mut output = Vec::new();
 
@@ -341,7 +346,8 @@ mod tests {
         let file_path = temp_dir.path().join("test.txt");
         std::fs::write(&file_path, "abc").unwrap();
 
-        let replacer = Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
+        let replacer =
+            Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
         let sources = vec![Source::File(file_path)];
         let mut output = Vec::new();
 
@@ -377,7 +383,8 @@ mod tests {
         let file_path = temp_dir.path().join("test.txt");
         std::fs::write(&file_path, "a \nb \n").unwrap();
 
-        let replacer = Replacer::new(r"\s+$".into(), "".into(), false, None, 0)?;
+        let replacer =
+            Replacer::new(r"\s+$".into(), "".into(), false, None, 0)?;
         let sources = vec![Source::File(file_path)];
         let mut output = Vec::new();
 

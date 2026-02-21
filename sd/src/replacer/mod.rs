@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{unescape, Result};
+use crate::{Result, unescape};
 
 use regex::bytes::Regex;
 
@@ -8,7 +8,7 @@ use regex::bytes::Regex;
 mod tests;
 mod validate;
 
-pub use validate::{validate_replace, InvalidReplaceCapture};
+pub use validate::{InvalidReplaceCapture, validate_replace};
 
 pub struct Replacer {
     regex: Regex,

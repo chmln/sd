@@ -15,7 +15,6 @@ rust-version = "1.86.0"
 [dependencies]
 regex = "1.10.2"
 rayon = "1.8.0"
-memmap2 = "0.9.0"
 thiserror = "1.0.50"
 tempfile.workspace = true
 
