@@ -31,6 +31,14 @@ jobs:
             target: x86_64-pc-windows-msvc
             use-cross: false
 
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            use-cross: false
+
+          - os: windows-latest
+            target: aarch64-pc-windows-gnullvm
+            use-cross: false
+
           - os: macos-latest
             target: x86_64-apple-darwin
             use-cross: false
