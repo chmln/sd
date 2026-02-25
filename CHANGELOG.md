@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Breaking
+
+- #328 Make line-by-line processing the default and add `--across` / `-A` (@Orion Gonzalez)
+  - `sd` now processes input line-by-line by default, reducing memory usage and
+    enabling streaming output for stdin
+  - The previous whole-file behavior is still available via `--across` / `-A`
+
+### Improvements
+
+- #313 Replace the unescape implementation with a more lenient one (@Orion Gonzalez)
+  - Avoids the previous all-or-nothing behavior when escape parsing partially fails
+- #326 Retain file ownership on atomic writes (@Gregory)
+  - Preserves original file uid/gid when replacing files through the atomic write path
+
+### Docs
+
+- #279 Update man page examples for the renamed string literal flag (@Philipp Gillé)
+- #281 Update README for string literal argument changes (@Evan Platzer)
+- #292 Fix capture group example in the man page (@John Careaga)
+- #299 Add `README_zh-CN.md` and follow-up note adjustments (@zhangyanming)
+- #320 Fix missing single quotes in a man page example (@Freimut Diener)
+
+### Pre-built Releases
+
+- (90bc67d) Add Windows ARM64 (`aarch64-pc-windows-msvc`) release targets (@Orion Gonzalez)
+- (c864c58) Add `aarch64-unknown-linux-gnu` target to CI and releases (@Orion Gonzalez)
+- #293 Bump `svenstaro/upload-release-action` from `2.7.0` to `2.9.0` (@dependabot[bot])
+
+### Internal
+
+- #265 Overall codebase reorganization (@Blair Noctis)
+  - Refactors application structure, error handling, and tests
+- `xtask` cleanup and test setup refactors (@Gregory, @Orion Gonzalez)
+- Dependency and tooling updates
+  - Bump `libc` from `0.2.149` to `0.2.155` (@Jingyun Hua)
+  - Upgrade `assert_cmd` and fix clippy warnings (@Gregory)
+
 ## [1.0.0] - 2023-11-07
 
 A quick note to any packages. The generated shell completions and man page are
@@ -187,4 +226,3 @@ To reflect this change, `--input` is also renamed to `--in-place`. This is the f
 ### Improvements
 
 - Files are now written to [atomically](https://github.com/chmln/sd/issues/3)
-

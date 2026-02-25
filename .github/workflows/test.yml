@@ -93,7 +93,7 @@ jobs:
           # For legal reasons, cross doesn't support Apple Silicon. See this:
           # https://github.com/cross-rs/cross-toolchains#darwin-targets
           # It builds and runs fine, but there's no easy way to test it in CI
-        if [ "${{ matrix.target }}" = "aarch64-apple-darwin" ]; then
+        if [ "${{ matrix.use-cross }}" = "true" ] || [ "${{ matrix.target }}" = "aarch64-apple-darwin" ] || [ "${{ matrix.target }}" = "aarch64-pc-windows-msvc" ]; then
           $CARGO build --target ${{ matrix.target }}
         else
           $CARGO test --target ${{ matrix.target }}
