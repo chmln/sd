@@ -78,7 +78,7 @@ release artifacts on the releases page.
   - Fixes several cross-compilation issues that effected different targets in CI
 - #182 `cargo update` (@CosmicHorrorDev)
   - Bumps dependencies to their latest compatible versions
-- #183 Switch `memmap` -> `memmap2` (@CosmicHorrorDev)
+- #183 Switch file-mapping crate implementation (@CosmicHorrorDev)
   - Switches away from an unmaintained crate
 - #184 Add editor config file matching rustfmt config (@CosmicHorrorDev)
   - Adds an `.editorconfig` file matching the settings listed in the
@@ -121,7 +121,7 @@ release artifacts on the releases page.
 
 ## [0.6.2]
 
-- Fixed pre-allocated memmap buffer size
+- Fixed pre-allocated file-mapping buffer size
 - Fixed failing tests
 
 ## [0.6.0] - 2019-06-15
@@ -187,5 +187,4 @@ To reflect this change, `--input` is also renamed to `--in-place`. This is the f
 ### Improvements
 
 - Files are now written to [atomically](https://github.com/chmln/sd/issues/3)
-
 

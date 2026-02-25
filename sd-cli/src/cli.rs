@@ -57,6 +57,12 @@ w - match full words only
     */
     pub flags: Option<String>,
 
+    #[arg(short = 'A', long = "across")]
+    /// Process each input as a whole rather than line by line. This allows
+    /// patterns to match across line boundaries but uses more memory and
+    /// prevents streaming.
+    pub across: bool,
+
     /// The regexp or string (if using `-F`) to search for.
     pub find: String,
 

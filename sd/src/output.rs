@@ -1,11 +1,10 @@
 use crate::{Error, Result};
-use memmap2::MmapMut;
-use std::{fs, io::Write, ops::DerefMut, path::Path};
+use std::{fs, io::Write, path::Path};
 
 pub(crate) fn write_atomic(path: &Path, data: &[u8]) -> Result<()> {
     let path = fs::canonicalize(path)?;
 
-    let temp = tempfile::NamedTempFile::new_in(
+    let mut temp = tempfile::NamedTempFile::new_in(
         path.parent()
             .ok_or_else(|| Error::InvalidPath(path.to_path_buf()))?,
     )?;
@@ -26,9 +25,8 @@ pub(crate) fn write_atomic(path: &Path, data: &[u8]) -> Result<()> {
     }
 
     if !data.is_empty() {
-        let mut mmap_temp = unsafe { MmapMut::map_mut(file)? };
-        mmap_temp.deref_mut().write_all(data)?;
-        mmap_temp.flush_async()?;
+        temp.as_file_mut().write_all(data)?;
+        temp.as_file_mut().flush()?;
     }
 
     temp.persist(&path)?;

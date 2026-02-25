@@ -29,6 +29,8 @@ Register-ArgumentCompleter -Native -CommandName 'sd' -ScriptBlock {
             [CompletionResult]::new('--preview', 'preview', [CompletionResultType]::ParameterName, 'Display changes in a human reviewable format (the specifics of the format are likely to change in the future)')
             [CompletionResult]::new('-F', 'F ', [CompletionResultType]::ParameterName, 'Treat FIND and REPLACE_WITH args as literal strings')
             [CompletionResult]::new('--fixed-strings', 'fixed-strings', [CompletionResultType]::ParameterName, 'Treat FIND and REPLACE_WITH args as literal strings')
+            [CompletionResult]::new('-A', 'A ', [CompletionResultType]::ParameterName, 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming')
+            [CompletionResult]::new('--across', 'across', [CompletionResultType]::ParameterName, 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('-V', 'V ', [CompletionResultType]::ParameterName, 'Print version')

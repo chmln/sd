@@ -23,8 +23,10 @@ Simpler syntax for replacing all occurrences:
   - sed: `sed s/before/after/g`
 
 Replace newlines with commas:
-  - sd: `sd '\n' ','`
+  - sd: `sd -A '\n' ','`
   - sed: `sed ':a;N;$!ba;s/\n/,/g'`
+
+  Note: this requires `-A` (across mode) since `\n` is a cross-line pattern.
 
 Extracting stuff out of strings containing slashes:
   - sd: `echo "sample with /path/" | sd '.*(/.*/)' '$1'`
@@ -77,6 +79,27 @@ hyperfine --warmup 3 --export-markdown out.md \
 | `sd     "(\w+)" "$1$1"      dump.json > /dev/null` | **0.942 ± 0.004** | 0.936…0.951 |
 
 Result: ~11.93 times faster
+
+**Line-by-line vs across mode** (1M lines, ~36MB file):
+
+| Command | Mean [ms] | Relative |
+|:---|---:|---:|
+| `sd -A 'foo' 'qux'` (across) | 125.6 ± 14.3 | 1.00 |
+| `sed s/foo/qux/g` | 316.4 ± 30.0 | 2.52 |
+| `sd 'foo' 'qux'` (line-by-line, default) | 357.0 ± 15.0 | 2.84 |
+
+| Command | Mean [ms] | Relative |
+|:---|---:|---:|
+| `sd -A '(\w+) world' '$1 earth'` (across) | 254.0 ± 11.2 | 1.00 |
+| `sd '(\w+) world' '$1 earth'` (line-by-line, default) | 566.7 ± 16.7 | 2.23 |
+| `sed -E 's/(\w+) world/\1 earth/g'` | 4432.7 ± 173.2 | 17.45 |
+
+Line-by-line mode is ~2-3x slower than across mode but still faster than sed for regex replacements. The tradeoff is dramatically lower memory usage:
+
+| Mode | Peak RSS |
+|:---|---:|
+| `sd -A` (across) | 74 MB |
+| `sd` (line-by-line, default) | 3 MB |
 
 ## Installation
 
@@ -174,6 +197,21 @@ $ echo "./hello foo" | sd "foo" -- "-w"
 ./hello -w
 $ echo "./hello --foo" | sd -- "--foo" "-w"
 ./hello -w
+```
+
+### Processing modes
+
+By default, sd processes input **line by line**. This means:
+- Low memory usage (only one line in memory at a time)
+- Streaming output for stdin (results appear before EOF)
+- `^` and `$` match the start/end of each line without phantom matches
+- `\s+$` trims trailing whitespace without eating newlines
+
+If you need patterns to match **across line boundaries** (e.g. replacing `\n` or matching multi-line patterns), use the `-A` / `--across` flag:
+
+```sh
+> echo -e "hello\nworld" | sd -A '\n' ','
+hello,world
 ```
 
 ### Escaping special characters

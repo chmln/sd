@@ -26,6 +26,8 @@ set edit:completion:arg-completer[sd] = {|@words|
             cand --preview 'Display changes in a human reviewable format (the specifics of the format are likely to change in the future)'
             cand -F 'Treat FIND and REPLACE_WITH args as literal strings'
             cand --fixed-strings 'Treat FIND and REPLACE_WITH args as literal strings'
+            cand -A 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming'
+            cand --across 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming'
             cand -h 'Print help (see more with ''--help'')'
             cand --help 'Print help (see more with ''--help'')'
             cand -V 'Print version'

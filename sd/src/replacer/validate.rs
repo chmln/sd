@@ -94,25 +94,26 @@ impl fmt::Display for InvalidReplaceCapture {
             }
         }
 
+        let ident = invalid_ident.slice(original_replace);
+        let (number, the_rest) = ident.split_at(*num_leading_digits);
+
+        writeln!(
+            f,
+            "The numbered capture group `${number}` in the replacement text is ambiguous."
+        )?;
+
+        let disambiguous = format!("${{{number}}}{the_rest}");
+        writeln!(
+            f,
+            "hint: Use curly braces to disambiguate it `{disambiguous}`."
+        )?;
+
+        writeln!(f, "{}", formatted)?;
+
         // This relies on all non-curly-braced capture chars being 1 byte
         let arrows_span = arrows_start.end_offset(invalid_ident.len());
         let mut arrows = " ".repeat(arrows_span.start);
         arrows.push_str(&"^".repeat(arrows_span.len()));
-
-        let ident = invalid_ident.slice(original_replace);
-        let (number, the_rest) = ident.split_at(*num_leading_digits);
-        let disambiguous = format!("${{{number}}}{the_rest}");
-        let error_message = format!(
-            "The numbered capture group `${number}` in the replacement text is ambiguous.",
-        );
-        let hint_message = format!(
-            "{}: Use curly braces to disambiguate it `{}`.",
-            "hint", disambiguous
-        );
-
-        writeln!(f, "{}", error_message)?;
-        writeln!(f, "{}", hint_message)?;
-        writeln!(f, "{}", formatted)?;
         write!(f, "{}", arrows)
     }
 }

@@ -19,7 +19,7 @@ _sd() {
 
     case "${cmd}" in
         sd)
-            opts="-p -F -n -f -h -V --preview --fixed-strings --max-replacements --flags --help --version <FIND> <REPLACE_WITH> [FILES]..."
+            opts="-p -F -n -f -A -h -V --preview --fixed-strings --max-replacements --flags --across --help --version <FIND> <REPLACE_WITH> [FILES]..."
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

@@ -23,6 +23,8 @@ _sd() {
 '--preview[Display changes in a human reviewable format (the specifics of the format are likely to change in the future)]' \
 '-F[Treat FIND and REPLACE_WITH args as literal strings]' \
 '--fixed-strings[Treat FIND and REPLACE_WITH args as literal strings]' \
+'-A[Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming]' \
+'--across[Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
 '-V[Print version]' \

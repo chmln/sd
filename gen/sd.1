@@ -8,7 +8,7 @@ sd
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH SYNOPSIS
-\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
+\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-A\fR|\fB\-\-across\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH DESCRIPTION
@@ -39,6 +39,9 @@ m \- multi\-line matching
 s \- make `.` match newlines
 
 w \- match full words only
+.TP
+\fB\-A\fR, \fB\-\-across\fR
+Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Print help (see a summary with \*(Aq\-h\*(Aq)
@@ -82,7 +85,7 @@ lorem ipsum 23
 Indexed capture groups
 \fB$ echo \*(Aqcargo +nightly watch\*(Aq | sd \*(Aq(\\w+)\\s+\\+(\\w+)\\s+(\\w+)\*(Aq \*(Aqcmd: $1, channel: $2, subcmd: $3\*(Aq\fR
 .br
-123 dollars and 45 cents
+cmd: cargo, channel: nightly, subcmd: watch
 .TP
 Find & replace in file
 \fB$ sd \*(Aqwindow.fetch\*(Aq \*(Aqfetch\*(Aq http.js\fR
