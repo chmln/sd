@@ -14,6 +14,12 @@ Why use it over any existing tools?
 
 *Smart, common-sense defaults.* &nbsp; Defaults follow common sense and are tailored for typical daily use.
 
+## Demo
+
+<p align="center">
+  <img src="media/demo.gif" alt="sd demo — replacing strings in a config file with simple syntax" width="600">
+</p>
+
 ## Comparison to sed
 
 While sed does a whole lot more, sd focuses on doing just one thing and doing it well. Here are some cherry-picked examples where sd shines.
