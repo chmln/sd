@@ -67,7 +67,8 @@ w - match full words only
     pub find: String,
 
     /// What to replace each match with. Unless in string mode, you may
-    /// use captured values like $1, $2, etc.
+    /// use captured values like $1, $2, etc. Use $$ to get a literal
+    /// dollar sign.
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.

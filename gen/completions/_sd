@@ -30,7 +30,7 @@ _sd() {
 '-V[Print version]' \
 '--version[Print version]' \
 ':find -- The regexp or string (if using `-F`) to search for:' \
-':replace_with -- What to replace each match with. Unless in string mode, you may use captured values like $1, $2, etc:' \
+':replace_with -- What to replace each match with. Unless in string mode, you may use captured values like $1, $2, etc. Use $$ to get a literal dollar sign:' \
 '*::files -- The path to file(s). This is optional - sd can also read from STDIN:_files' \
 && ret=0
 }
