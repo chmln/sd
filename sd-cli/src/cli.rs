@@ -68,6 +68,8 @@ w - match full words only
 
     /// What to replace each match with. Unless in string mode, you may
     /// use captured values like $1, $2, etc.
+    ///
+    /// To insert a literal $, use $$.
     pub replace_with: String,
 
     /// The path to file(s). This is optional - sd can also read from STDIN.
