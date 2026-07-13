@@ -121,6 +121,18 @@ fn unescape_regex_replacements() {
 }
 
 #[test]
+fn unescape_regex_replacements_before_capture() {
+    Replace {
+        look_for: r#"address: (.*?),.*name: "(.*?)""#,
+        replace_with: r"$1\x00$2",
+        src: r#"address: 2c-76-00-c3-99-2a, not connected, name: "KeithPods Pro""#,
+        expected: "2c-76-00-c3-99-2a\0KeithPods Pro",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
 fn no_unescape_literal_replacements() {
     Replace {
         look_for: "test",

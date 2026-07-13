@@ -48,13 +48,20 @@ fn escape_n_chars(chars: &mut Chars<'_>, length: usize) -> Option<char> {
     let s = chars.as_str().get(0..length)?;
     let u = u32::from_str_radix(s, 16).ok()?;
     let ch = char::from_u32(u)?;
-    _ = chars.nth(length);
+    for _ in 0..length {
+        _ = chars.next();
+    }
     Some(ch)
 }
 
 #[cfg(test)]
 mod test {
     use std::fmt::Write as _;
+
+    #[test]
+    fn escape_sequence_preserves_following_char() {
+        assert_eq!(super::unescape(r"\x00$2"), "\0$2");
+    }
 
     #[test]
     fn test_unescape() {
