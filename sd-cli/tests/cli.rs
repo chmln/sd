@@ -172,6 +172,81 @@ mod cli {
         "###);
     }
 
+    fn undefined_replace_helper(find: &str, replace: &str) -> String {
+        let err = sd().args([find, replace]).write_stdin("stdin").unwrap_err();
+        String::from_utf8(err.as_output().unwrap().stderr.clone()).unwrap()
+    }
+
+    #[test]
+    fn undefined_capture_shell_variable() {
+        let plain_stderr =
+            undefined_replace_helper("rm -f", r#"rm_temp "$path""#);
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The capture group `$path` in the replacement text does not exist in the pattern.
+        hint: The pattern has no named capture groups. If you meant a literal `$` (a shell variable, for instance), write `$$path`, or use -F to treat both args as literal strings.
+        rm_temp "$path"
+                  ^^^^
+        "###);
+    }
+
+    #[test]
+    fn undefined_capture_out_of_range_number() {
+        let plain_stderr = undefined_replace_helper("(a)(b)", "$5");
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The capture group `$5` in the replacement text does not exist in the pattern.
+        hint: The pattern has 2 capture group(s), so only $0 to $2 are valid.
+        $5
+         ^
+        "###);
+    }
+
+    #[test]
+    fn undefined_capture_suggests_available_names() {
+        let plain_stderr = undefined_replace_helper("(?<verb>a)", "$vrb!");
+        insta::assert_snapshot!(plain_stderr, @r###"
+        error: The capture group `$vrb` in the replacement text does not exist in the pattern.
+        hint: Available named groups: `$verb`. For a literal `$`, write `$$vrb`.
+        $vrb!
+         ^^^
+        "###);
+    }
+
+    #[test]
+    fn undefined_capture_leaves_file_untouched() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"rm -f keep_me")?;
+
+        sd().args([
+            "rm -f",
+            "rm_temp \"$path\"",
+            file.path().to_str().unwrap(),
+        ])
+        .assert()
+        .failure();
+
+        assert_file(file.path(), "rm -f keep_me");
+
+        Ok(())
+    }
+
+    #[test]
+    fn defined_captures_still_work() {
+        sd().args(["(a)(b)", "$2$1"])
+            .write_stdin("ab")
+            .assert()
+            .success()
+            .stdout("ba");
+    }
+
+    #[test]
+    fn escaped_dollar_is_not_a_capture() {
+        sd().args(["a", "$$path"])
+            .write_stdin("a")
+            .assert()
+            .success()
+            .stdout("$path");
+    }
+
     // NOTE: styled terminal output is platform dependent, so convert to a
     // common format, in this case HTML, to check
     #[ignore = "TODO: wait for proper colorization"]
@@ -425,10 +500,9 @@ mod cli {
             assert_eq!(fs::read_to_string(&unwritable_dir_file1)?, ORIG_TEXT);
             assert_eq!(fs::read_to_string(&unwritable_dir_file2)?, ORIG_TEXT);
 
-            let stderr_orig = std::str::from_utf8(
-                &failed_command.get_output().stderr,
-            )
-            .unwrap();
+            let stderr_orig =
+                std::str::from_utf8(&failed_command.get_output().stderr)
+                    .unwrap();
             // Normalize unstable path bits
             let stderr_partial_norm = stderr_orig
                 .replace(test_home.to_str().unwrap(), "<test_home>")

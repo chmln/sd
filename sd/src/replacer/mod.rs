@@ -25,15 +25,33 @@ impl Replacer {
         flags: Option<String>,
         replacements: usize,
     ) -> Result<Self> {
-        let (look_for, replace_with) = if is_literal {
-            (regex::escape(&look_for), replace_with.into_bytes())
+        let look_for = if is_literal {
+            regex::escape(&look_for)
         } else {
-            validate_replace(&replace_with)?;
-
-            (look_for, unescape::unescape(&replace_with).into_bytes())
+            look_for
         };
 
-        let mut regex = regex::bytes::RegexBuilder::new(&look_for);
+        let regex = Self::build_regex(&look_for, flags)?;
+
+        // Validated against the built regex, so a reference to a group that
+        // does not exist is an error rather than an empty expansion.
+        let replace_with = if is_literal {
+            replace_with.into_bytes()
+        } else {
+            validate_replace(&replace_with, &regex)?;
+            unescape::unescape(&replace_with).into_bytes()
+        };
+
+        Ok(Self {
+            regex,
+            replace_with,
+            is_literal,
+            replacements,
+        })
+    }
+
+    fn build_regex(look_for: &str, flags: Option<String>) -> Result<Regex> {
+        let mut regex = regex::bytes::RegexBuilder::new(look_for);
         regex.multi_line(true);
 
         if let Some(flags) = flags {
@@ -61,12 +79,7 @@ impl Replacer {
             });
         };
 
-        Ok(Self {
-            regex: regex.build()?,
-            replace_with,
-            is_literal,
-            replacements,
-        })
+        Ok(regex.build()?)
     }
 
     pub fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
