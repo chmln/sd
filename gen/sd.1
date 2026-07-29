@@ -8,7 +8,7 @@ sd
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH SYNOPSIS
-\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-A\fR|\fB\-\-across\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
+\fBsd\fR [\fB\-p\fR|\fB\-\-preview\fR] [\fB\-F\fR|\fB\-\-fixed\-strings\fR] [\fB\-n\fR|\fB\-\-max\-replacements\fR] [\fB\-f\fR|\fB\-\-flags\fR] [\fB\-A\fR|\fB\-\-across\fR] [\fB\-m\fR|\fB\-\-must\-match\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIFIND\fR> <\fIREPLACE_WITH\fR> [\fIFILES\fR] 
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
 .SH DESCRIPTION
@@ -43,6 +43,9 @@ w \- match full words only
 \fB\-A\fR, \fB\-\-across\fR
 Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming
 .TP
+\fB\-m\fR, \fB\-\-must\-match\fR
+Exit with a non\-zero status if the pattern matched no input. Without this flag sd exits 0 whether or not anything was replaced, which matches sed. Inputs that did match are still replaced either way
+.TP
 \fB\-h\fR, \fB\-\-help\fR
 Print help (see a summary with \*(Aq\-h\*(Aq)
 .TP
@@ -66,6 +69,8 @@ Note: sd modifies files in\-place by default. See documentation for examples.
 Successful program execution.
 .IP 1
 Unsuccessful program execution.
+.IP 2
+The pattern matched no input, and \-\-must\-match was given.
 .IP 101
 The program panicked.
 .ie \n(.g .ds Aq \(aq

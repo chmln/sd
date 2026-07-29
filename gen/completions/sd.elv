@@ -28,6 +28,8 @@ set edit:completion:arg-completer[sd] = {|@words|
             cand --fixed-strings 'Treat FIND and REPLACE_WITH args as literal strings'
             cand -A 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming'
             cand --across 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming'
+            cand -m 'Exit with a non-zero status if the pattern matched no input. Without this flag sd exits 0 whether or not anything was replaced, which matches sed. Inputs that did match are still replaced either way'
+            cand --must-match 'Exit with a non-zero status if the pattern matched no input. Without this flag sd exits 0 whether or not anything was replaced, which matches sed. Inputs that did match are still replaced either way'
             cand -h 'Print help (see more with ''--help'')'
             cand --help 'Print help (see more with ''--help'')'
             cand -V 'Print version'

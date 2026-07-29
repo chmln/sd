@@ -45,6 +45,10 @@ fn gen_man(base_dir: &Path) {
     let statuses = [
         ("0", "Successful program execution."),
         ("1", "Unsuccessful program execution."),
+        (
+            "2",
+            "The pattern matched no input, and --must-match was given.",
+        ),
         ("101", "The program panicked."),
     ];
     let mut sect = Roff::new();

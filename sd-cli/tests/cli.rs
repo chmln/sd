@@ -340,6 +340,150 @@ mod cli {
         Ok(())
     }
 
+    /// Exit status used by `--must-match` when nothing matched.
+    const NO_MATCH: i32 = 2;
+
+    #[test]
+    fn no_match_succeeds_by_default() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"abc\n")?;
+        let path = file.into_temp_path();
+
+        sd().args(["nowhere", "here", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path, "abc\n");
+
+        sd().args(["nowhere", "here"])
+            .write_stdin("abc\n")
+            .assert()
+            .success()
+            .stdout("abc\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn must_match_fails_when_nothing_matched() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"abc\n")?;
+        let path = file.into_temp_path();
+
+        sd().args(["-m", "nowhere", "here", path.to_str().unwrap()])
+            .assert()
+            .code(NO_MATCH);
+        // The exit status reports the outcome, it does not roll anything back,
+        // and with no match there was nothing to write anyway.
+        assert_file(&path, "abc\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn must_match_succeeds_when_something_matched() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"abc\n")?;
+        let path = file.into_temp_path();
+
+        sd().args(["--must-match", "abc", "xyz", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path, "xyz\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn must_match_stdin() {
+        sd().args(["-m", "foo", "bar"])
+            .write_stdin("foo\n")
+            .assert()
+            .success()
+            .stdout("bar\n");
+
+        sd().args(["-m", "foo", "bar"])
+            .write_stdin("baz\n")
+            .assert()
+            .code(NO_MATCH)
+            .stdout("baz\n");
+    }
+
+    #[test]
+    fn must_match_preview() {
+        sd().args(["-m", "-p", "foo", "bar"])
+            .write_stdin("baz\n")
+            .assert()
+            .code(NO_MATCH);
+    }
+
+    #[test]
+    fn must_match_across() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"a\nb\n")?;
+        let path = file.into_temp_path();
+
+        sd().args(["-m", "-A", r"a\nb", "X", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path, "X\n");
+
+        sd().args(["-m", "-A", "nowhere", "X", path.to_str().unwrap()])
+            .assert()
+            .code(NO_MATCH);
+
+        Ok(())
+    }
+
+    /// The status describes the run as a whole, so one matching input is enough.
+    #[test]
+    fn must_match_is_satisfied_by_any_input() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let hit = dir.path().join("hit.txt");
+        let miss = dir.path().join("miss.txt");
+        fs::write(&hit, "abc\n")?;
+        fs::write(&miss, "xyz\n")?;
+
+        sd().args([
+            "-m",
+            "abc",
+            "def",
+            hit.to_str().unwrap(),
+            miss.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+        assert_file(&hit, "def\n");
+        assert_file(&miss, "xyz\n");
+
+        fs::write(&hit, "xyz\n")?;
+        sd().args([
+            "-m",
+            "abc",
+            "def",
+            hit.to_str().unwrap(),
+            miss.to_str().unwrap(),
+        ])
+        .assert()
+        .code(NO_MATCH);
+
+        Ok(())
+    }
+
+    /// Errors keep their own status, so a script can tell "found nothing" apart
+    /// from "could not run".
+    #[test]
+    fn must_match_does_not_mask_errors() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let missing = dir.path().join("missing.txt");
+
+        sd().args(["-m", "abc", "def", missing.to_str().unwrap()])
+            .assert()
+            .failure()
+            .code(1);
+
+        Ok(())
+    }
+
     #[cfg(unix)]
     mod unix_only {
         use super::*;
@@ -425,10 +569,9 @@ mod cli {
             assert_eq!(fs::read_to_string(&unwritable_dir_file1)?, ORIG_TEXT);
             assert_eq!(fs::read_to_string(&unwritable_dir_file2)?, ORIG_TEXT);
 
-            let stderr_orig = std::str::from_utf8(
-                &failed_command.get_output().stderr,
-            )
-            .unwrap();
+            let stderr_orig =
+                std::str::from_utf8(&failed_command.get_output().stderr)
+                    .unwrap();
             // Normalize unstable path bits
             let stderr_partial_norm = stderr_orig
                 .replace(test_home.to_str().unwrap(), "<test_home>")

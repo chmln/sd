@@ -31,6 +31,8 @@ Register-ArgumentCompleter -Native -CommandName 'sd' -ScriptBlock {
             [CompletionResult]::new('--fixed-strings', 'fixed-strings', [CompletionResultType]::ParameterName, 'Treat FIND and REPLACE_WITH args as literal strings')
             [CompletionResult]::new('-A', 'A ', [CompletionResultType]::ParameterName, 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming')
             [CompletionResult]::new('--across', 'across', [CompletionResultType]::ParameterName, 'Process each input as a whole rather than line by line. This allows patterns to match across line boundaries but uses more memory and prevents streaming')
+            [CompletionResult]::new('-m', 'm', [CompletionResultType]::ParameterName, 'Exit with a non-zero status if the pattern matched no input. Without this flag sd exits 0 whether or not anything was replaced, which matches sed. Inputs that did match are still replaced either way')
+            [CompletionResult]::new('--must-match', 'must-match', [CompletionResultType]::ParameterName, 'Exit with a non-zero status if the pattern matched no input. Without this flag sd exits 0 whether or not anything was replaced, which matches sed. Inputs that did match are still replaced either way')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('-V', 'V ', [CompletionResultType]::ParameterName, 'Print version')

@@ -4,6 +4,7 @@ pub mod replacer;
 mod unescape;
 
 use std::{
+    borrow::Cow,
     fs,
     io::{BufRead, BufWriter, Read, Write},
     path::PathBuf,
@@ -14,13 +15,17 @@ pub use self::input::{Source, open_source, read_source};
 pub use self::replacer::Replacer;
 
 /// Core processing function that handles file replacement
+///
+/// Returns whether the pattern matched any of the inputs, so that callers can
+/// implement `--must-match`. Reporting it rather than acting on it keeps the
+/// exit-status policy in the CLI.
 pub fn process_sources(
     replacer: &Replacer,
     sources: &[Source],
     preview: bool,
     line_by_line: bool,
     output_writer: &mut dyn Write,
-) -> Result<()> {
+) -> Result<bool> {
     if line_by_line {
         return process_sources_line_by_line(
             replacer,
@@ -56,6 +61,10 @@ pub fn process_sources(
             .collect()
     };
 
+    // `replace` only allocates when the pattern matched, so the `Cow` variant
+    // already tells us whether anything changed.
+    let matched = replaced.iter().any(|r| matches!(r, Cow::Owned(_)));
+
     if preview || sources.first() == Some(&Source::Stdin) {
         for (source, replaced) in sources.iter().zip(replaced) {
             if needs_separator {
@@ -80,7 +89,7 @@ pub fn process_sources(
         }
     }
 
-    Ok(())
+    Ok(matched)
 }
 
 fn process_sources_line_by_line(
@@ -88,8 +97,9 @@ fn process_sources_line_by_line(
     sources: &[Source],
     preview: bool,
     output_writer: &mut dyn Write,
-) -> Result<()> {
+) -> Result<bool> {
     let needs_separator = sources.len() > 1;
+    let mut matched = false;
 
     if preview || sources.first() == Some(&Source::Stdin) {
         for source in sources {
@@ -97,7 +107,8 @@ fn process_sources_line_by_line(
                 writeln!(output_writer, "----- {} -----", source.display())?;
             }
             let reader = open_source(source)?;
-            process_reader_line_by_line(replacer, reader, output_writer)?;
+            matched |=
+                process_reader_line_by_line(replacer, reader, output_writer)?;
         }
     } else {
         // Pre-validate all files before modifying any, matching the
@@ -118,8 +129,9 @@ fn process_sources_line_by_line(
         for source in sources {
             match source {
                 Source::File(path) => {
-                    if let Err(e) = write_file_line_by_line(replacer, path) {
-                        failed_jobs.push((path.to_owned(), e));
+                    match write_file_line_by_line(replacer, path) {
+                        Ok(file_matched) => matched |= file_matched,
+                        Err(e) => failed_jobs.push((path.to_owned(), e)),
                     }
                 }
                 _ => unreachable!("stdin should go previous branch"),
@@ -130,18 +142,19 @@ fn process_sources_line_by_line(
         }
     }
 
-    Ok(())
+    Ok(matched)
 }
 
 fn process_reader_line_by_line(
     replacer: &Replacer,
     mut reader: Box<dyn BufRead + '_>,
     writer: &mut dyn Write,
-) -> Result<()> {
+) -> Result<bool> {
     const CHUNK_SIZE: usize = 8192;
 
     let mut chunk = vec![0u8; CHUNK_SIZE];
     let mut line = Vec::with_capacity(256);
+    let mut matched = false;
 
     loop {
         let n = reader.read(&mut chunk)?;
@@ -149,6 +162,7 @@ fn process_reader_line_by_line(
             // Finish any remaining line
             if !line.is_empty() {
                 let replaced = replacer.replace(&line);
+                matched |= matches!(replaced, Cow::Owned(_));
                 writer.write_all(&replaced)?;
             }
             break;
@@ -160,6 +174,7 @@ fn process_reader_line_by_line(
                 // Found a complete line
                 line.extend_from_slice(&chunk[start..i]);
                 let replaced = replacer.replace(&line);
+                matched |= matches!(replaced, Cow::Owned(_));
                 writer.write_all(&replaced)?;
                 writer.write_all(b"\n")?;
                 line.clear();
@@ -173,10 +188,13 @@ fn process_reader_line_by_line(
         }
     }
 
-    Ok(())
+    Ok(matched)
 }
 
-fn write_file_line_by_line(replacer: &Replacer, path: &PathBuf) -> Result<()> {
+fn write_file_line_by_line(
+    replacer: &Replacer,
+    path: &PathBuf,
+) -> Result<bool> {
     let canonical = fs::canonicalize(path)?;
 
     let temp = tempfile::NamedTempFile::new_in(
@@ -189,17 +207,19 @@ fn write_file_line_by_line(replacer: &Replacer, path: &PathBuf) -> Result<()> {
         temp.as_file().set_permissions(metadata.permissions()).ok();
     }
 
-    {
+    let matched = {
         let source = Source::File(path.clone());
         let reader = open_source(&source)?;
         let mut writer = BufWriter::new(temp.as_file());
-        process_reader_line_by_line(replacer, reader, &mut writer)?;
+        let matched =
+            process_reader_line_by_line(replacer, reader, &mut writer)?;
         writer.flush()?;
-    }
+        matched
+    };
 
     temp.persist(&canonical)?;
 
-    Ok(())
+    Ok(matched)
 }
 
 fn write_with_temp(path: &PathBuf, data: &[u8]) -> Result<()> {
@@ -373,6 +393,82 @@ mod tests {
 
         let result = String::from_utf8(output).unwrap();
         assert_eq!(result, "p-1\np-2\np-3\n");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_process_sources_reports_match() -> Result<()> {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("test.txt");
+        std::fs::write(&file_path, "abc123def").unwrap();
+
+        let replacer =
+            Replacer::new("abc".into(), "xyz".into(), false, None, 0)?;
+        let sources = vec![Source::File(file_path)];
+
+        for line_by_line in [false, true] {
+            let mut output = Vec::new();
+            assert!(process_sources(
+                &replacer,
+                &sources,
+                true,
+                line_by_line,
+                &mut output
+            )?);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_process_sources_reports_no_match() -> Result<()> {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("test.txt");
+        std::fs::write(&file_path, "abc123def").unwrap();
+
+        let replacer =
+            Replacer::new("nowhere".into(), "xyz".into(), false, None, 0)?;
+        let sources = vec![Source::File(file_path)];
+
+        for line_by_line in [false, true] {
+            let mut output = Vec::new();
+            assert!(!process_sources(
+                &replacer,
+                &sources,
+                true,
+                line_by_line,
+                &mut output
+            )?);
+        }
+
+        Ok(())
+    }
+
+    /// A match in any input counts, whichever input it was.
+    #[test]
+    fn test_process_sources_reports_match_in_later_source() -> Result<()> {
+        let temp_dir = TempDir::new().unwrap();
+        let miss = temp_dir.path().join("miss.txt");
+        let hit = temp_dir.path().join("hit.txt");
+        std::fs::write(&miss, "xyz\n").unwrap();
+        std::fs::write(&hit, "abc\n").unwrap();
+
+        let replacer =
+            Replacer::new("abc".into(), "def".into(), false, None, 0)?;
+        let sources =
+            vec![Source::File(miss.clone()), Source::File(hit.clone())];
+
+        for line_by_line in [false, true] {
+            let mut output = Vec::new();
+            assert!(process_sources(
+                &replacer,
+                &sources,
+                true,
+                line_by_line,
+                &mut output
+            )?);
+        }
 
         Ok(())
     }
