@@ -63,6 +63,12 @@ w - match full words only
     /// prevents streaming.
     pub across: bool,
 
+    #[arg(short = 'm', long = "must-match")]
+    /// Exit with a non-zero status if the pattern matched no input. Without
+    /// this flag sd exits 0 whether or not anything was replaced, which
+    /// matches sed. Inputs that did match are still replaced either way.
+    pub must_match: bool,
+
     /// The regexp or string (if using `-F`) to search for.
     pub find: String,
 

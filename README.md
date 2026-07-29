@@ -221,3 +221,31 @@ To escape the `$` character, use `$$`:
 ❯ echo "foo" | sd 'foo' '$$bar'
 $bar
 ```
+
+### Requiring a match
+
+Like `sed`, sd exits successfully whether or not the pattern matched anything, so
+a typo in the pattern looks the same as a file that needed no changes:
+
+```bash
+❯ echo "foo" | sd 'typo' 'bar'
+foo
+❯ echo $?
+0
+```
+
+Pass `-m` / `--must-match` to exit with status 2 when the pattern matched none of
+the input. This is useful in scripts and CI, where a silently vacuous edit is
+worse than a loud failure:
+
+```bash
+❯ echo "foo" | sd -m 'typo' 'bar'
+foo
+❯ echo $?
+2
+```
+
+The flag only changes the exit status. Inputs that did match are replaced either
+way, and the status refers to the run as a whole, so one matching file out of
+several is enough to succeed. Errors keep their own status of 1, so a script can
+tell "the pattern found nothing" apart from "sd could not do its job".

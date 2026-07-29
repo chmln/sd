@@ -69,6 +69,11 @@ impl Replacer {
         })
     }
 
+    /// Replaces every match in `content`, up to the configured limit.
+    ///
+    /// Returns [`Cow::Borrowed`] when the pattern did not match and
+    /// [`Cow::Owned`] otherwise, so a caller can tell a no-op apart from a
+    /// replacement without scanning the input a second time.
     pub fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
         let regex = &self.regex;
         let limit = self.replacements;
