@@ -4,7 +4,21 @@ use std::{error::Error, fmt, str::CharIndices};
 pub struct InvalidReplaceCapture {
     original_replace: String,
     invalid_ident: Span,
-    num_leading_digits: usize,
+    kind: CaptureErrorKind,
+}
+
+/// Why the capture reference is rejected. Private so that `Span` need not be
+/// part of the public API (enum variant fields are as public as the enum).
+#[derive(Debug)]
+enum CaptureErrorKind {
+    /// `$1x` - group 1 followed by `x`, or group `1x`?
+    Ambiguous { num_leading_digits: usize },
+    /// A reference to a group the pattern never defines.
+    Undefined {
+        is_numbered: bool,
+        available: Vec<String>,
+        num_groups: usize,
+    },
 }
 
 impl Error for InvalidReplaceCapture {}
@@ -45,7 +59,7 @@ impl fmt::Display for InvalidReplaceCapture {
         let Self {
             original_replace,
             invalid_ident,
-            num_leading_digits,
+            kind,
         } = self;
 
         // Build up the error to show the user
@@ -95,18 +109,57 @@ impl fmt::Display for InvalidReplaceCapture {
         }
 
         let ident = invalid_ident.slice(original_replace);
-        let (number, the_rest) = ident.split_at(*num_leading_digits);
 
-        writeln!(
-            f,
-            "The numbered capture group `${number}` in the replacement text is ambiguous."
-        )?;
+        match kind {
+            CaptureErrorKind::Ambiguous { num_leading_digits } => {
+                let (number, the_rest) = ident.split_at(*num_leading_digits);
 
-        let disambiguous = format!("${{{number}}}{the_rest}");
-        writeln!(
-            f,
-            "hint: Use curly braces to disambiguate it `{disambiguous}`."
-        )?;
+                writeln!(
+                    f,
+                    "The numbered capture group `${number}` in the replacement text is ambiguous."
+                )?;
+
+                let disambiguous = format!("${{{number}}}{the_rest}");
+                writeln!(
+                    f,
+                    "hint: Use curly braces to disambiguate it `{disambiguous}`."
+                )?;
+            }
+            CaptureErrorKind::Undefined {
+                is_numbered,
+                available,
+                num_groups,
+            } => {
+                writeln!(
+                    f,
+                    "The capture group `${ident}` in the replacement text does not exist in the pattern."
+                )?;
+
+                if *is_numbered {
+                    match num_groups {
+                        0 => writeln!(
+                            f,
+                            "hint: The pattern has no capture groups. Did you mean a literal `$`? Write `$$`, or use -F to treat both args as literal strings."
+                        )?,
+                        n => writeln!(
+                            f,
+                            "hint: The pattern has {n} capture group(s), so only $0 to ${n} are valid."
+                        )?,
+                    }
+                } else if available.is_empty() {
+                    writeln!(
+                        f,
+                        "hint: The pattern has no named capture groups. If you meant a literal `$` (a shell variable, for instance), write `$${ident}`, or use -F to treat both args as literal strings."
+                    )?;
+                } else {
+                    let names = available.join("`, `$");
+                    writeln!(
+                        f,
+                        "hint: Available named groups: `${names}`. For a literal `$`, write `$${ident}`."
+                    )?;
+                }
+            }
+        }
 
         writeln!(f, "{}", formatted)?;
 
@@ -118,7 +171,57 @@ impl fmt::Display for InvalidReplaceCapture {
     }
 }
 
-pub fn validate_replace(s: &str) -> Result<(), InvalidReplaceCapture> {
+/// Rejects a replacement whose capture references cannot mean what the user
+/// intended: ambiguous ones like `$1x`, and references to groups the pattern
+/// never defines.
+pub fn validate_replace(
+    s: &str,
+    regex: &regex::bytes::Regex,
+) -> Result<(), InvalidReplaceCapture> {
+    validate_unambiguous(s)?;
+
+    for ident in ReplaceCaptureIter::new(s) {
+        // A reference to a group the pattern does not define expands to the
+        // empty string, silently deleting text the user meant to keep. The
+        // common case is a shell variable that arrived unexpanded, because it
+        // was single-quoted: `sd 'rm -f' 'rm_temp "$path"'` writes
+        // `rm_temp ""`.
+        let name = ident
+            .name
+            .strip_prefix('{')
+            .and_then(|n| n.strip_suffix('}'))
+            .unwrap_or(ident.name);
+        let numbered = name.parse::<usize>();
+        let exists = match numbered {
+            // captures_len() counts group 0, the whole match.
+            Ok(n) => n < regex.captures_len(),
+            Err(_) => regex.capture_names().any(|c| c == Some(name)),
+        };
+        if !exists {
+            return Err(InvalidReplaceCapture {
+                original_replace: s.to_owned(),
+                invalid_ident: ident.span,
+                kind: CaptureErrorKind::Undefined {
+                    is_numbered: numbered.is_ok(),
+                    available: regex
+                        .capture_names()
+                        .flatten()
+                        .map(str::to_owned)
+                        .collect(),
+                    num_groups: regex.captures_len().saturating_sub(1),
+                },
+            });
+        }
+    }
+
+    Ok(())
+}
+
+/// The pattern-independent half of the check: `$1x` is rejected regardless of
+/// what the pattern captures, because it could mean either group.
+pub(super) fn validate_unambiguous(
+    s: &str,
+) -> Result<(), InvalidReplaceCapture> {
     for ident in ReplaceCaptureIter::new(s) {
         let mut char_it = ident.name.char_indices();
         let (_, c) = char_it.next().unwrap();
@@ -128,7 +231,9 @@ pub fn validate_replace(s: &str) -> Result<(), InvalidReplaceCapture> {
                     return Err(InvalidReplaceCapture {
                         original_replace: s.to_owned(),
                         invalid_ident: ident.span,
-                        num_leading_digits: i,
+                        kind: CaptureErrorKind::Ambiguous {
+                            num_leading_digits: i,
+                        },
                     });
                 }
             }
@@ -298,6 +403,63 @@ mod tests {
     use super::*;
 
     use proptest::prelude::*;
+
+    fn validate(look_for: &str, replace_with: &str) -> Result<(), String> {
+        let regex = regex::bytes::Regex::new(look_for).unwrap();
+        validate_replace(replace_with, &regex).map_err(|e| e.to_string())
+    }
+
+    #[test]
+    fn undefined_named_capture_is_rejected() {
+        // The motivating case: a single-quoted shell variable reaches sd
+        // intact and would otherwise expand to nothing.
+        let err = validate("rm -f", r#"rm_temp "$path""#).unwrap_err();
+        assert!(err.contains("`$path`"), "{err}");
+        assert!(err.contains("does not exist"), "{err}");
+        // The hint has to teach the escape, since that is the actual fix
+        assert!(err.contains("$$path"), "{err}");
+    }
+
+    #[test]
+    fn out_of_range_numbered_capture_is_rejected() {
+        let err = validate("(a)(b)", "$5").unwrap_err();
+        assert!(err.contains("$0 to $2"), "{err}");
+    }
+
+    #[test]
+    fn undefined_capture_lists_available_names() {
+        let err = validate("(?<verb>a)", "$vrb").unwrap_err();
+        assert!(err.contains("`$verb`"), "{err}");
+    }
+
+    #[test]
+    fn defined_captures_are_accepted() {
+        validate("(a)(b)", "$2$1").unwrap();
+        validate("(a)", "${1}x").unwrap();
+        validate("(?<verb>a)", "$verb!").unwrap();
+        // Group 0 is the whole match, and is always available
+        validate("a", "$0!").unwrap();
+        // A non-participating group still exists
+        validate("a(b)?", "$1").unwrap();
+        validate("(?<n>a)|(?<m>b)", "$n$m").unwrap();
+    }
+
+    #[test]
+    fn literal_dollars_are_accepted() {
+        validate("a", "$$path").unwrap();
+        // A trailing `$`, or one followed by a non-ident char, is not a
+        // capture reference at all
+        validate("a", "100$").unwrap();
+        validate("a", "costs $ 5").unwrap();
+    }
+
+    #[test]
+    fn ambiguity_is_reported_before_existence() {
+        // `$1x` is rejected for being ambiguous even though group 1 exists,
+        // so the more actionable message wins
+        let err = validate("(a)", "$1x").unwrap_err();
+        assert!(err.contains("ambiguous"), "{err}");
+    }
 
     #[test]
     fn literal_dollar_sign() {

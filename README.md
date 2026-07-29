@@ -221,3 +221,13 @@ To escape the `$` character, use `$$`:
 ❯ echo "foo" | sd 'foo' '$$bar'
 $bar
 ```
+
+This matters most for single-quoted shell variables, which reach `sd` unexpanded
+and would otherwise be read as a capture group. `sd` rejects a reference to a
+group the pattern does not define, rather than replacing it with nothing:
+
+```bash
+❯ echo 'rm -f "$path"' | sd 'rm -f' 'rm_temp "$path"'
+error: The capture group `$path` in the replacement text does not exist in the pattern.
+hint: The pattern has no named capture groups. If you meant a literal `$` (a shell variable, for instance), write `$$path`, or use -F to treat both args as literal strings.
+```

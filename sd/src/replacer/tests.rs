@@ -4,19 +4,19 @@ use proptest::prelude::*;
 proptest! {
     #[test]
     fn validate_doesnt_panic(s in r"(\PC*\$?){0,5}") {
-        let _ = validate::validate_replace(&s);
+        let _ = validate::validate_unambiguous(&s);
     }
 
     // $ followed by a digit and a non-ident char or an ident char
     #[test]
     fn validate_ok(s in r"([^\$]*(\$([0-9][^a-zA-Z_0-9\$]|a-zA-Z_))?){0,5}") {
-        validate::validate_replace(&s).unwrap();
+        validate::validate_unambiguous(&s).unwrap();
     }
 
     // Force at least one $ followed by a digit and an ident char
     #[test]
     fn validate_err(s in r"[^\$]*?\$[0-9][a-zA-Z_]\PC*") {
-        validate::validate_replace(&s).unwrap_err();
+        validate::validate_unambiguous(&s).unwrap_err();
     }
 }
 
