@@ -33,7 +33,23 @@ impl Replacer {
             (look_for, unescape::unescape(&replace_with).into_bytes())
         };
 
-        let mut regex = regex::bytes::RegexBuilder::new(&look_for);
+        // `w` rewrites the pattern rather than setting a builder option, so it
+        // has to be resolved before the builder exists. Otherwise the builder
+        // would have to be replaced mid-loop, discarding every option set by a
+        // flag to the left of the `w`.
+        //
+        // The group is non-capturing so that `\b` binds to the whole pattern
+        // rather than to its first and last alternatives: `foo|bar` has to
+        // become `\b(?:foo|bar)\b`, not `\bfoo|bar\b`. A capturing group would
+        // shift the user's own `$1` to `$2`.
+        let word_boundary = flags.as_deref().is_some_and(|f| f.contains('w'));
+        let pattern = if word_boundary {
+            format!("\\b(?:{look_for})\\b")
+        } else {
+            look_for
+        };
+
+        let mut regex = regex::bytes::RegexBuilder::new(&pattern);
         regex.multi_line(true);
 
         if let Some(flags) = flags {
@@ -50,12 +66,8 @@ impl Replacer {
                         }
                         regex.dot_matches_new_line(true);
                     },
-                    'w' => {
-                        regex = regex::bytes::RegexBuilder::new(&format!(
-                            "\\b{}\\b",
-                            look_for
-                        ));
-                    },
+                    // handled above, before the builder was constructed
+                    'w' => {},
                     _ => {},
                 };
             });
