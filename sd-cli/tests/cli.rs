@@ -340,6 +340,32 @@ mod cli {
         Ok(())
     }
 
+    #[test]
+    fn word_boundary_flag_keeps_other_flags() -> Result<()> {
+        for flags in ["-fiw", "-fwi"] {
+            sd().args([flags, "abc", "X"])
+                .write_stdin("ABCd ABC")
+                .assert()
+                .success()
+                .stdout("ABCd X");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn word_boundary_flag_keeps_multi_line_across() -> Result<()> {
+        for flags in ["-fw", "-fwm", "-fmw"] {
+            sd().args([flags, "-A", r"^\w+", "M"])
+                .write_stdin("aa\nbb")
+                .assert()
+                .success()
+                .stdout("M\nM");
+        }
+
+        Ok(())
+    }
+
     #[cfg(unix)]
     mod unix_only {
         use super::*;
