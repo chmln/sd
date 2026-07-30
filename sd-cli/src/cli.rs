@@ -49,7 +49,7 @@ e - disable multi-line matching
 
 i - case-insensitive
 
-m - multi-line matching
+m - multi-line matching (the default; use to override an earlier `e`)
 
 s - make `.` match newlines
 

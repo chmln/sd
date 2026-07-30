@@ -340,6 +340,36 @@ mod cli {
         Ok(())
     }
 
+    #[test]
+    fn multi_line_flag_can_undo_a_preceding_e() -> Result<()> {
+        sd().args(["-A", "-fem", r"^\w+", "M"])
+            .write_stdin("aa\nbb")
+            .assert()
+            .success()
+            .stdout("M\nM");
+
+        sd().args(["-A", "-fme", r"^\w+", "M"])
+            .write_stdin("aa\nbb")
+            .assert()
+            .success()
+            .stdout("M\nbb");
+
+        Ok(())
+    }
+
+    #[test]
+    fn dot_matches_newline_flag_leaves_anchors_alone() -> Result<()> {
+        for flags in ["-fs", "-fsm", "-fms"] {
+            sd().args([flags, "-A", r"^\w+", "M"])
+                .write_stdin("aa\nbb")
+                .assert()
+                .success()
+                .stdout("M\nM");
+        }
+
+        Ok(())
+    }
+
     #[cfg(unix)]
     mod unix_only {
         use super::*;
