@@ -147,6 +147,115 @@ fn full_word_replace() {
 }
 
 #[test]
+fn multi_line_is_the_default() {
+    for flags in [None, Some("m")] {
+        Replace {
+            look_for: r"^\w+",
+            replace_with: "M",
+            flags,
+            src: "aa\nbb",
+            expected: "M\nM",
+            ..Default::default()
+        }
+        .test();
+    }
+}
+
+#[test]
+fn disabling_multi_line() {
+    Replace {
+        look_for: r"^\w+",
+        replace_with: "M",
+        flags: Some("e"),
+        src: "aa\nbb",
+        expected: "M\nbb",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn multi_line_flag_can_undo_a_preceding_e() {
+    // `e` then `m` reads as "off, then on", so it has to end up on. `m` being a
+    // no-op made an `e` permanent for the rest of the flag string.
+    Replace {
+        look_for: r"^\w+",
+        replace_with: "M",
+        flags: Some("em"),
+        src: "aa\nbb",
+        expected: "M\nM",
+        ..Default::default()
+    }
+    .test();
+
+    // ...and the reverse order still ends up off, since the last one wins.
+    Replace {
+        look_for: r"^\w+",
+        replace_with: "M",
+        flags: Some("me"),
+        src: "aa\nbb",
+        expected: "M\nbb",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn dot_matches_newline_flag_leaves_anchors_alone() {
+    // `s` is documented as only affecting `.`. It used to disable multi-line as
+    // an undocumented side effect, so `^` stopped matching at line starts.
+    for flags in ["s", "sm", "ms"] {
+        Replace {
+            look_for: r"^\w+",
+            replace_with: "M",
+            flags: Some(flags),
+            src: "aa\nbb",
+            expected: "M\nM",
+            ..Default::default()
+        }
+        .test();
+    }
+
+    // What `s` is actually for, unaffected by the above.
+    for flags in ["s", "sm", "ms"] {
+        Replace {
+            look_for: "a.b",
+            replace_with: "X",
+            flags: Some(flags),
+            src: "a\nb",
+            expected: "X",
+            ..Default::default()
+        }
+        .test();
+    }
+
+    // `.` must still not match a newline without `s`.
+    Replace {
+        look_for: "a.b",
+        replace_with: "X",
+        src: "a\nb",
+        expected: "a\nb",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn dot_matches_newline_composes_with_disabled_multi_line() {
+    // Both at once has to be expressible: `.` matching newlines while `^`/`$`
+    // anchor only to the whole input. Coupling the two made this impossible.
+    Replace {
+        look_for: r"^a.b",
+        replace_with: "X",
+        flags: Some("es"),
+        src: "a\nb\na\nb",
+        expected: "X\na\nb",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
 fn escaping_unnecessarily() {
     // https://github.com/chmln/sd/issues/313
     Replace {

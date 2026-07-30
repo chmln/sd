@@ -42,14 +42,15 @@ impl Replacer {
                 match c {
                     'c' => { regex.case_insensitive(false); },
                     'i' => { regex.case_insensitive(true); },
-                    'm' => {},
+                    // Multi-line is the default, so `m` is usually redundant,
+                    // but it still has to be a real setter rather than a no-op
+                    // so that it can turn multi-line back on after an `e`.
+                    'm' => { regex.multi_line(true); },
                     'e' => { regex.multi_line(false); },
-                    's' => {
-                        if !flags.contains('m') {
-                            regex.multi_line(false);
-                        }
-                        regex.dot_matches_new_line(true);
-                    },
+                    // Only `.`, and nothing to do with `^`/`$`. Disabling
+                    // multi-line here too would make `s` a silent alias for
+                    // `es`, leaving no way to ask for one without the other.
+                    's' => { regex.dot_matches_new_line(true); },
                     'w' => {
                         regex = regex::bytes::RegexBuilder::new(&format!(
                             "\\b{}\\b",
