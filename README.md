@@ -14,6 +14,14 @@ Why use it over any existing tools?
 
 *Smart, common-sense defaults.* &nbsp; Defaults follow common sense and are tailored for typical daily use.
 
+## Comparison to `perl -pe`
+
+`perl -pe` / `perl -pi -e` can do similar substitutions, but `sd` is usually
+easier day-to-day: find and replace are separate arguments (no delimiter
+juggling), Unicode works with sensible defaults, and string-literal mode
+(`-F`) avoids regex escaping. Prefer `perl` when you need a full programming
+language inside the replacement; prefer `sd` for quick, readable edits.
+
 ## Comparison to sed
 
 While sed does a whole lot more, sd focuses on doing just one thing and doing it well. Here are some cherry-picked examples where sd shines.
