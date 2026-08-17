@@ -242,6 +242,31 @@ mod cli {
             .stdout("bar\nfoo\nfoo");
     }
 
+    // The limit is documented as being per file, so it must not restart on
+    // every line in the default line-by-line mode.
+    #[test]
+    fn limit_replacements_file_line_by_line() -> Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        file.write_all(b"foo foo\nfoo foo\nfoo")?;
+        let path = file.into_temp_path();
+
+        sd().args(["-n", "3", "foo", "bar", path.to_str().unwrap()])
+            .assert()
+            .success();
+        assert_file(&path, "bar bar\nbar foo\nfoo");
+
+        Ok(())
+    }
+
+    #[test]
+    fn limit_replacements_stdin_line_by_line() {
+        sd().args(["-n", "1", "foo", "bar"])
+            .write_stdin("foo\nfoo\nfoo")
+            .assert()
+            .success()
+            .stdout("bar\nfoo\nfoo");
+    }
+
     const UNTOUCHED_CONTENTS: &str = "untouched";
 
     fn assert_fails_correctly(

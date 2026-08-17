@@ -70,13 +70,34 @@ impl Replacer {
     }
 
     pub fn replace<'a>(&'a self, content: &'a [u8]) -> Cow<'a, [u8]> {
+        let mut budget = self.budget();
+        self.replace_within_budget(content, &mut budget)
+    }
+
+    /// The number of replacements this replacer may perform per input.
+    /// [`usize::MAX`] when unlimited.
+    pub fn budget(&self) -> usize {
+        if self.replacements == 0 {
+            usize::MAX
+        } else {
+            self.replacements
+        }
+    }
+
+    /// Like [`Replacer::replace`], but bounded by `budget`, which is
+    /// decremented by the number of replacements performed. This lets a single
+    /// limit span several calls, e.g. one call per line of the same file.
+    pub fn replace_within_budget<'a>(
+        &'a self,
+        content: &'a [u8],
+        budget: &mut usize,
+    ) -> Cow<'a, [u8]> {
         let regex = &self.regex;
-        let limit = self.replacements;
         let use_color = false;
         if self.is_literal {
             Self::replacen(
                 regex,
-                limit,
+                budget,
                 content,
                 use_color,
                 regex::bytes::NoExpand(&self.replace_with),
@@ -84,7 +105,7 @@ impl Replacer {
         } else {
             Self::replacen(
                 regex,
-                limit,
+                budget,
                 content,
                 use_color,
                 &*self.replace_with,
@@ -96,24 +117,28 @@ impl Replacer {
     /// coloring replacements
     pub fn replacen<'haystack, R: regex::bytes::Replacer>(
         regex: &regex::bytes::Regex,
-        limit: usize,
+        budget: &mut usize,
         haystack: &'haystack [u8],
         _use_color: bool,
         mut rep: R,
     ) -> Cow<'haystack, [u8]> {
-        let mut it = regex.captures_iter(haystack).enumerate().peekable();
+        if *budget == 0 {
+            return Cow::Borrowed(haystack);
+        }
+        let mut it = regex.captures_iter(haystack).peekable();
         if it.peek().is_none() {
             return Cow::Borrowed(haystack);
         }
         let mut new = Vec::with_capacity(haystack.len());
         let mut last_match = 0;
-        for (i, cap) in it {
+        for cap in it {
             // unwrap on 0 is OK because captures only reports matches
             let m = cap.get(0).unwrap();
             new.extend_from_slice(&haystack[last_match..m.start()]);
             rep.replace_append(&cap, &mut new);
             last_match = m.end();
-            if limit > 0 && i >= limit - 1 {
+            *budget -= 1;
+            if *budget == 0 {
                 break;
             }
         }

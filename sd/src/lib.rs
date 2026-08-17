@@ -142,13 +142,17 @@ fn process_reader_line_by_line(
 
     let mut chunk = vec![0u8; CHUNK_SIZE];
     let mut line = Vec::with_capacity(256);
+    // The replacement limit is documented as being per input, so a single
+    // budget has to span every line of this reader.
+    let mut budget = replacer.budget();
 
     loop {
         let n = reader.read(&mut chunk)?;
         if n == 0 {
             // Finish any remaining line
             if !line.is_empty() {
-                let replaced = replacer.replace(&line);
+                let replaced =
+                    replacer.replace_within_budget(&line, &mut budget);
                 writer.write_all(&replaced)?;
             }
             break;
@@ -159,7 +163,8 @@ fn process_reader_line_by_line(
             if byte == b'\n' {
                 // Found a complete line
                 line.extend_from_slice(&chunk[start..i]);
-                let replaced = replacer.replace(&line);
+                let replaced =
+                    replacer.replace_within_budget(&line, &mut budget);
                 writer.write_all(&replaced)?;
                 writer.write_all(b"\n")?;
                 line.clear();
