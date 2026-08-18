@@ -110,6 +110,20 @@ impl Replacer {
         for (i, cap) in it {
             // unwrap on 0 is OK because captures only reports matches
             let m = cap.get(0).unwrap();
+
+            // Ignore a zero-width match at the very end of the input when the
+            // input ends with a newline. In whole-input (`--across`) mode the
+            // multi-line regex treats the position after the trailing newline
+            // as the start of an empty final "line", so patterns that can
+            // match nothing (e.g. `.*`, `^`, `$`) match there and emit a
+            // spurious extra replacement. See https://github.com/chmln/sd/issues/318.
+            if m.start() == m.end()
+                && m.end() == haystack.len()
+                && haystack.last() == Some(&b'\n')
+            {
+                continue;
+            }
+
             new.extend_from_slice(&haystack[last_match..m.start()]);
             rep.replace_append(&cap, &mut new);
             last_match = m.end();

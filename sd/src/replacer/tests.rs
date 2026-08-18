@@ -167,3 +167,84 @@ fn escaping_unnecessarily() {
     }
     .test();
 }
+
+// https://github.com/chmln/sd/issues/318
+//
+// In whole-input mode a pattern that can match the empty string used to also
+// match the empty "line" after the trailing newline, duplicating the output.
+#[test]
+fn no_phantom_match_after_trailing_newline() {
+    // The reported case: `${1}def` was emitted twice.
+    Replace {
+        look_for: "(.*)",
+        replace_with: "${1}def",
+        src: "abc\n",
+        expected: "abcdef\n",
+        ..Default::default()
+    }
+    .test();
+
+    // A plain replacement was duplicated the same way.
+    Replace {
+        look_for: ".*",
+        replace_with: "X",
+        src: "abc\n",
+        expected: "X\n",
+        ..Default::default()
+    }
+    .test();
+
+    // One replacement per real line, none for the phantom trailing line.
+    Replace {
+        look_for: ".*",
+        replace_with: "X",
+        src: "abc\ndef\n",
+        expected: "X\nX\n",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn phantom_match_guard_does_not_over_suppress() {
+    // Without a trailing newline the final match must still be replaced.
+    Replace {
+        look_for: ".*",
+        replace_with: "X",
+        src: "abc",
+        expected: "X",
+        ..Default::default()
+    }
+    .test();
+
+    // A genuine empty line before the trailing newline is still replaced;
+    // only the phantom line after the final newline is skipped.
+    Replace {
+        look_for: ".*",
+        replace_with: "X",
+        src: "abc\n\n",
+        expected: "X\nX\n",
+        ..Default::default()
+    }
+    .test();
+
+    // Zero-width matches that are not at the phantom position are untouched.
+    Replace {
+        look_for: "x*",
+        replace_with: "-",
+        src: "abc\n",
+        expected: "-a-b-c-\n",
+        ..Default::default()
+    }
+    .test();
+
+    // `^` still prefixes every real line and adds nothing after the last one.
+    Replace {
+        look_for: "^",
+        replace_with: "> ",
+        src: "a\nb\n",
+        expected: "> a\n> b\n",
+        ..Default::default()
+    }
+    .test();
+}
