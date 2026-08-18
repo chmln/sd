@@ -330,6 +330,18 @@ mod cli {
     }
 
     #[test]
+    fn across_no_phantom_match_after_trailing_newline() -> Result<()> {
+        // https://github.com/chmln/sd/issues/318
+        sd().args(["-A", "(.*)", "${1}def"])
+            .write_stdin("abc\n")
+            .assert()
+            .success()
+            .stdout("abcdef\n");
+
+        Ok(())
+    }
+
+    #[test]
     fn line_by_line_whitespace_trim() -> Result<()> {
         sd().args([r"\s+$", ""])
             .write_stdin("a \nb \n")
