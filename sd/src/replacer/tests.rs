@@ -167,3 +167,70 @@ fn escaping_unnecessarily() {
     }
     .test();
 }
+
+#[test]
+fn bash_commands_in_replace() {
+    // https://github.com/chmln/sd/issues/305
+    Replace {
+        look_for: r"(\w+)[\s]",
+        replace_with: r#"$(echo "the string $1 has $(echo -n $1 | wc -m) chars; ")"#,
+        src: "Real Madrid",
+        expected: "the string Real has 4 chars; Madrid",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: r"(\w+)[\s](\w+)",
+        replace_with: r#"$(echo "the string $1 has $(echo -n $1 | wc -m) chars") $(echo "while the string $2 has $(echo -n $2 | wc -m) chars!")"#,
+        src: "Real Madrid",
+        expected: "the string Real has 4 chars while the string Madrid has 6 chars!",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: r"([a-zA-Z]+)",
+        replace_with: r#"$(echo -n "the string $1 has $(echo -n $1 | wc -m) chars")"#,
+        src: "Real Madrid",
+        expected: "the string Real has 4 chars the string Madrid has 6 chars",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: r"A(.*)A",
+        replace_with: r#"$(echo "$1" | tr a-z A-Z)"#,
+        src: "hello AworldA",
+        expected: "hello WORLD",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: r"A(?P<groupName>.*)A",
+        replace_with: r#"$(echo "${groupName}" | tr a-z A-Z)"#,
+        src: "hello AworldA",
+        expected: "hello WORLD",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: r"A(?P<groupName>.*)A",
+        replace_with: r#"$(echo "$groupName" | tr a-z A-Z)"#,
+        src: "hello AworldA",
+        expected: "hello WORLD",
+        ..Default::default()
+    }
+    .test();
+
+    Replace {
+        look_for: r"(\()(\))",
+        replace_with: r#"$(echo $(echo $(echo $(echo "$1)"))))$(echo "($2")"#,
+        src: r"()",
+        expected: "()()",
+        ..Default::default()
+    }
+    .test();
+}

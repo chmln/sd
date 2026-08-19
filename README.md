@@ -181,6 +181,16 @@ Install through
    fd --type file --exec cp {} {}.bk \; --exec sd 'from "react"' 'from "preact"'
    ```
 
+6. **Replace w/ shell command output using captured groups**
+
+    ```sh
+    # extract captured groups and use them as input for shell commands
+    echo "hello WORLD!" | sd '(\w+)\s(\w+)' '$(echo "$1" | tr a-z A-Z) $(echo "$2" | tr A-Z a-z)'
+    # HELLO world!
+    echo "mama hello!" | sd '(?P<group1>\w+)\s(?P<group2>\w+)' '$(echo $(echo -n $group1 | wc -m ) chars) $(echo $(echo -n $group2 | wc -m ) chars)'
+    # 4 chars 5 chars!    
+    ```
+
 ### Edge cases
 sd will interpret every argument starting with `-` as a (potentially unknown) flag.
 The common convention of using `--` to signal the end of flags is respected:
