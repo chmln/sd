@@ -27,6 +27,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - #292 Fix capture group example in the man page (@John Careaga)
 - #299 Add `README_zh-CN.md` and follow-up note adjustments (@zhangyanming)
 - #320 Fix missing single quotes in a man page example (@Freimut Diener)
+- #357 Restore the description in `--help` and the man page (@simono)
 
 ### Pre-built Releases
 

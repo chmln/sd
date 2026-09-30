@@ -97,3 +97,21 @@ fn gen_man(base_dir: &Path) {
 
     std::fs::write(man_path, buffer).expect("failed to write manpage");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn man_page_has_description() {
+        let mut buffer = Vec::new();
+        clap_mangen::Man::new(Options::command())
+            .render_description_section(&mut buffer)
+            .unwrap();
+        let section = String::from_utf8(buffer).unwrap();
+        assert!(
+            section.contains("An intuitive find & replace CLI"),
+            "{section}"
+        );
+    }
+}

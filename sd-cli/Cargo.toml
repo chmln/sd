@@ -2,6 +2,7 @@
 name = "sd-cli"
 version.workspace = true
 edition.workspace = true
+description.workspace = true
 
 [[bin]]
 name = "sd"
