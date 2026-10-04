@@ -32,8 +32,12 @@ jobs:
             target: x86_64-pc-windows-msvc
             use-cross: false
 
-          - os: windows-latest
+          - os: windows-11-arm
             target: aarch64-pc-windows-msvc
+            use-cross: false
+
+          - os: windows-11-arm
+            target: aarch64-pc-windows-gnullvm
             use-cross: false
 
           - os: macos-latest
@@ -61,6 +65,25 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
+
+    - name: Install Windows ARM64 GNU-family linker
+      if: ${{ matrix.target == 'aarch64-pc-windows-gnullvm' }}
+      id: msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: CLANGARM64
+        update: true
+        install: mingw-w64-clang-aarch64-clang
+    - name: Expose Windows ARM64 GNU-family linker
+      if: ${{ matrix.target == 'aarch64-pc-windows-gnullvm' }}
+      shell: pwsh
+      env:
+        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+      run: |
+        echo "$env:MSYS2_LOCATION\\clangarm64\\bin" >> $env:GITHUB_PATH
+        echo "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER=$env:MSYS2_LOCATION\\clangarm64\\bin\\clang.exe" >> $env:GITHUB_ENV
+        # Link libunwind statically so the release does not need MSYS2's libunwind.dll.
+        echo "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_RUSTFLAGS=-C target-feature=+crt-static" >> $env:GITHUB_ENV
 
     - name: Set the version
       shell: bash
@@ -100,7 +123,7 @@ jobs:
         $CARGO --version
         $CARGO build --release --locked --target ${{ matrix.target }}
         # Handle windows being an oddity
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+        if [[ "${{ matrix.target }}" == *-windows-* ]]; then
           echo "BIN_NAME=sd.exe" >> $GITHUB_ENV
         else
           echo "BIN_NAME=sd" >> $GITHUB_ENV
@@ -113,7 +136,7 @@ jobs:
         mkdir -p "$staging"
 
         cp -r {README.md,LICENSE,CHANGELOG.md,gen/*} "$staging"
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+        if [[ "${{ matrix.target }}" == *-windows-* ]]; then
           cp "target/${{ matrix.target }}/release/sd.exe" "$staging/"
           7z a "$staging.zip" "$staging"
           echo "ASSET=$staging.zip" >> $GITHUB_ENV
