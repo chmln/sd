@@ -147,6 +147,32 @@ fn full_word_replace() {
 }
 
 #[test]
+fn full_word_keeps_dot_matches_newline() {
+    Replace {
+        look_for: "a.b",
+        replace_with: "X",
+        flags: Some("sw"),
+        src: "xa\nb a\nb",
+        expected: "xa\nb X",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn full_word_keeps_case_insensitive() {
+    Replace {
+        look_for: "ABC",
+        replace_with: "X",
+        flags: Some("iw"),
+        src: "abc abcd",
+        expected: "X abcd",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
 fn escaping_unnecessarily() {
     // https://github.com/chmln/sd/issues/313
     Replace {
