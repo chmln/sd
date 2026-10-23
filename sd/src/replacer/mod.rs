@@ -33,6 +33,12 @@ impl Replacer {
             (look_for, unescape::unescape(&replace_with).into_bytes())
         };
 
+        // Wrap the pattern before building, so `w` keeps the other flags.
+        let look_for = match &flags {
+            Some(flags) if flags.contains('w') => format!("\\b{}\\b", look_for),
+            _ => look_for,
+        };
+
         let mut regex = regex::bytes::RegexBuilder::new(&look_for);
         regex.multi_line(true);
 
@@ -50,12 +56,7 @@ impl Replacer {
                         }
                         regex.dot_matches_new_line(true);
                     },
-                    'w' => {
-                        regex = regex::bytes::RegexBuilder::new(&format!(
-                            "\\b{}\\b",
-                            look_for
-                        ));
-                    },
+                    'w' => {},
                     _ => {},
                 };
             });
