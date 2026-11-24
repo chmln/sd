@@ -33,6 +33,18 @@ impl Replacer {
             (look_for, unescape::unescape(&replace_with).into_bytes())
         };
 
+        let look_for =
+            if flags.as_deref().is_some_and(|flags| flags.contains('w')) {
+                // Parse before adding boundaries so a trailing regex comment cannot
+                // swallow the closing group and invalid patterns stay invalid.
+                let pattern = regex_syntax::ast::parse::Parser::new()
+                    .parse(&look_for)
+                    .map_err(|err| regex::Error::Syntax(err.to_string()))?;
+                format!(r"\b(?:{pattern})\b")
+            } else {
+                look_for
+            };
+
         let mut regex = regex::bytes::RegexBuilder::new(&look_for);
         regex.multi_line(true);
 
@@ -49,12 +61,6 @@ impl Replacer {
                             regex.multi_line(false);
                         }
                         regex.dot_matches_new_line(true);
-                    },
-                    'w' => {
-                        regex = regex::bytes::RegexBuilder::new(&format!(
-                            "\\b{}\\b",
-                            look_for
-                        ));
                     },
                     _ => {},
                 };

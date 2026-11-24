@@ -603,6 +603,7 @@ dependencies = [
  "rayon",
  "regex",
  "regex-automata",
+ "regex-syntax 0.8.8",
  "tempfile",
  "thiserror",
 ]
