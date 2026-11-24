@@ -147,6 +147,63 @@ fn full_word_replace() {
 }
 
 #[test]
+fn full_word_alternatives_preserve_captures() {
+    Replace {
+        look_for: "(cat)|(dog)",
+        replace_with: "<$1$2>",
+        flags: Some("w"),
+        src: "cat catalog hotdog dog",
+        expected: "<cat> catalog hotdog <dog>",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn full_word_keeps_other_flags_in_either_order() {
+    for flags in ["iw", "wi"] {
+        Replace {
+            look_for: "cat",
+            replace_with: "_",
+            flags: Some(flags),
+            src: "CAT Catalog",
+            expected: "_ Catalog",
+            ..Default::default()
+        }
+        .test();
+    }
+}
+
+#[test]
+fn full_word_with_trailing_regex_comment() {
+    Replace {
+        look_for: "(?x)cat # a pet",
+        replace_with: "_",
+        flags: Some("w"),
+        src: "cat catalog",
+        expected: "_ catalog",
+        ..Default::default()
+    }
+    .test();
+}
+
+#[test]
+fn full_word_rejects_invalid_patterns() {
+    for pattern in ["?", "a)(?:b"] {
+        assert!(
+            Replacer::new(
+                pattern.into(),
+                "_".into(),
+                false,
+                Some("w".into()),
+                0,
+            )
+            .is_err()
+        );
+    }
+}
+
+#[test]
 fn escaping_unnecessarily() {
     // https://github.com/chmln/sd/issues/313
     Replace {
